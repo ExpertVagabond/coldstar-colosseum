@@ -2,6 +2,7 @@
 Terminal UI Components using Rich library
 """
 
+from typing import Optional
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -76,7 +77,7 @@ def print_section_header(title: str):
     console.print()
 
 
-def print_wallet_info(public_key: str, balance: float = None):
+def print_wallet_info(public_key: str, balance: Optional[float] = None):
     table = Table(box=DOUBLE, show_header=False, border_style="cyan")
     table.add_column("Field", style="dim")
     table.add_column("Value", style="green bold")
