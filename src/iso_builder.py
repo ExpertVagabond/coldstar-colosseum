@@ -107,11 +107,25 @@ class ISOBuilder:
             
             with open(blacklist_conf, 'w') as f:
                 f.write("# Network modules blacklisted for offline cold wallet\n")
+                f.write("# Ethernet drivers\n")
                 for module in NETWORK_BLACKLIST_MODULES:
                     f.write(f"blacklist {module}\n")
+                f.write("# Additional wireless drivers\n")
+                f.write("blacklist cfg80211\n")
+                f.write("blacklist mac80211\n")
+                f.write("blacklist rfkill\n")
+                f.write("blacklist bluetooth\n")
+                f.write("blacklist btusb\n")
+                f.write("# USB network adapters\n")
+                f.write("blacklist usbnet\n")
+                f.write("blacklist cdc_ether\n")
+                f.write("blacklist rndis_host\n")
+                f.write("blacklist ax88179_178a\n")
             
             print_success("Network drivers blacklisted")
             
+            self._disable_network_services()
+            self._create_network_lockdown_script()
             self._create_signing_script()
             self._create_boot_profile()
             
@@ -121,6 +135,88 @@ class ISOBuilder:
         except Exception as e:
             print_error(f"Configuration error: {e}")
             return False
+    
+    def _disable_network_services(self):
+        init_dir = self.rootfs_dir / "etc" / "init.d"
+        init_dir.mkdir(parents=True, exist_ok=True)
+        
+        rclocal = self.rootfs_dir / "etc" / "local.d" / "disable-network.start"
+        rclocal.parent.mkdir(parents=True, exist_ok=True)
+        
+        network_lockdown = '''#!/bin/sh
+# Ensure no network interfaces come up
+for iface in $(ls /sys/class/net/ 2>/dev/null | grep -v lo); do
+    ip link set "$iface" down 2>/dev/null
+done
+
+# Drop all network traffic via iptables if available
+if command -v iptables >/dev/null 2>&1; then
+    iptables -P INPUT DROP 2>/dev/null
+    iptables -P OUTPUT DROP 2>/dev/null
+    iptables -P FORWARD DROP 2>/dev/null
+fi
+
+# Kill any networking daemons that might have started
+for proc in dhcpcd udhcpc wpa_supplicant NetworkManager; do
+    pkill -9 "$proc" 2>/dev/null
+done
+'''
+        
+        with open(rclocal, 'w') as f:
+            f.write(network_lockdown)
+        os.chmod(rclocal, 0o755)
+        
+        interfaces_file = self.rootfs_dir / "etc" / "network" / "interfaces"
+        interfaces_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(interfaces_file, 'w') as f:
+            f.write("# Network interfaces disabled for cold wallet security\n")
+            f.write("auto lo\n")
+            f.write("iface lo inet loopback\n")
+        
+        print_success("Network services disabled")
+    
+    def _create_network_lockdown_script(self):
+        script_path = self.rootfs_dir / "usr" / "local" / "bin" / "verify_offline.sh"
+        script_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        script_content = '''#!/bin/sh
+# Verify system is truly offline
+
+echo "NETWORK STATUS CHECK"
+echo "===================="
+
+ONLINE=0
+
+for iface in $(ls /sys/class/net/ 2>/dev/null); do
+    if [ "$iface" != "lo" ]; then
+        state=$(cat /sys/class/net/$iface/operstate 2>/dev/null)
+        if [ "$state" = "up" ]; then
+            echo "WARNING: Interface $iface is UP!"
+            ONLINE=1
+        fi
+    fi
+done
+
+if command -v ping >/dev/null 2>&1; then
+    if ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
+        echo "WARNING: Network connectivity detected!"
+        ONLINE=1
+    fi
+fi
+
+if [ $ONLINE -eq 0 ]; then
+    echo "VERIFIED: System is OFFLINE"
+    echo "Safe for transaction signing."
+else
+    echo ""
+    echo "WARNING: NETWORK ACCESS DETECTED!"
+    echo "Do NOT sign transactions on this system!"
+fi
+'''
+        
+        with open(script_path, 'w') as f:
+            f.write(script_content)
+        os.chmod(script_path, 0o755)
     
     def _create_signing_script(self):
         script_dir = self.rootfs_dir / "usr" / "local" / "bin"

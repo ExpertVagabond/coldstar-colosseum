@@ -19,6 +19,13 @@ class SolanaNetwork:
         self.rpc_url = rpc_url or SOLANA_RPC_URL
         self.client = httpx.Client(timeout=30.0)
     
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+    
     def _make_rpc_request(self, method: str, params: list = None) -> dict:
         payload = {
             "jsonrpc": "2.0",
