@@ -37,6 +37,28 @@ class SolanaColdWalletCLI:
         
         self.local_wallet_dir = Path("./local_wallet")
         self.local_wallet_dir.mkdir(exist_ok=True)
+        
+        self.wallet_configured = False
+        self.current_public_key = None
+    
+    def _check_existing_wallet(self) -> bool:
+        local_keypair = self.local_wallet_dir / "keypair.json"
+        if local_keypair.exists():
+            self.wallet_manager.set_wallet_directory(str(self.local_wallet_dir))
+            self.wallet_manager.load_keypair()
+            self.current_public_key = self.wallet_manager.get_public_key()
+            self.wallet_configured = True
+            return True
+        return False
+    
+    def _display_wallet_balance(self):
+        if not self.current_public_key:
+            return
+        
+        print_section_header("WALLET STATUS")
+        balance = self.network.get_balance(self.current_public_key)
+        print_wallet_info(self.current_public_key, balance)
+        console.print()
     
     def run(self):
         clear_screen()
@@ -50,6 +72,9 @@ class SolanaColdWalletCLI:
             print_warning("Network connection: Failed (some features unavailable)")
         
         console.print()
+        
+        if self._check_existing_wallet():
+            self._display_wallet_balance()
         
         while True:
             try:
@@ -66,18 +91,42 @@ class SolanaColdWalletCLI:
     def main_menu(self):
         print_section_header("MAIN MENU")
         
-        options = [
-            "1. Detect USB Devices",
-            "2. Flash Cold Wallet OS to USB",
-            "3. Generate New Wallet (Local)",
-            "4. View Wallet Information",
-            "5. Create Unsigned Transaction",
-            "6. Sign Transaction (Offline)",
-            "7. Broadcast Signed Transaction",
-            "8. Request Devnet Airdrop",
-            "9. Network Status",
-            "0. Exit"
-        ]
+        if self.wallet_configured:
+            options = [
+                "1. View Wallet / Balance",
+                "2. Send SOL",
+                "3. Sign Transaction (Offline)",
+                "4. Broadcast Signed Transaction",
+                "5. Request Devnet Airdrop",
+                "6. Network Status",
+                "7. Generate New Wallet",
+                "0. Exit"
+            ]
+            
+            actions = {
+                "1": self.view_wallet_info,
+                "2": self.create_unsigned_transaction,
+                "3": self.sign_transaction,
+                "4": self.broadcast_transaction,
+                "5": self.request_airdrop,
+                "6": self.show_network_status,
+                "7": self.generate_local_wallet,
+                "0": self.exit_app
+            }
+        else:
+            options = [
+                "1. Detect USB Devices",
+                "2. Flash Cold Wallet OS to USB",
+                "3. Generate New Wallet",
+                "0. Exit"
+            ]
+            
+            actions = {
+                "1": self.detect_usb_devices,
+                "2": self.flash_cold_wallet,
+                "3": self.generate_local_wallet,
+                "0": self.exit_app
+            }
         
         choice = select_menu_option(options, "Select an option:")
         
@@ -85,19 +134,6 @@ class SolanaColdWalletCLI:
             return
         
         choice_num = choice.split(".")[0].strip()
-        
-        actions = {
-            "1": self.detect_usb_devices,
-            "2": self.flash_cold_wallet,
-            "3": self.generate_local_wallet,
-            "4": self.view_wallet_info,
-            "5": self.create_unsigned_transaction,
-            "6": self.sign_transaction,
-            "7": self.broadcast_transaction,
-            "8": self.request_airdrop,
-            "9": self.show_network_status,
-            "0": self.exit_app
-        }
         
         action = actions.get(choice_num)
         if action:
@@ -227,8 +263,12 @@ class SolanaColdWalletCLI:
         keypair, public_key = self.wallet_manager.generate_keypair()
         
         if self.wallet_manager.save_keypair(str(wallet_path)):
+            self.wallet_configured = True
+            self.current_public_key = public_key
+            
             console.print()
-            print_wallet_info(public_key)
+            balance = self.network.get_balance(public_key)
+            print_wallet_info(public_key, balance)
             console.print()
             print_warning("IMPORTANT: Back up your keypair.json file securely!")
             print_info(f"Keypair location: {wallet_path}")
