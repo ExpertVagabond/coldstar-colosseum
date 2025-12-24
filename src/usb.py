@@ -1,10 +1,13 @@
 """
 USB Device Detection and Management
+
+B - Love U 3000
 """
 
 import subprocess
 import os
 import json
+import platform
 from pathlib import Path
 from typing import List, Optional, Dict
 
@@ -16,8 +19,143 @@ class USBManager:
         self.detected_devices: List[Dict] = []
         self.selected_device: Optional[Dict] = None
         self.mount_point: Optional[str] = None
+        self.is_windows = platform.system() == 'Windows'
     
     def detect_usb_devices(self) -> List[Dict]:
+        """Detect USB devices - supports both Windows and Linux"""
+        if self.is_windows:
+            return self._detect_windows()
+        else:
+            return self._detect_linux()
+    
+    def _detect_windows(self) -> List[Dict]:
+        """Detect USB devices on Windows using PowerShell"""
+        # B - Love U 3000
+        devices = []
+        
+        try:
+            # Use PowerShell to get removable drives
+            ps_command = """
+            Get-WmiObject Win32_DiskDrive | Where-Object {$_.InterfaceType -eq 'USB'} | ForEach-Object {
+                $disk = $_
+                $partitions = Get-WmiObject -Query "ASSOCIATORS OF {Win32_DiskDrive.DeviceID='$($disk.DeviceID)'} WHERE AssocClass=Win32_DiskDriveToDiskPartition"
+                $volumes = @()
+                foreach ($partition in $partitions) {
+                    $logical = Get-WmiObject -Query "ASSOCIATORS OF {Win32_DiskPartition.DeviceID='$($partition.DeviceID)'} WHERE AssocClass=Win32_LogicalDiskToPartition"
+                    foreach ($vol in $logical) {
+                        $volumes += @{
+                            Letter = $vol.DeviceID
+                            Size = $vol.Size
+                        }
+                    }
+                }
+                @{
+                    DeviceID = $disk.DeviceID
+                    Model = $disk.Model
+                    Size = $disk.Size
+                    Volumes = $volumes
+                } | ConvertTo-Json -Compress
+            }
+            """
+            
+            result = subprocess.run(
+                ['powershell', '-Command', ps_command],
+                capture_output=True,
+                text=True,
+                timeout=15
+            )
+            
+            if result.returncode != 0:
+                print_warning(f"PowerShell command failed: {result.stderr}")
+                # Fallback to simpler method
+                return self._detect_windows_simple()
+            
+            # Parse JSON output for each device
+            for line in result.stdout.strip().split('\n'):
+                if line.strip():
+                    try:
+                        dev_data = json.loads(line)
+                        size_gb = int(dev_data.get('Size', 0)) / (1024**3)
+                        
+                        dev_info = {
+                            'device': dev_data.get('DeviceID', 'Unknown'),
+                            'size': f"{size_gb:.1f}GB",
+                            'model': dev_data.get('Model', 'USB Device').strip(),
+                            'mountpoint': None,
+                            'partitions': []
+                        }
+                        
+                        # Add volume information
+                        for vol in dev_data.get('Volumes', []):
+                            letter = vol.get('Letter')
+                            if letter:
+                                vol_size = int(vol.get('Size', 0)) / (1024**3)
+                                partition = {
+                                    'device': letter,
+                                    'size': f"{vol_size:.1f}GB",
+                                    'mountpoint': letter + '\\'
+                                }
+                                dev_info['partitions'].append(partition)
+                                if not dev_info['mountpoint']:
+                                    dev_info['mountpoint'] = letter + '\\'
+                        
+                        devices.append(dev_info)
+                    except json.JSONDecodeError:
+                        continue
+            
+            self.detected_devices = devices
+            return devices
+            
+        except subprocess.TimeoutExpired:
+            print_error("Device detection timed out")
+            return []
+        except Exception as e:
+            print_error(f"Error detecting USB devices: {e}")
+            return self._detect_windows_simple()
+    
+    def _detect_windows_simple(self) -> List[Dict]:
+        """Simple Windows USB detection using WMIC"""
+        devices = []
+        
+        try:
+            result = subprocess.run(
+                ['wmic', 'logicaldisk', 'where', 'drivetype=2', 'get', 'deviceid,volumename,size'],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode == 0:
+                lines = result.stdout.strip().split('\n')[1:]  # Skip header
+                for line in lines:
+                    parts = line.strip().split()
+                    if parts:
+                        drive_letter = parts[0]
+                        size_bytes = int(parts[-1]) if parts[-1].isdigit() else 0
+                        size_gb = size_bytes / (1024**3) if size_bytes > 0 else 0
+                        
+                        dev_info = {
+                            'device': drive_letter,
+                            'size': f"{size_gb:.1f}GB" if size_gb > 0 else "Unknown",
+                            'model': 'Removable Drive',
+                            'mountpoint': drive_letter + '\\',
+                            'partitions': [{
+                                'device': drive_letter,
+                                'size': f"{size_gb:.1f}GB" if size_gb > 0 else "Unknown",
+                                'mountpoint': drive_letter + '\\'
+                            }]
+                        }
+                        devices.append(dev_info)
+            
+            self.detected_devices = devices
+            return devices
+            
+        except Exception as e:
+            print_error(f"Simple detection failed: {e}")
+            return []
+    
+    def _detect_linux(self) -> List[Dict]:
+        """Detect USB devices on Linux using lsblk"""
         devices = []
         
         try:
@@ -128,11 +266,33 @@ class USBManager:
         return None
     
     def mount_device(self, device_path: str = None, mount_point: str = None) -> Optional[str]:
+        """Mount a device - Windows drives are already mounted"""
         device = device_path or (self.selected_device['device'] if self.selected_device else None)
         if not device:
             print_error("No device specified")
             return None
         
+        # On Windows, drives are already mounted
+        if self.is_windows:
+            if self.selected_device and self.selected_device.get('mountpoint'):
+                self.mount_point = self.selected_device['mountpoint']
+                print_success(f"Using drive: {self.mount_point}")
+                return self.mount_point
+            elif self.selected_device and self.selected_device.get('partitions') and len(self.selected_device['partitions']) > 0:
+                partition = self.selected_device['partitions'][0]
+                if partition.get('mountpoint'):
+                    self.mount_point = partition['mountpoint']
+                    print_success(f"Using drive: {self.mount_point}")
+                    return self.mount_point
+                else:
+                    print_error("Partition has no mount point")
+                    return None
+            else:
+                print_error("No mountpoint found for Windows drive")
+                print_info("Device might not be formatted or have no partitions")
+                return None
+        
+        # Linux mounting logic
         if self.selected_device and self.selected_device.get('partitions'):
             partition = self.selected_device['partitions'][0]
             device = partition['device']
@@ -176,11 +336,20 @@ class USBManager:
             return None
     
     def unmount_device(self, mount_point: str = None) -> bool:
+        """Unmount a device - on Windows, this is a no-op"""
         target = mount_point or self.mount_point
         if not target:
             print_warning("No mount point to unmount")
             return True
         
+        # On Windows, we don't need to unmount drives
+        if self.is_windows:
+            print_info("Windows drives don't need to be unmounted")
+            if target == self.mount_point:
+                self.mount_point = None
+            return True
+        
+        # Linux unmount logic
         try:
             result = subprocess.run(
                 ['umount', target],
@@ -225,9 +394,25 @@ class USBManager:
         }
     
     def is_root(self) -> bool:
-        return os.geteuid() == 0
+        """Check if running with elevated privileges"""
+        if self.is_windows:
+            # On Windows, check if running as admin
+            try:
+                import ctypes
+                return ctypes.windll.shell32.IsUserAnAdmin() != 0
+            except:
+                return False
+        else:
+            # On Linux/Unix
+            return os.geteuid() == 0
     
     def check_permissions(self) -> bool:
+        """Check if user has necessary permissions for USB operations"""
+        # On Windows, admin privileges are less critical for basic USB access
+        if self.is_windows:
+            return True
+        
+        # On Linux, root is required for mount operations
         if not self.is_root():
             print_warning("USB operations require root privileges")
             print_info("Please run with: sudo python main.py")

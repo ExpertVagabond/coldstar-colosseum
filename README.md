@@ -14,25 +14,36 @@ A Python-based terminal application for creating and managing Solana cold wallet
 ## Requirements
 
 - Python 3.11+
-- Linux operating system (for USB operations)
-- Root privileges (for USB flashing and mounting)
+- Windows or Linux operating system
+- Root/Administrator privileges (for USB operations)
 
 ## Installation
 
-1. Clone this repository
-2. Install dependencies:
+### Step 1: Install Python Dependencies
+
+**Before launching VS Code**, install the required Python packages by running this command in your terminal:
 
 ```bash
-pip install solana solders pynacl base58 rich questionary httpx aiofiles
+pip install rich questionary solana solders pynacl httpx aiofiles base58
 ```
 
-3. Run the application:
+### Step 2: Run in VS Code
+
+1. Clone this repository
+2. Open the project folder in VS Code
+3. If you haven't installed dependencies yet, open the VS Code terminal (`` Ctrl+` ``) and run:
+
+```bash
+pip install rich questionary solana solders pynacl httpx aiofiles base58
+```
+
+4. Run the application:
 
 ```bash
 python main.py
 ```
 
-For USB operations (flashing, mounting):
+**Note for Linux users**: USB operations (flashing, mounting) may require root privileges:
 ```bash
 sudo python main.py
 ```

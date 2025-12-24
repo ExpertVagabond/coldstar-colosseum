@@ -7,6 +7,8 @@ Usage:
     sudo python3 flash_usb.py /dev/sdX           # Flash to specific device
     sudo python3 flash_usb.py --build            # Build ISO then flash
     sudo python3 flash_usb.py --build-only       # Only build ISO, don't flash
+
+B - Love U 3000
 """
 
 import subprocess
