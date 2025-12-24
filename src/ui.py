@@ -42,7 +42,7 @@ def print_banner():
 ║      ███████║╚██████╔╝███████╗██║  ██║██║ ╚████║██║  ██║      ║
 ║      ╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝      ║
 ║                                                               ║
-║              COLD WALLET USB TOOL v1.0.0                      ║
+║           COLD WALLET USB TOOL v1.0.0 By </Syrem>             ║
 ║                                                               ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  SECURITY NOTICE: This tool creates offline Solana wallets.   ║
