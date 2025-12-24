@@ -236,10 +236,13 @@ class SolanaColdWalletCLI:
                 print_success("Cold wallet USB created successfully!")
                 console.print()
                 print_info("Next steps:")
-                print_info("1. Boot from this USB drive")
-                print_info("2. The wallet will be initialized on first boot")
-                print_info("3. Record the public key displayed")
-                print_info("4. Use the inbox/outbox for transaction signing")
+                print_info("1. Boot from this USB on an AIR-GAPPED computer")
+                print_info("2. Wallet keypair will generate ON THE DEVICE (never online)")
+                print_info("3. Record the public key displayed on screen")
+                print_info("4. Use inbox/outbox directories for transaction signing")
+                console.print()
+                print_warning("SECURITY: The private key is generated and stays")
+                print_warning("ONLY on the air-gapped device - maximum security!")
             
         finally:
             self.iso_builder.cleanup()

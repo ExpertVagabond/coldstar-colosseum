@@ -132,8 +132,8 @@ class ISOBuilder:
             self._disable_network_services()
             self._create_network_lockdown_script()
             self._create_signing_script()
+            self._create_first_boot_keygen()
             self._create_boot_profile()
-            self._generate_embedded_keypair()
             
             print_success("Offline OS configured")
             return True
@@ -387,8 +387,9 @@ if [ -f /wallet/pubkey.txt ]; then
     echo ""
     echo "--------------------------------------------"
 else
-    echo "ERROR: No wallet found!"
-    echo "This USB may be corrupted. Please re-flash."
+    echo "Wallet not yet initialized."
+    echo "Run: python3 /usr/local/bin/init_wallet.py"
+    echo "to generate your wallet on this air-gapped device."
 fi
 
 echo ""
@@ -412,35 +413,106 @@ echo ""
         os.chmod(profile_path, 0o755)
         print_success("Boot profile created")
     
-    def _generate_embedded_keypair(self) -> Tuple[str, str]:
-        wallet_dir = self.rootfs_dir / "wallet"
-        wallet_dir.mkdir(parents=True, exist_ok=True)
+    def _create_first_boot_keygen(self):
+        script_dir = self.rootfs_dir / "usr" / "local" / "bin"
+        script_dir.mkdir(parents=True, exist_ok=True)
         
-        keypair_path = wallet_dir / "keypair.json"
-        pubkey_path = wallet_dir / "pubkey.txt"
+        keygen_script = script_dir / "init_wallet.py"
+        
+        keygen_content = '''#!/usr/bin/env python3
+"""First-boot wallet initialization - generates keypair on air-gapped device"""
+
+import os
+import sys
+import json
+
+WALLET_DIR = "/wallet"
+KEYPAIR_FILE = f"{WALLET_DIR}/keypair.json"
+PUBKEY_FILE = f"{WALLET_DIR}/pubkey.txt"
+
+def main():
+    if os.path.exists(KEYPAIR_FILE):
+        print("Wallet already initialized.")
+        with open(PUBKEY_FILE, 'r') as f:
+            print(f"Public Key: {f.read().strip()}")
+        return
+    
+    print("=" * 50)
+    print("  GENERATING NEW WALLET ON AIR-GAPPED DEVICE")
+    print("=" * 50)
+    print()
+    print("SECURITY: This private key is being generated")
+    print("directly on this offline device and has NEVER")
+    print("touched any networked computer.")
+    print()
+    
+    try:
+        from solders.keypair import Keypair
         
         keypair = Keypair()
         public_key = str(keypair.pubkey())
         
+        os.makedirs(WALLET_DIR, exist_ok=True)
+        
         secret_bytes = bytes(keypair)
         secret_list = list(secret_bytes)
         
-        with open(keypair_path, 'w') as f:
+        with open(KEYPAIR_FILE, 'w') as f:
             json.dump(secret_list, f)
         
-        with open(pubkey_path, 'w') as f:
+        os.chmod(KEYPAIR_FILE, 0o600)
+        
+        with open(PUBKEY_FILE, 'w') as f:
             f.write(public_key)
         
-        os.chmod(keypair_path, 0o600)
+        print("=" * 50)
+        print("  WALLET GENERATED SUCCESSFULLY")
+        print("=" * 50)
+        print()
+        print("YOUR PUBLIC KEY (WALLET ADDRESS):")
+        print("-" * 50)
+        print(public_key)
+        print("-" * 50)
+        print()
+        print("IMPORTANT: Write down or photograph this address!")
+        print("You will need it to receive SOL on this wallet.")
+        print()
+        print("The private key is stored securely on this device")
+        print("and will NEVER leave this air-gapped system.")
+        print("=" * 50)
         
-        self.generated_pubkey = public_key
+    except ImportError:
+        print("ERROR: solders library not available")
+        print("The cold wallet OS may be incomplete.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+'''
         
-        print_success("Wallet keypair generated and embedded")
-        print_wallet_info(public_key)
-        print_warning("IMPORTANT: This public key is your wallet address!")
-        print_warning("Record it now - you'll need it to receive funds.")
+        with open(keygen_script, 'w') as f:
+            f.write(keygen_content)
+        os.chmod(keygen_script, 0o755)
         
-        return public_key, str(keypair_path)
+        first_boot_script = self.rootfs_dir / "etc" / "local.d" / "init-wallet.start"
+        first_boot_script.parent.mkdir(parents=True, exist_ok=True)
+        
+        boot_init_content = '''#!/bin/sh
+# First boot wallet initialization
+if [ ! -f /wallet/keypair.json ]; then
+    python3 /usr/local/bin/init_wallet.py
+fi
+'''
+        
+        with open(first_boot_script, 'w') as f:
+            f.write(boot_init_content)
+        os.chmod(first_boot_script, 0o755)
+        
+        print_success("First-boot keygen script created")
+        print_info("Wallet will be generated on first boot of air-gapped device")
     
     def get_generated_pubkey(self) -> Optional[str]:
         return self.generated_pubkey
