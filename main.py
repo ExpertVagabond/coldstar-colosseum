@@ -57,18 +57,6 @@ class SolanaColdWalletCLI:
         console.print()
     
     def run(self):
-        clear_screen()
-        print_banner()
-        
-        print_info(f"Connected to: {SOLANA_RPC_URL}")
-        
-        if self.network.is_connected():
-            print_success("Network connection: OK")
-        else:
-            print_warning("Network connection: Failed (some features unavailable)")
-        
-        console.print()
-        
         while True:
             try:
                 self.main_menu()
@@ -81,7 +69,18 @@ class SolanaColdWalletCLI:
                 print_error(f"Error: {e}")
                 continue
     
+    def _draw_header(self):
+        clear_screen()
+        print_banner()
+        print_info(f"Network: {SOLANA_RPC_URL}")
+        if self.network.is_connected():
+            print_success("Status: Connected")
+        else:
+            print_warning("Status: Offline")
+        console.print()
+    
     def main_menu(self):
+        self._draw_header()
         devices = self.usb_manager.detect_usb_devices()
         
         if not devices:
@@ -109,17 +108,16 @@ class SolanaColdWalletCLI:
         
         choice_num = choice.split(".")[0].strip()
         
-        if choice_num == "1":
-            print_info("Scanning for USB devices...")
-            devices = self.usb_manager.detect_usb_devices()
-            if devices:
-                print_success(f"Found {len(devices)} USB device(s)")
-            else:
-                print_warning("No USB devices found. Please connect a device.")
-        elif choice_num == "2":
+        if choice_num == "2":
+            self._draw_header()
             self.show_network_status()
+            self._wait_for_key()
         elif choice_num == "0":
             self.exit_app()
+    
+    def _wait_for_key(self):
+        console.print()
+        console.input("[dim]Press Enter to continue...[/dim]")
     
     def _usb_detected_menu(self, devices):
         print_section_header("USB DEVICE DETECTED")
@@ -141,11 +139,15 @@ class SolanaColdWalletCLI:
         choice_num = choice.split(".")[0].strip()
         
         if choice_num == "1":
+            self._draw_header()
             self.flash_cold_wallet()
+            self._wait_for_key()
         elif choice_num == "2":
             self._mount_and_check_wallet(devices)
         elif choice_num == "3":
+            self._draw_header()
             self.show_network_status()
+            self._wait_for_key()
         elif choice_num == "0":
             self.exit_app()
     
@@ -199,20 +201,34 @@ class SolanaColdWalletCLI:
         
         choice_num = choice.split(".")[0].strip()
         
-        actions = {
-            "1": self.view_wallet_info,
-            "2": self.create_unsigned_transaction,
-            "3": self.sign_transaction,
-            "4": self.broadcast_transaction,
-            "5": self.request_airdrop,
-            "6": self.show_network_status,
-            "7": self._unmount_usb,
-            "0": self.exit_app
-        }
-        
-        action = actions.get(choice_num)
-        if action:
-            action()
+        if choice_num == "1":
+            self._draw_header()
+            self.view_wallet_info()
+            self._wait_for_key()
+        elif choice_num == "2":
+            self._draw_header()
+            self.create_unsigned_transaction()
+            self._wait_for_key()
+        elif choice_num == "3":
+            self._draw_header()
+            self.sign_transaction()
+            self._wait_for_key()
+        elif choice_num == "4":
+            self._draw_header()
+            self.broadcast_transaction()
+            self._wait_for_key()
+        elif choice_num == "5":
+            self._draw_header()
+            self.request_airdrop()
+            self._wait_for_key()
+        elif choice_num == "6":
+            self._draw_header()
+            self.show_network_status()
+            self._wait_for_key()
+        elif choice_num == "7":
+            self._unmount_usb()
+        elif choice_num == "0":
+            self.exit_app()
     
     def _unmount_usb(self):
         if self.current_usb_device:
