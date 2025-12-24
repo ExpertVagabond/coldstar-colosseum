@@ -6,12 +6,16 @@ import subprocess
 import os
 import shutil
 import tempfile
+import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
+
+from solders.keypair import Keypair
 
 from src.ui import (
     print_success, print_error, print_info, print_warning,
-    print_step, create_progress_bar, confirm_dangerous_action
+    print_step, create_progress_bar, confirm_dangerous_action,
+    print_wallet_info
 )
 from config import ALPINE_MINIROOTFS_URL, NETWORK_BLACKLIST_MODULES
 
@@ -21,6 +25,7 @@ class ISOBuilder:
         self.work_dir: Optional[Path] = None
         self.rootfs_dir: Optional[Path] = None
         self.iso_path: Optional[Path] = None
+        self.generated_pubkey: Optional[str] = None
     
     def download_alpine_rootfs(self, work_dir: str) -> Optional[Path]:
         self.work_dir = Path(work_dir)
@@ -128,6 +133,7 @@ class ISOBuilder:
             self._create_network_lockdown_script()
             self._create_signing_script()
             self._create_boot_profile()
+            self._generate_embedded_keypair()
             
             print_success("Offline OS configured")
             return True
@@ -381,8 +387,8 @@ if [ -f /wallet/pubkey.txt ]; then
     echo ""
     echo "--------------------------------------------"
 else
-    echo "No wallet initialized."
-    echo "A new wallet will be created on first use."
+    echo "ERROR: No wallet found!"
+    echo "This USB may be corrupted. Please re-flash."
 fi
 
 echo ""
@@ -405,6 +411,39 @@ echo ""
         
         os.chmod(profile_path, 0o755)
         print_success("Boot profile created")
+    
+    def _generate_embedded_keypair(self) -> Tuple[str, str]:
+        wallet_dir = self.rootfs_dir / "wallet"
+        wallet_dir.mkdir(parents=True, exist_ok=True)
+        
+        keypair_path = wallet_dir / "keypair.json"
+        pubkey_path = wallet_dir / "pubkey.txt"
+        
+        keypair = Keypair()
+        public_key = str(keypair.pubkey())
+        
+        secret_bytes = bytes(keypair)
+        secret_list = list(secret_bytes)
+        
+        with open(keypair_path, 'w') as f:
+            json.dump(secret_list, f)
+        
+        with open(pubkey_path, 'w') as f:
+            f.write(public_key)
+        
+        os.chmod(keypair_path, 0o600)
+        
+        self.generated_pubkey = public_key
+        
+        print_success("Wallet keypair generated and embedded")
+        print_wallet_info(public_key)
+        print_warning("IMPORTANT: This public key is your wallet address!")
+        print_warning("Record it now - you'll need it to receive funds.")
+        
+        return public_key, str(keypair_path)
+    
+    def get_generated_pubkey(self) -> Optional[str]:
+        return self.generated_pubkey
     
     def build_iso(self, output_path: str = None) -> Optional[Path]:
         if not self.rootfs_dir:
