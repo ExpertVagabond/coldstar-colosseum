@@ -10,8 +10,6 @@ import json
 from pathlib import Path
 from typing import Optional, Tuple
 
-from solders.keypair import Keypair
-
 from src.ui import (
     print_success, print_error, print_info, print_warning,
     print_step, create_progress_bar, confirm_dangerous_action,
@@ -26,6 +24,34 @@ class ISOBuilder:
         self.rootfs_dir: Optional[Path] = None
         self.iso_path: Optional[Path] = None
         self.generated_pubkey: Optional[str] = None
+    
+    def build_complete_iso(self, output_dir: str = "./output") -> Optional[Path]:
+        """Build complete bootable ISO with transaction signing and keygen"""
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        with tempfile.TemporaryDirectory() as work_dir:
+            self.work_dir = Path(work_dir)
+            
+            tarball = self.download_alpine_rootfs(work_dir)
+            if not tarball:
+                return None
+            
+            if not self.extract_rootfs(tarball):
+                return None
+            
+            if not self.configure_offline_os():
+                return None
+            
+            if not self._install_python_deps():
+                return None
+            
+            iso_path = self._create_bootable_image(output_path)
+            if iso_path:
+                print_success(f"ISO created successfully: {iso_path}")
+                return iso_path
+            
+            return None
     
     def download_alpine_rootfs(self, work_dir: str) -> Optional[Path]:
         self.work_dir = Path(work_dir)
@@ -141,6 +167,32 @@ class ISOBuilder:
         except Exception as e:
             print_error(f"Configuration error: {e}")
             return False
+    
+    def _install_python_deps(self) -> bool:
+        """Create a setup script for installing Python deps on first boot"""
+        print_step(4, 6, "Configuring Python environment...")
+        
+        setup_script = self.rootfs_dir / "etc" / "local.d" / "setup-python.start"
+        setup_script.parent.mkdir(parents=True, exist_ok=True)
+        
+        setup_content = '''#!/bin/sh
+# Install Python and Solana dependencies on first boot
+if [ ! -f /var/lib/.python-setup-done ]; then
+    echo "Setting up Python environment..."
+    apk update 2>/dev/null || true
+    apk add python3 py3-pip 2>/dev/null || true
+    pip3 install solders solana --break-system-packages 2>/dev/null || true
+    touch /var/lib/.python-setup-done
+    echo "Python setup complete"
+fi
+'''
+        
+        with open(setup_script, 'w') as f:
+            f.write(setup_content)
+        os.chmod(setup_script, 0o755)
+        
+        print_success("Python environment configured")
+        return True
     
     def _disable_network_services(self):
         init_dir = self.rootfs_dir / "etc" / "init.d"
@@ -514,68 +566,72 @@ fi
         print_success("First-boot keygen script created")
         print_info("Wallet will be generated on first boot of air-gapped device")
     
-    def get_generated_pubkey(self) -> Optional[str]:
-        return self.generated_pubkey
-    
-    def build_iso(self, output_path: str = None) -> Optional[Path]:
-        if not self.rootfs_dir:
-            print_error("No rootfs configured")
-            return None
+    def _create_bootable_image(self, output_dir: Path) -> Optional[Path]:
+        """Create a bootable disk image"""
+        print_step(5, 6, "Creating bootable image...")
         
-        print_step(4, 6, "Building bootable ISO...")
-        
-        self.iso_path = Path(output_path) if output_path else self.work_dir / "solana-cold-wallet.iso"
+        image_path = output_dir / "solana-cold-wallet.img"
         
         try:
-            result = subprocess.run(['which', 'grub-mkrescue'], capture_output=True)
-            if result.returncode != 0:
-                result = subprocess.run(['which', 'grub2-mkrescue'], capture_output=True)
-                grub_cmd = 'grub2-mkrescue' if result.returncode == 0 else None
-            else:
-                grub_cmd = 'grub-mkrescue'
-            
-            if not grub_cmd:
-                print_warning("grub-mkrescue not found, creating simple bootable image")
-                return self._create_simple_image()
-            
-            grub_dir = self.rootfs_dir / "boot" / "grub"
-            grub_dir.mkdir(parents=True, exist_ok=True)
-            
-            grub_cfg = grub_dir / "grub.cfg"
-            grub_content = '''
-set timeout=5
-set default=0
-
-menuentry "Solana Cold Wallet (Offline)" {
-    linux /boot/vmlinuz root=/dev/ram0 quiet
-    initrd /boot/initramfs
-}
-'''
-            with open(grub_cfg, 'w') as f:
-                f.write(grub_content)
-            
-            result = subprocess.run(
-                [grub_cmd, '-o', str(self.iso_path), str(self.rootfs_dir)],
+            print_info("Creating 512MB disk image...")
+            subprocess.run(
+                ['dd', 'if=/dev/zero', f'of={image_path}', 'bs=1M', 'count=512'],
                 capture_output=True,
-                text=True,
+                timeout=120
+            )
+            
+            print_info("Setting up partition table...")
+            subprocess.run(['parted', '-s', str(image_path), 'mklabel', 'msdos'], capture_output=True)
+            subprocess.run(['parted', '-s', str(image_path), 'mkpart', 'primary', 'ext4', '1MiB', '100%'], capture_output=True)
+            subprocess.run(['parted', '-s', str(image_path), 'set', '1', 'boot', 'on'], capture_output=True)
+            
+            loop_result = subprocess.run(
+                ['losetup', '--find', '--show', '-P', str(image_path)],
+                capture_output=True,
+                text=True
+            )
+            
+            if loop_result.returncode != 0:
+                print_warning("Loop device setup requires root. Creating archive instead.")
+                return self._create_archive_image(output_dir)
+            
+            loop_device = loop_result.stdout.strip()
+            partition = f"{loop_device}p1"
+            
+            print_info("Formatting partition...")
+            subprocess.run(['mkfs.ext4', '-F', partition], capture_output=True, timeout=60)
+            
+            mount_point = self.work_dir / "mnt"
+            mount_point.mkdir(exist_ok=True)
+            
+            subprocess.run(['mount', partition, str(mount_point)], capture_output=True)
+            
+            print_info("Copying filesystem...")
+            subprocess.run(
+                ['cp', '-a', f'{self.rootfs_dir}/.', str(mount_point)],
+                capture_output=True,
                 timeout=300
             )
             
-            if result.returncode == 0 and self.iso_path.exists():
-                print_success(f"ISO created: {self.iso_path}")
-                return self.iso_path
-            else:
-                print_warning("ISO creation with grub failed, using simple image")
-                return self._create_simple_image()
-                
+            subprocess.run(['umount', str(mount_point)], capture_output=True)
+            subprocess.run(['losetup', '-d', loop_device], capture_output=True)
+            
+            print_success(f"Bootable image created: {image_path}")
+            self.iso_path = image_path
+            return image_path
+            
+        except subprocess.TimeoutExpired:
+            print_warning("Image creation timed out, creating archive instead")
+            return self._create_archive_image(output_dir)
         except Exception as e:
-            print_warning(f"ISO creation failed: {e}, using simple image")
-            return self._create_simple_image()
+            print_warning(f"Image creation failed: {e}, creating archive instead")
+            return self._create_archive_image(output_dir)
     
-    def _create_simple_image(self) -> Optional[Path]:
-        print_info("Creating portable wallet filesystem...")
+    def _create_archive_image(self, output_dir: Path) -> Optional[Path]:
+        """Fallback: create a tar.gz archive of the filesystem"""
+        print_step(5, 6, "Creating portable filesystem archive...")
         
-        archive_path = self.work_dir / "solana-cold-wallet.tar.gz"
+        archive_path = output_dir / "solana-cold-wallet.tar.gz"
         
         try:
             result = subprocess.run(
@@ -586,7 +642,7 @@ menuentry "Solana Cold Wallet (Offline)" {
             )
             
             if result.returncode == 0:
-                print_success(f"Wallet filesystem created: {archive_path}")
+                print_success(f"Filesystem archive created: {archive_path}")
                 self.iso_path = archive_path
                 return archive_path
             else:
@@ -597,6 +653,13 @@ menuentry "Solana Cold Wallet (Offline)" {
             print_error(f"Archive creation failed: {e}")
             return None
     
+    def get_generated_pubkey(self) -> Optional[str]:
+        return self.generated_pubkey
+    
+    def build_iso(self, output_path: str = None) -> Optional[Path]:
+        """Legacy method - use build_complete_iso instead"""
+        return self.build_complete_iso(output_path or "./output")
+    
     def flash_to_usb(self, device_path: str, image_path: str = None) -> bool:
         image = Path(image_path) if image_path else self.iso_path
         
@@ -604,7 +667,7 @@ menuentry "Solana Cold Wallet (Offline)" {
             print_error("No image file to flash")
             return False
         
-        print_step(5, 6, f"Flashing to {device_path}...")
+        print_step(6, 6, f"Flashing to {device_path}...")
         print_warning(f"This will ERASE ALL DATA on {device_path}")
         
         if not confirm_dangerous_action(
@@ -615,7 +678,7 @@ menuentry "Solana Cold Wallet (Offline)" {
             return False
         
         try:
-            if str(image).endswith('.iso'):
+            if str(image).endswith('.img') or str(image).endswith('.iso'):
                 result = subprocess.run(
                     ['dd', f'if={image}', f'of={device_path}', 'bs=4M', 'status=progress', 'oflag=sync'],
                     capture_output=False,

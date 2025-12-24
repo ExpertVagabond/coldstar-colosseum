@@ -34,11 +34,9 @@ A browser-based Solana cold wallet system that enables secure offline transactio
 ### One-Time Setup
 
 1. **Download ISO** - User downloads the cold wallet ISO from the website
-2. **Flash to USB** - User flashes ISO to USB drive using:
-   - balenaEtcher (cross-platform, easiest)
-   - Rufus (Windows)
-   - dd command (Linux/macOS)
-   - Ventoy (multi-ISO USB, drag-and-drop)
+2. **Mount ISO to USB** - User downloads the ISO via GitHub and manually mounts it onto the USB drive:
+   - This process allows users to create a serialized device ready to use with the in-browser companion website,
+   - Users can sign transactions and view balance using this setup.
 3. **First Boot** - User boots an air-gapped PC from the USB
 4. **Keypair Generation** - Private keys are generated on the air-gapped device (never touches the internet)
 
