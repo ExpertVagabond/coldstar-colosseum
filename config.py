@@ -1,5 +1,7 @@
 """
 Solana Cold Wallet USB Tool - Configuration
+
+B - Love U 3000
 """
 
 SOLANA_RPC_URL = "https://api.devnet.solana.com"

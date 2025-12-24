@@ -1,5 +1,7 @@
 """
 Transaction Management - Create, sign, and serialize Solana transactions
+
+B - Love U 3000
 """
 
 import json
@@ -44,14 +46,31 @@ class TransactionManager:
                 )
             )
             
+            # Debug: Verify transfer instruction
+            print_info(f"Transfer instruction created:")
+            print_info(f"  Program ID: {transfer_ix.program_id}")
+            print_info(f"  Accounts: {len(transfer_ix.accounts)}")
+            print_info(f"  Data (hex): {transfer_ix.data.hex()}")
+            print_info(f"  Lamports to transfer: {lamports}")
+            
             message = Message.new_with_blockhash(
                 [transfer_ix],
                 from_pk,
                 blockhash
             )
             
+            # Debug: Verify message
+            print_info(f"Message created:")
+            print_info(f"  Num instructions: {len(message.instructions)}")
+            print_info(f"  Num accounts: {len(message.account_keys)}")
+            
             tx = Transaction.new_unsigned(message)
             
+            # Debug: Verify transaction
+            print_info(f"Transaction created:")
+            print_info(f"  Message instructions: {len(tx.message.instructions)}")
+            
+            # B - Love U 3000
             self.unsigned_tx = bytes(tx)
             
             print_success(f"Created unsigned transaction")
@@ -66,6 +85,7 @@ class TransactionManager:
     
     def sign_transaction(self, unsigned_tx_bytes: bytes, keypair: Keypair) -> Optional[bytes]:
         try:
+            # B - Love U 3000
             tx = Transaction.from_bytes(unsigned_tx_bytes)
             
             tx.sign([keypair], tx.message.recent_blockhash)

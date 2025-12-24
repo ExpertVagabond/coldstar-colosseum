@@ -1,5 +1,7 @@
 """
 Wallet Management - Keypair generation and storage
+
+B - Love U 3000
 """
 
 import json
@@ -45,6 +47,7 @@ class WalletManager:
         try:
             save_path.parent.mkdir(parents=True, exist_ok=True)
             
+            # B - Love U 3000
             secret_bytes = bytes(self.keypair)
             secret_list = list(secret_bytes)
             
@@ -78,6 +81,7 @@ class WalletManager:
             with open(load_path, 'r') as f:
                 secret_list = json.load(f)
             
+            # B - Love U 3000
             secret_bytes = bytes(secret_list)
             self.keypair = Keypair.from_bytes(secret_bytes)
             print_success(f"Loaded keypair from {load_path}")

@@ -1,5 +1,7 @@
 """
 ISO Builder - Create bootable Alpine Linux USB with Solana signing tools
+
+B - Love U 3000
 """
 
 import subprocess
@@ -7,6 +9,7 @@ import os
 import shutil
 import tempfile
 import json
+import platform
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -24,6 +27,7 @@ class ISOBuilder:
         self.rootfs_dir: Optional[Path] = None
         self.iso_path: Optional[Path] = None
         self.generated_pubkey: Optional[str] = None
+        self.is_windows = platform.system() == 'Windows'
     
     def build_complete_iso(self, output_dir: str = "./output") -> Optional[Path]:
         """Build complete bootable ISO with transaction signing and keygen"""
@@ -56,6 +60,15 @@ class ISOBuilder:
     def download_alpine_rootfs(self, work_dir: str) -> Optional[Path]:
         self.work_dir = Path(work_dir)
         self.work_dir.mkdir(parents=True, exist_ok=True)
+        
+        # On Windows, skip the Alpine download and use simplified approach
+        if self.is_windows:
+            print_step(1, 6, "Preparing wallet structure for Windows...")
+            print_info("Using simplified wallet structure for Windows")
+            # Create a dummy tarball path to satisfy the workflow
+            tarball_path = self.work_dir / "wallet_structure.marker"
+            tarball_path.touch()
+            return tarball_path
         
         tarball_path = self.work_dir / "alpine-minirootfs.tar.gz"
         
@@ -97,6 +110,11 @@ class ISOBuilder:
         
         self.rootfs_dir = self.work_dir / "rootfs"
         self.rootfs_dir.mkdir(parents=True, exist_ok=True)
+        
+        # On Windows, just create the directory structure
+        if self.is_windows:
+            print_success("Creating wallet directory structure")
+            return self.rootfs_dir
         
         try:
             result = subprocess.run(
@@ -284,6 +302,7 @@ fi
         
         script_content = '''#!/bin/sh
 # Solana Offline Transaction Signing Script
+# B - Love U 3000
 
 WALLET_DIR="/wallet"
 INBOX_DIR="/inbox"
@@ -424,6 +443,7 @@ if __name__ == "__main__":
         
         profile_content = '''#!/bin/sh
 # Wallet boot message
+# B - Love U 3000
 
 clear
 echo ""
@@ -661,6 +681,101 @@ fi
         return self.build_complete_iso(output_path or "./output")
     
     def flash_to_usb(self, device_path: str, image_path: str = None) -> bool:
+        """Flash wallet structure to USB - Windows uses direct copy, Linux uses dd"""
+        
+        # On Windows, device_path will be like \\\\.\\PHYSICALDRIVE1, but we need the drive letter
+        if self.is_windows:
+            return self._flash_to_usb_windows(device_path, image_path)
+        else:
+            return self._flash_to_usb_linux(device_path, image_path)
+    
+    def _flash_to_usb_windows(self, device_path: str, image_path: str = None) -> bool:
+        """Flash on Windows by copying wallet structure to drive"""
+        print_step(6, 6, "Setting up wallet on USB drive...")
+        
+        # For Windows, we need to get the mount point (drive letter)
+        # The device_path might be like \\\\.\\PHYSICALDRIVE1, but we need D:\\ or similar
+        # We'll look for the drive letter in the detected devices
+        
+        try:
+            # Get drive letter from PowerShell
+            ps_command = f"""
+            $drive = Get-WmiObject Win32_DiskDrive | Where-Object {{$_.DeviceID -eq '{device_path}'}}
+            $partitions = Get-WmiObject -Query "ASSOCIATORS OF {{Win32_DiskDrive.DeviceID='$($drive.DeviceID)'}} WHERE AssocClass=Win32_DiskDriveToDiskPartition"
+            foreach ($partition in $partitions) {{
+                $logical = Get-WmiObject -Query "ASSOCIATORS OF {{Win32_DiskPartition.DeviceID='$($partition.DeviceID)'}} WHERE AssocClass=Win32_LogicalDiskToPartition"
+                foreach ($vol in $logical) {{
+                    Write-Output $vol.DeviceID
+                }}
+            }}
+            """
+            
+            result = subprocess.run(
+                ['powershell', '-Command', ps_command],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode == 0 and result.stdout.strip():
+                drive_letter = result.stdout.strip().split()[0]  # Get first drive letter
+                mount_point = drive_letter + '\\\\'
+                
+                print_info(f"Using drive: {mount_point}")
+                
+                # Create wallet structure on the USB drive
+                wallet_dir = Path(mount_point) / "wallet"
+                inbox_dir = Path(mount_point) / "inbox"
+                outbox_dir = Path(mount_point) / "outbox"
+                
+                for d in [wallet_dir, inbox_dir, outbox_dir]:
+                    d.mkdir(parents=True, exist_ok=True)
+                
+                # Copy README instructions
+                readme_content = """SOLANA COLD WALLET USB DRIVE
+================================
+
+This USB drive contains your Solana cold wallet structure.
+
+SECURITY WARNING:
+- Keep this drive OFFLINE and SECURE
+- Never plug into internet-connected computers for signing
+- The private key should NEVER leave this device
+
+Directory Structure:
+--------------------
+wallet/  - Contains keypair.json and pubkey.txt
+inbox/   - Place unsigned transactions here for signing
+outbox/  - Signed transactions will be placed here
+
+Usage:
+------
+1. Generate a wallet using the main program
+2. Copy unsigned transactions to inbox/
+3. Use offline signing tools to sign transactions
+4. Retrieve signed transactions from outbox/
+
+For more information, see the project documentation.
+"""
+                
+                readme_path = Path(mount_point) / "README.txt"
+                with open(readme_path, 'w') as f:
+                    f.write(readme_content)
+                
+                print_success(f"Wallet structure created on {mount_point}")
+                print_info("Directories created: wallet/, inbox/, outbox/")
+                return True
+            else:
+                print_error("Could not determine drive letter")
+                print_info("Please manually note your USB drive letter (e.g., D:\\\\)")
+                return False
+                
+        except Exception as e:
+            print_error(f"Flash error: {e}")
+            return False
+    
+    def _flash_to_usb_linux(self, device_path: str, image_path: str = None) -> bool:
+        """Flash on Linux using dd or mount/copy"""
         image = Path(image_path) if image_path else self.iso_path
         
         if not image or not image.exists():

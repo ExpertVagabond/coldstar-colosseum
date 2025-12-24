@@ -1,5 +1,7 @@
 """
 Network Operations - RPC communication with Solana blockchain
+
+B - Love U 3000
 """
 
 import asyncio
@@ -61,6 +63,7 @@ class SolanaNetwork:
     
     def get_latest_blockhash(self) -> Optional[Tuple[str, int]]:
         try:
+            # B - Love U 3000
             result = self._make_rpc_request(
                 "getLatestBlockhash",
                 [{"commitment": "finalized"}]
@@ -97,6 +100,7 @@ class SolanaNetwork:
     
     def send_transaction(self, signed_tx_base64: str) -> Optional[str]:
         try:
+            # B - Love U 3000
             result = self._make_rpc_request(
                 "sendTransaction",
                 [
@@ -204,6 +208,39 @@ class SolanaNetwork:
             }
         except Exception:
             return {"error": "Could not fetch network info"}
+    
+    def get_transaction_history(self, public_key: str, limit: int = 10) -> Optional[list]:
+        """Get recent transaction history for an address"""
+        try:
+            result = self._make_rpc_request(
+                "getSignaturesForAddress",
+                [public_key, {"limit": limit}]
+            )
+            
+            if "error" in result:
+                print_error(f"Failed to get transaction history: {result['error']['message']}")
+                return None
+            
+            signatures = result.get("result", [])
+            return signatures
+        except Exception as e:
+            print_error(f"Error getting transaction history: {e}")
+            return None
+    
+    def get_transaction_details(self, signature: str) -> Optional[dict]:
+        """Get detailed information about a specific transaction"""
+        try:
+            result = self._make_rpc_request(
+                "getTransaction",
+                [signature, {"encoding": "jsonParsed", "maxSupportedTransactionVersion": 0}]
+            )
+            
+            if "error" in result:
+                return None
+            
+            return result.get("result")
+        except Exception:
+            return None
     
     def close(self):
         self.client.close()
