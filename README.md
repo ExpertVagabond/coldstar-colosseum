@@ -105,6 +105,8 @@ For true offline signing:
 
 ## Security Notes
 
+*I CAN NOT EXPRESS ENOUGH HOW THIS IS SUPER SUPER UNRELIABLE TO STORE REAL SOLANA ON - IT'S LIKE LEAVING A GOLD BAR IN LONDON AND EXPECTING IT TO BE THEIR 300 MILLISECONDS LATER*
+
 - **Private keys** are stored in `keypair.json` - NEVER share this file
 - The cold wallet USB has **no network drivers** - private keys cannot be exfiltrated
 - Always verify transaction details before signing
