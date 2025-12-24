@@ -35,21 +35,17 @@ class SolanaColdWalletCLI:
         self.transaction_manager = TransactionManager()
         self.iso_builder = ISOBuilder()
         
-        self.local_wallet_dir = Path("./local_wallet")
-        self.local_wallet_dir.mkdir(exist_ok=True)
-        
-        self.wallet_configured = False
+        self.current_usb_device = None
         self.current_public_key = None
+        self.usb_is_cold_wallet = False
     
-    def _check_existing_wallet(self) -> bool:
-        local_keypair = self.local_wallet_dir / "keypair.json"
-        if local_keypair.exists():
-            self.wallet_manager.set_wallet_directory(str(self.local_wallet_dir))
-            self.wallet_manager.load_keypair()
-            self.current_public_key = self.wallet_manager.get_public_key()
-            self.wallet_configured = True
-            return True
-        return False
+    def _check_usb_for_wallet(self, mount_point: str) -> tuple:
+        """Check if mounted USB has a cold wallet with pubkey.txt"""
+        pubkey_path = Path(mount_point) / "wallet" / "pubkey.txt"
+        if pubkey_path.exists():
+            with open(pubkey_path, 'r') as f:
+                return True, f.read().strip()
+        return False, None
     
     def _display_wallet_balance(self):
         if not self.current_public_key:
@@ -73,9 +69,6 @@ class SolanaColdWalletCLI:
         
         console.print()
         
-        if self._check_existing_wallet():
-            self._display_wallet_balance()
-        
         while True:
             try:
                 self.main_menu()
@@ -89,44 +82,25 @@ class SolanaColdWalletCLI:
                 continue
     
     def main_menu(self):
-        print_section_header("MAIN MENU")
+        devices = self.usb_manager.detect_usb_devices()
         
-        if self.wallet_configured:
-            options = [
-                "1. View Wallet / Balance",
-                "2. Send SOL",
-                "3. Sign Transaction (Offline)",
-                "4. Broadcast Signed Transaction",
-                "5. Request Devnet Airdrop",
-                "6. Network Status",
-                "7. Generate New Wallet",
-                "0. Exit"
-            ]
-            
-            actions = {
-                "1": self.view_wallet_info,
-                "2": self.create_unsigned_transaction,
-                "3": self.sign_transaction,
-                "4": self.broadcast_transaction,
-                "5": self.request_airdrop,
-                "6": self.show_network_status,
-                "7": self.generate_local_wallet,
-                "0": self.exit_app
-            }
+        if not devices:
+            self._no_usb_menu()
+        elif self.usb_is_cold_wallet and self.current_public_key:
+            self._wallet_menu()
         else:
-            options = [
-                "1. Detect USB Devices",
-                "2. Flash Cold Wallet OS to USB",
-                "3. Generate New Wallet",
-                "0. Exit"
-            ]
-            
-            actions = {
-                "1": self.detect_usb_devices,
-                "2": self.flash_cold_wallet,
-                "3": self.generate_local_wallet,
-                "0": self.exit_app
-            }
+            self._usb_detected_menu(devices)
+    
+    def _no_usb_menu(self):
+        print_section_header("NO USB DEVICE DETECTED")
+        print_warning("Please connect a USB drive to continue.")
+        console.print()
+        
+        options = [
+            "1. Refresh (Check for USB)",
+            "2. Network Status",
+            "0. Exit"
+        ]
         
         choice = select_menu_option(options, "Select an option:")
         
@@ -135,9 +109,118 @@ class SolanaColdWalletCLI:
         
         choice_num = choice.split(".")[0].strip()
         
+        if choice_num == "1":
+            print_info("Scanning for USB devices...")
+            devices = self.usb_manager.detect_usb_devices()
+            if devices:
+                print_success(f"Found {len(devices)} USB device(s)")
+            else:
+                print_warning("No USB devices found. Please connect a device.")
+        elif choice_num == "2":
+            self.show_network_status()
+        elif choice_num == "0":
+            self.exit_app()
+    
+    def _usb_detected_menu(self, devices):
+        print_section_header("USB DEVICE DETECTED")
+        print_device_list(devices)
+        console.print()
+        
+        options = [
+            "1. Flash Cold Wallet OS to USB",
+            "2. Mount USB (Check for existing wallet)",
+            "3. Network Status",
+            "0. Exit"
+        ]
+        
+        choice = select_menu_option(options, "Select an option:")
+        
+        if choice is None:
+            return
+        
+        choice_num = choice.split(".")[0].strip()
+        
+        if choice_num == "1":
+            self.flash_cold_wallet()
+        elif choice_num == "2":
+            self._mount_and_check_wallet(devices)
+        elif choice_num == "3":
+            self.show_network_status()
+        elif choice_num == "0":
+            self.exit_app()
+    
+    def _mount_and_check_wallet(self, devices):
+        if len(devices) == 1:
+            device = devices[0]
+        else:
+            device_options = [f"{i+1}. {d['device']} ({d['size']})" for i, d in enumerate(devices)]
+            device_options.append("Cancel")
+            
+            selection = select_menu_option(device_options, "Select device to mount:")
+            
+            if not selection or "Cancel" in selection:
+                return
+            
+            idx = int(selection.split(".")[0]) - 1
+            device = devices[idx]
+        
+        mount_point = self.usb_manager.mount_device(device['device'])
+        if mount_point:
+            is_wallet, pubkey = self._check_usb_for_wallet(mount_point)
+            if is_wallet:
+                self.usb_is_cold_wallet = True
+                self.current_public_key = pubkey
+                self.current_usb_device = device
+                print_success("Cold wallet found on USB!")
+                self._display_wallet_balance()
+            else:
+                print_info("No wallet found on this USB. You can flash it with Cold Wallet OS.")
+    
+    def _wallet_menu(self):
+        self._display_wallet_balance()
+        
+        print_section_header("WALLET OPERATIONS")
+        
+        options = [
+            "1. View Wallet / Balance",
+            "2. Send SOL",
+            "3. Sign Transaction (Offline)",
+            "4. Broadcast Signed Transaction",
+            "5. Request Devnet Airdrop",
+            "6. Network Status",
+            "7. Unmount USB / Switch Device",
+            "0. Exit"
+        ]
+        
+        choice = select_menu_option(options, "Select an option:")
+        
+        if choice is None:
+            return
+        
+        choice_num = choice.split(".")[0].strip()
+        
+        actions = {
+            "1": self.view_wallet_info,
+            "2": self.create_unsigned_transaction,
+            "3": self.sign_transaction,
+            "4": self.broadcast_transaction,
+            "5": self.request_airdrop,
+            "6": self.show_network_status,
+            "7": self._unmount_usb,
+            "0": self.exit_app
+        }
+        
         action = actions.get(choice_num)
         if action:
             action()
+    
+    def _unmount_usb(self):
+        if self.current_usb_device:
+            self.usb_manager.unmount_device(self.current_usb_device['device'])
+        self.current_usb_device = None
+        self.current_public_key = None
+        self.usb_is_cold_wallet = False
+        print_success("USB unmounted. You can now remove or switch devices.")
     
     def detect_usb_devices(self):
         print_section_header("USB DEVICE DETECTION")
@@ -247,52 +330,14 @@ class SolanaColdWalletCLI:
         finally:
             self.iso_builder.cleanup()
     
-    def generate_local_wallet(self):
-        print_section_header("GENERATE NEW WALLET")
-        
-        wallet_path = self.local_wallet_dir / "keypair.json"
-        
-        if wallet_path.exists():
-            print_warning("A wallet already exists in the local directory")
-            if not confirm_dangerous_action(
-                "Creating a new wallet will REPLACE the existing one!",
-                "REPLACE"
-            ):
-                print_info("Operation cancelled")
-                return
-        
-        self.wallet_manager.set_wallet_directory(str(self.local_wallet_dir))
-        
-        keypair, public_key = self.wallet_manager.generate_keypair()
-        
-        if self.wallet_manager.save_keypair(str(wallet_path)):
-            self.wallet_configured = True
-            self.current_public_key = public_key
-            
-            console.print()
-            balance = self.network.get_balance(public_key)
-            print_wallet_info(public_key, balance)
-            console.print()
-            print_warning("IMPORTANT: Back up your keypair.json file securely!")
-            print_info(f"Keypair location: {wallet_path}")
-    
     def view_wallet_info(self):
         print_section_header("WALLET INFORMATION")
         
-        wallet_options = []
-        
-        local_keypair = self.local_wallet_dir / "keypair.json"
-        if local_keypair.exists():
-            wallet_options.append("Local wallet (./local_wallet)")
-        
-        if self.usb_manager.mount_point and self.usb_manager.check_wallet_exists():
-            wallet_options.append(f"USB wallet ({self.usb_manager.mount_point})")
-        
-        wallet_options.append("Enter public key manually")
-        wallet_options.append("Cancel")
-        
-        if len(wallet_options) == 2:
-            print_info("No wallets found. Generate a wallet first.")
+        if self.current_public_key:
+            balance = self.network.get_balance(self.current_public_key)
+            print_wallet_info(self.current_public_key, balance)
+        else:
+            print_info("No wallet connected. Mount a USB with a cold wallet first.")
             manual = get_text_input("Or enter a public key to check balance: ")
             if manual and self.wallet_manager.validate_address(manual):
                 balance = self.network.get_balance(manual)
@@ -300,50 +345,15 @@ class SolanaColdWalletCLI:
                     print_wallet_info(manual, balance)
                 else:
                     print_wallet_info(manual)
-            return
-        
-        selection = select_menu_option(wallet_options, "Select wallet to view:")
-        
-        if not selection or "Cancel" in selection:
-            return
-        
-        public_key = None
-        
-        if "Local" in selection:
-            self.wallet_manager.set_wallet_directory(str(self.local_wallet_dir))
-            self.wallet_manager.load_keypair()
-            public_key = self.wallet_manager.get_public_key()
-        elif "USB" in selection:
-            paths = self.usb_manager.get_wallet_paths()
-            self.wallet_manager.load_keypair(paths['keypair'])
-            public_key = self.wallet_manager.get_public_key()
-        elif "manually" in selection:
-            public_key = get_text_input("Enter public key: ")
-            if not self.wallet_manager.validate_address(public_key):
-                print_error("Invalid Solana address")
-                return
-        
-        if public_key:
-            balance = self.network.get_balance(public_key)
-            print_wallet_info(public_key, balance)
     
     def create_unsigned_transaction(self):
         print_section_header("CREATE UNSIGNED TRANSACTION")
         
-        from_address = None
+        if not self.current_public_key:
+            print_error("No wallet connected. Mount a USB with a cold wallet first.")
+            return
         
-        local_keypair = self.local_wallet_dir / "keypair.json"
-        if local_keypair.exists():
-            self.wallet_manager.set_wallet_directory(str(self.local_wallet_dir))
-            self.wallet_manager.load_keypair()
-            from_address = self.wallet_manager.get_public_key()
-        
-        if not from_address:
-            from_address = get_text_input("Enter sender's public key: ")
-            if not self.wallet_manager.validate_address(from_address):
-                print_error("Invalid sender address")
-                return
-        
+        from_address = self.current_public_key
         print_info(f"From: {from_address}")
         
         balance = self.network.get_balance(from_address)
@@ -387,8 +397,13 @@ class SolanaColdWalletCLI:
         )
         
         if tx_bytes:
-            output_dir = self.local_wallet_dir / "transactions"
-            output_dir.mkdir(exist_ok=True)
+            if self.usb_manager.mount_point:
+                inbox_dir = Path(self.usb_manager.mount_point) / "inbox"
+                inbox_dir.mkdir(exist_ok=True)
+                output_dir = inbox_dir
+            else:
+                output_dir = Path("./transactions")
+                output_dir.mkdir(exist_ok=True)
             
             import time
             filename = f"unsigned_tx_{int(time.time())}.json"
@@ -398,84 +413,49 @@ class SolanaColdWalletCLI:
                 console.print()
                 print_success("Unsigned transaction created!")
                 print_info(f"File: {output_path}")
-                print_info("Copy this file to your cold wallet's /inbox directory for signing")
+                if self.usb_manager.mount_point:
+                    print_info("Transaction saved to USB inbox.")
+                    print_info("Boot the USB on an air-gapped computer to sign.")
+                else:
+                    print_info("Copy this file to your cold wallet's /inbox directory for signing")
     
     def sign_transaction(self):
-        print_section_header("SIGN TRANSACTION (OFFLINE)")
+        print_section_header("SIGN TRANSACTION")
+        print_info("Signing happens on the AIR-GAPPED cold wallet device.")
+        print_info("This option checks for signed transactions in the USB outbox.")
+        console.print()
         
-        tx_dir = self.local_wallet_dir / "transactions"
-        
-        unsigned_files = list(tx_dir.glob("unsigned_*.json")) if tx_dir.exists() else []
-        
-        if not unsigned_files:
-            print_warning("No unsigned transactions found")
-            manual_path = get_text_input("Enter path to unsigned transaction file: ")
-            if manual_path:
-                unsigned_files = [Path(manual_path)]
-            else:
-                return
-        
-        file_options = [f.name for f in unsigned_files]
-        file_options.append("Cancel")
-        
-        selection = select_menu_option(file_options, "Select transaction to sign:")
-        
-        if not selection or "Cancel" in selection:
+        if not self.usb_manager.mount_point:
+            print_error("No USB mounted. Mount your cold wallet USB first.")
             return
         
-        tx_path = tx_dir / selection if tx_dir.exists() else Path(selection)
+        outbox_dir = Path(self.usb_manager.mount_point) / "outbox"
         
-        tx_bytes = self.transaction_manager.load_unsigned_transaction(str(tx_path))
-        if not tx_bytes:
-            return
+        signed_files = list(outbox_dir.glob("signed_*.json")) if outbox_dir.exists() else []
         
-        keypair = None
-        local_keypair = self.local_wallet_dir / "keypair.json"
-        
-        if local_keypair.exists():
-            print_info("Loading local wallet for signing...")
-            self.wallet_manager.set_wallet_directory(str(self.local_wallet_dir))
-            keypair = self.wallet_manager.load_keypair()
-        
-        if not keypair:
-            keypair_path = get_text_input("Enter path to keypair.json: ")
-            if keypair_path:
-                keypair = self.wallet_manager.load_keypair(keypair_path)
-        
-        if not keypair:
-            print_error("No keypair available for signing")
-            return
-        
-        print_warning("You are about to sign this transaction with your private key")
-        if not confirm_dangerous_action("Sign this transaction?", "SIGN"):
-            return
-        
-        signed_bytes = self.transaction_manager.sign_transaction(tx_bytes, keypair)
-        
-        if signed_bytes:
-            import time
-            filename = f"signed_tx_{int(time.time())}.json"
-            output_path = tx_dir / filename
-            
-            if self.transaction_manager.save_signed_transaction(signed_bytes, str(output_path)):
-                console.print()
-                print_success("Transaction signed successfully!")
-                print_info(f"Signed transaction: {output_path}")
+        if signed_files:
+            print_success(f"Found {len(signed_files)} signed transaction(s) ready to broadcast")
+            for f in signed_files:
+                print_info(f"  - {f.name}")
+        else:
+            print_warning("No signed transactions found in USB outbox.")
+            print_info("Boot the cold wallet USB on an air-gapped computer to sign transactions.")
     
     def broadcast_transaction(self):
         print_section_header("BROADCAST SIGNED TRANSACTION")
         
-        tx_dir = self.local_wallet_dir / "transactions"
+        if not self.usb_manager.mount_point:
+            print_error("No USB mounted. Mount your cold wallet USB first.")
+            return
         
-        signed_files = list(tx_dir.glob("signed_*.json")) if tx_dir.exists() else []
+        outbox_dir = Path(self.usb_manager.mount_point) / "outbox"
+        
+        signed_files = list(outbox_dir.glob("signed_*.json")) if outbox_dir.exists() else []
         
         if not signed_files:
-            print_warning("No signed transactions found")
-            manual_path = get_text_input("Enter path to signed transaction file: ")
-            if manual_path:
-                signed_files = [Path(manual_path)]
-            else:
-                return
+            print_warning("No signed transactions found in USB outbox")
+            print_info("Sign transactions on the air-gapped device first.")
+            return
         
         file_options = [f.name for f in signed_files]
         file_options.append("Cancel")
@@ -485,7 +465,7 @@ class SolanaColdWalletCLI:
         if not selection or "Cancel" in selection:
             return
         
-        tx_path = tx_dir / selection if tx_dir.exists() else Path(selection)
+        tx_path = outbox_dir / selection
         
         tx_bytes = self.transaction_manager.load_signed_transaction(str(tx_path))
         if not tx_bytes:
@@ -525,20 +505,12 @@ class SolanaColdWalletCLI:
             print_error("Airdrops are only available on Devnet")
             return
         
-        public_key = None
+        if not self.current_public_key:
+            print_error("No wallet connected. Mount a USB with a cold wallet first.")
+            return
         
-        local_keypair = self.local_wallet_dir / "keypair.json"
-        if local_keypair.exists():
-            self.wallet_manager.set_wallet_directory(str(self.local_wallet_dir))
-            self.wallet_manager.load_keypair()
-            public_key = self.wallet_manager.get_public_key()
-            print_info(f"Using wallet: {public_key}")
-        
-        if not public_key:
-            public_key = get_text_input("Enter public key for airdrop: ")
-            if not self.wallet_manager.validate_address(public_key):
-                print_error("Invalid address")
-                return
+        public_key = self.current_public_key
+        print_info(f"Wallet: {public_key}")
         
         amount = get_float_input("Enter amount (max 2 SOL): ", 1.0)
         if amount > 2:
