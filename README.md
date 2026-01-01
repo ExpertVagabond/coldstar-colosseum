@@ -1,5 +1,14 @@
 # Coldstar
 
+```
+⚠️  EXPERIMENTAL SOFTWARE - BETA VERSION
+────────────────────────────────────────────────────────────────
+This software is experimental and under active development.
+Not formally audited. Do not use with funds you cannot afford to lose.
+Subject to breaking changes. For testing and advanced users only.
+Use at your own risk.
+```
+
 Coldstar is a CLI-first cold wallet system that transforms any standard USB drive into a disposable, RAM-only signing medium. It eliminates long-lived private key exposure by ensuring keys are decrypted only in volatile memory and only for the duration of transaction signing.
 
 Coldstar is designed for developers, traders, and operators who value verifiability, automation, and explicit control over convenience-oriented hardware wallets.
