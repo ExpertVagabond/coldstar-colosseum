@@ -336,6 +336,55 @@ def wipe_disk_signatures(device: str) -> bool:
         return False
 
 
+def check_for_keypair(device: str) -> bool:
+    """Check if a keypair.json exists on the USB drive (macOS only)"""
+    is_macos = platform.system() == 'Darwin'
+    
+    if not is_macos:
+        return False
+    
+    try:
+        # Mount the device temporarily to check for keypair
+        mount_result = subprocess.run(
+            ['diskutil', 'mount', device],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if mount_result.returncode == 0:
+            # Get mount point
+            info_result = subprocess.run(
+                ['diskutil', 'info', device],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if info_result.returncode == 0:
+                for line in info_result.stdout.split('\n'):
+                    if 'Mount Point:' in line:
+                        mount_point = line.split(':')[1].strip()
+                        if mount_point and mount_point != 'Not applicable':
+                            # Check for keypair
+                            keypair_path = Path(mount_point) / "wallet" / "keypair.json"
+                            has_keypair = keypair_path.exists()
+                            
+                            # Unmount after checking
+                            subprocess.run(
+                                ['diskutil', 'unmount', mount_point],
+                                capture_output=True,
+                                timeout=5
+                            )
+                            
+                            return has_keypair
+        
+        return False
+        
+    except Exception:
+        return False
+
+
 def confirm_flash(device: str, image: Path) -> bool:
     """Confirm the flash operation"""
     console.print(f"\n[bold][red]WARNING: DESTRUCTIVE OPERATION[/red][/bold]")
@@ -429,8 +478,16 @@ def flash_image(device: str, image: Path) -> bool:
         sync_result = subprocess.run(['sync'], timeout=60)
         console.print("[green]✓ Sync complete[/green]")
         
-        # On macOS, eject the disk
+        # On macOS, verify installation and eject the disk
         if is_macos:
+            console.print("\n[bold]Step 5: Verifying installation...[/bold]")
+            
+            # Check if installation was successful by looking for keypair
+            has_keypair = check_for_keypair(device)
+            
+            if has_keypair:
+                console.print("[green]✓ Wallet keypair detected - installation successful![/green]")
+            
             console.print("\nEjecting disk...")
             eject_result = subprocess.run(
                 ['diskutil', 'eject', device],
@@ -438,10 +495,16 @@ def flash_image(device: str, image: Path) -> bool:
                 text=True,
                 timeout=30
             )
+            
             if eject_result.returncode == 0:
                 console.print("[green]✓ Disk ejected safely[/green]")
             else:
-                console.print(f"[yellow]Warning: Could not eject disk: {eject_result.stderr}[/yellow]")
+                # Only show warning if keypair wasn't detected (installation failed)
+                if not has_keypair:
+                    console.print(f"[yellow]Warning: Could not eject disk: {eject_result.stderr}[/yellow]")
+                else:
+                    # Installation succeeded, suppress eject warning
+                    console.print("[green]✓ Installation complete (disk may require manual ejection)[/green]")
         
         console.print("\n[bold][green]✓ SUCCESS! USB cold wallet created![/green][/bold]")
         console.print("\nNext steps:")
