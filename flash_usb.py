@@ -14,6 +14,7 @@ B - Love U 3000
 import subprocess
 import sys
 import os
+import platform
 from pathlib import Path
 
 try:
@@ -49,6 +50,14 @@ def print_banner():
 
 
 def check_root():
+    # On macOS, diskutil can work without root for some operations
+    if platform.system() == 'Darwin':
+        # Just warn but don't exit
+        if os.geteuid() != 0:
+            console.print("[yellow]Note: Running without root. Some operations may require sudo.[/yellow]")
+        return
+    
+    # On Linux, require root
     if os.geteuid() != 0:
         console.print("[red]ERROR: This script must be run as root (sudo)[/red]")
         console.print("Usage: sudo python3 flash_usb.py")
@@ -75,6 +84,70 @@ def list_usb_devices() -> list:
     """List available USB block devices"""
     devices = []
     
+    # macOS support using diskutil
+    if platform.system() == 'Darwin':
+        try:
+            result = subprocess.run(
+                ['diskutil', 'list'],
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode != 0:
+                console.print("[yellow]Warning: Could not list devices with diskutil[/yellow]")
+                return devices
+            
+            # Parse diskutil output
+            lines = result.stdout.split('\n')
+            current_disk = None
+            
+            for line in lines:
+                # Look for disk identifiers
+                if '/dev/disk' in line and '(external' in line:
+                    parts = line.split()
+                    for part in parts:
+                        if part.startswith('/dev/disk'):
+                            disk_name = part.rstrip(':')
+                            
+                            # Get detailed info
+                            info_result = subprocess.run(
+                                ['diskutil', 'info', disk_name],
+                                capture_output=True,
+                                text=True,
+                                timeout=5
+                            )
+                            
+                            if info_result.returncode == 0:
+                                size = "Unknown"
+                                model = "USB Device"
+                                
+                                for info_line in info_result.stdout.split('\n'):
+                                    if 'Disk Size:' in info_line:
+                                        # Extract size (e.g., "32.0 GB")
+                                        parts = info_line.split()
+                                        for i, p in enumerate(parts):
+                                            if 'GB' in p or 'MB' in p:
+                                                if i > 0:
+                                                    size = f"{parts[i-1]} {p}"
+                                                break
+                                    elif 'Device / Media Name:' in info_line:
+                                        model = info_line.split(':', 1)[1].strip()
+                                
+                                devices.append({
+                                    'name': disk_name.replace('/dev/', ''),
+                                    'path': disk_name,
+                                    'size': size,
+                                    'model': model
+                                })
+                            break
+            
+            return devices
+            
+        except Exception as e:
+            console.print(f"[yellow]Warning: Could not list devices: {e}[/yellow]")
+            return devices
+    
+    # Linux support using lsblk
     try:
         result = subprocess.run(
             ['lsblk', '-d', '-o', 'NAME,SIZE,TYPE,TRAN,MODEL', '-n'],
@@ -159,9 +232,28 @@ def flash_image(device: str, image: Path) -> bool:
     console.print(f"\n[bold]Flashing {image.name} to {device}...[/bold]")
     console.print("This may take several minutes.\n")
     
+    is_macos = platform.system() == 'Darwin'
+    
     try:
+        # On macOS, unmount the disk first (but don't eject)
+        if is_macos:
+            console.print(f"Unmounting {device}...")
+            subprocess.run(['diskutil', 'unmountDisk', device], timeout=30)
+        
         if str(image).endswith('.img') or str(image).endswith('.iso'):
-            cmd = ['dd', f'if={image}', f'of={device}', 'bs=4M', 'status=progress', 'oflag=sync']
+            # For macOS, use rdisk for faster writes
+            target_device = device
+            if is_macos and 'disk' in device:
+                target_device = device.replace('/dev/disk', '/dev/rdisk')
+            
+            cmd = ['dd', f'if={image}', f'of={target_device}', 'bs=4m' if is_macos else 'bs=4M']
+            
+            # Add status on macOS if supported
+            if not is_macos:
+                cmd.extend(['status=progress', 'oflag=sync'])
+            
+            console.print(f"Writing image to {target_device}...")
+            result = subprocess.run(cmd, timeout=600)
         else:
             console.print("Formatting USB as ext4...")
             subprocess.run(['mkfs.ext4', '-F', device], timeout=60)
@@ -185,10 +277,14 @@ def flash_image(device: str, image: Path) -> bool:
                 return True
             return False
         
-        result = subprocess.run(cmd, timeout=600)
-        
+        # Sync to ensure all data is written
         console.print("Syncing...")
         subprocess.run(['sync'])
+        
+        # On macOS, eject the disk
+        if is_macos:
+            console.print("Ejecting disk...")
+            subprocess.run(['diskutil', 'eject', device], timeout=30)
         
         if result.returncode == 0:
             console.print("\n[bold][green]SUCCESS! USB cold wallet created![/green][/bold]")

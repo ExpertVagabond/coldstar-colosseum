@@ -1,5 +1,11 @@
 # Coldstar
 
+Coldstar is a CLI-first cold wallet system that transforms any standard USB drive into a disposable, RAM-only signing medium. It eliminates long-lived private key exposure by ensuring keys are decrypted only in volatile memory and only for the duration of transaction signing.
+
+Coldstar is designed for developers, traders, and operators who value verifiability, automation, and explicit control over convenience-oriented hardware wallets.
+
+This repository contains the core implementation, documentation, and tooling required to initialize USB-based cold wallets and perform offline transaction signing.
+
 ```
 ⚠️  EXPERIMENTAL SOFTWARE - BETA VERSION
 ────────────────────────────────────────────────────────────────
@@ -8,12 +14,6 @@ Not formally audited. Do not use with funds you cannot afford to lose.
 Subject to breaking changes. For testing and advanced users only.
 Use at your own risk.
 ```
-
-Coldstar is a CLI-first cold wallet system that transforms any standard USB drive into a disposable, RAM-only signing medium. It eliminates long-lived private key exposure by ensuring keys are decrypted only in volatile memory and only for the duration of transaction signing.
-
-Coldstar is designed for developers, traders, and operators who value verifiability, automation, and explicit control over convenience-oriented hardware wallets.
-
-This repository contains the core implementation, documentation, and tooling required to initialize USB-based cold wallets and perform offline transaction signing.
 
 ---
 
@@ -568,6 +568,8 @@ USB Drive
 - [FIRST_BOOT_PROCESS.md](documentation/FIRST_BOOT_PROCESS.md) - Detailed technical specification
 - [FIRST_BOOT_IMPLEMENTATION.md](documentation/FIRST_BOOT_IMPLEMENTATION.md) - Implementation details and code walkthrough
 - [FIRST_BOOT_QUICKSTART.md](documentation/FIRST_BOOT_QUICKSTART.md) - Quick start guide for users
+- [STEP7_VISUAL_GUIDE.md](STEP7_VISUAL_GUIDE.md) - Visual guide to the 7-step USB flash process with automatic wallet generation
+- [STEP7_QUICK_REFERENCE.md](STEP7_QUICK_REFERENCE.md) - Quick reference for Step 7 implementation
 
 ---
 

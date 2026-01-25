@@ -19,12 +19,17 @@ class USBManager:
         self.detected_devices: List[Dict] = []
         self.selected_device: Optional[Dict] = None
         self.mount_point: Optional[str] = None
-        self.is_windows = platform.system() == 'Windows'
+        self.system = platform.system()
+        self.is_windows = self.system == 'Windows'
+        self.is_macos = self.system == 'Darwin'
+        self.is_linux = self.system == 'Linux'
     
     def detect_usb_devices(self) -> List[Dict]:
-        """Detect USB devices - supports both Windows and Linux"""
+        """Detect USB devices - supports Windows, macOS, and Linux"""
         if self.is_windows:
             return self._detect_windows()
+        elif self.is_macos:
+            return self._detect_macos()
         else:
             return self._detect_linux()
     
@@ -154,6 +159,180 @@ class USBManager:
             print_error(f"Simple detection failed: {e}")
             return []
     
+    def _detect_macos(self) -> List[Dict]:
+        """Detect USB devices on macOS using diskutil"""
+        devices = []
+        
+        try:
+            # Get list of external disks
+            result = subprocess.run(
+                ['diskutil', 'list', '-plist', 'external'],
+                capture_output=True,
+                timeout=10
+            )
+            
+            if result.returncode != 0:
+                print_warning("Could not run diskutil")
+                return devices
+            
+            # Parse plist output
+            import plistlib
+            plist_data = plistlib.loads(result.stdout)
+            
+            # Get all external disks
+            for disk in plist_data.get('AllDisksAndPartitions', []):
+                device_id = disk.get('DeviceIdentifier', '')
+                if not device_id:
+                    continue
+                
+                # Get detailed info for this disk
+                info_result = subprocess.run(
+                    ['diskutil', 'info', '-plist', device_id],
+                    capture_output=True,
+                    timeout=5
+                )
+                
+                if info_result.returncode != 0:
+                    continue
+                
+                disk_info = plistlib.loads(info_result.stdout)
+                
+                # Only include removable USB devices
+                is_removable = disk_info.get('Removable', False) or disk_info.get('Internal', True) == False
+                protocol = disk_info.get('BusProtocol', '')
+                
+                if is_removable and ('USB' in protocol or 'Secure Digital' in protocol):
+                    size_bytes = disk_info.get('TotalSize', 0)
+                    size_gb = size_bytes / (1024**3)
+                    
+                    dev_info = {
+                        'device': f"/dev/{device_id}",
+                        'size': f"{size_gb:.1f}GB" if size_gb > 0 else "Unknown",
+                        'model': disk_info.get('MediaName', 'USB Device').strip(),
+                        'mountpoint': None,
+                        'partitions': []
+                    }
+                    
+                    # Get partition information
+                    for partition in disk.get('Partitions', []):
+                        part_id = partition.get('DeviceIdentifier', '')
+                        if not part_id:
+                            continue
+                        
+                        # Get partition details
+                        part_result = subprocess.run(
+                            ['diskutil', 'info', '-plist', part_id],
+                            capture_output=True,
+                            timeout=5
+                        )
+                        
+                        if part_result.returncode == 0:
+                            part_info = plistlib.loads(part_result.stdout)
+                            part_size = part_info.get('TotalSize', 0)
+                            part_size_gb = part_size / (1024**3)
+                            mount_point = part_info.get('MountPoint', '')
+                            
+                            partition_data = {
+                                'device': f"/dev/{part_id}",
+                                'size': f"{part_size_gb:.1f}GB" if part_size_gb > 0 else "Unknown",
+                                'mountpoint': mount_point if mount_point else None
+                            }
+                            dev_info['partitions'].append(partition_data)
+                            
+                            if mount_point and not dev_info['mountpoint']:
+                                dev_info['mountpoint'] = mount_point
+                    
+                    devices.append(dev_info)
+            
+            self.detected_devices = devices
+            return devices
+            
+        except subprocess.TimeoutExpired:
+            print_error("Device detection timed out")
+            return []
+        except ImportError:
+            print_error("plistlib not available - using fallback method")
+            return self._detect_macos_fallback()
+        except Exception as e:
+            print_error(f"Error detecting USB devices on macOS: {e}")
+            return self._detect_macos_fallback()
+    
+    def _detect_macos_fallback(self) -> List[Dict]:
+        """Fallback macOS detection using simple diskutil commands"""
+        devices = []
+        
+        try:
+            # List all disks
+            result = subprocess.run(
+                ['diskutil', 'list'],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode != 0:
+                return devices
+            
+            # Parse output to find external disks
+            lines = result.stdout.split('\n')
+            current_disk = None
+            
+            for line in lines:
+                # Look for disk identifiers like /dev/disk2
+                if '/dev/disk' in line:
+                    parts = line.split()
+                    for part in parts:
+                        if part.startswith('/dev/disk'):
+                            current_disk = part
+                            break
+                
+                # Check if it's external
+                if current_disk and 'external' in line.lower():
+                    # Get info for this disk
+                    info_result = subprocess.run(
+                        ['diskutil', 'info', current_disk],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    
+                    if info_result.returncode == 0:
+                        info_lines = info_result.stdout.split('\n')
+                        size = "Unknown"
+                        model = "USB Device"
+                        mounted = None
+                        
+                        for info_line in info_lines:
+                            if 'Disk Size:' in info_line:
+                                # Extract size
+                                if 'GB' in info_line:
+                                    size_match = info_line.split('(')[1].split('GB')[0].strip() if '(' in info_line else "Unknown"
+                                    size = f"{size_match}GB" if size_match != "Unknown" else "Unknown"
+                            elif 'Device / Media Name:' in info_line:
+                                model = info_line.split(':')[1].strip()
+                            elif 'Mount Point:' in info_line:
+                                mount = info_line.split(':')[1].strip()
+                                if mount and mount != 'Not applicable':
+                                    mounted = mount
+                        
+                        dev_info = {
+                            'device': current_disk,
+                            'size': size,
+                            'model': model,
+                            'mountpoint': mounted,
+                            'partitions': []
+                        }
+                        
+                        devices.append(dev_info)
+                        current_disk = None
+            
+            self.detected_devices = devices
+            return devices
+            
+        except Exception as e:
+            print_error(f"Fallback detection failed: {e}")
+            return []
+    
     def _detect_linux(self) -> List[Dict]:
         """Detect USB devices on Linux using lsblk"""
         devices = []
@@ -266,11 +445,64 @@ class USBManager:
         return None
     
     def mount_device(self, device_path: str = None, mount_point: str = None) -> Optional[str]:
-        """Mount a device - Windows drives are already mounted"""
+        """Mount a device - Windows and macOS drives are typically already mounted"""
         device = device_path or (self.selected_device['device'] if self.selected_device else None)
         if not device:
             print_error("No device specified")
             return None
+        
+        # On macOS, check if already mounted or mount using diskutil
+        if self.is_macos:
+            if self.selected_device and self.selected_device.get('mountpoint'):
+                self.mount_point = self.selected_device['mountpoint']
+                print_success(f"Using mounted volume: {self.mount_point}")
+                self.first_instance_boot_process(self.mount_point)
+                return self.mount_point
+            elif self.selected_device and self.selected_device.get('partitions') and len(self.selected_device['partitions']) > 0:
+                partition = self.selected_device['partitions'][0]
+                if partition.get('mountpoint'):
+                    self.mount_point = partition['mountpoint']
+                    print_success(f"Using mounted volume: {self.mount_point}")
+                    self.first_instance_boot_process(self.mount_point)
+                    return self.mount_point
+                else:
+                    # Try to mount using diskutil
+                    part_device = partition['device']
+                    try:
+                        result = subprocess.run(
+                            ['diskutil', 'mount', part_device],
+                            capture_output=True,
+                            text=True,
+                            timeout=30
+                        )
+                        
+                        if result.returncode == 0:
+                            # Get mount point
+                            info_result = subprocess.run(
+                                ['diskutil', 'info', part_device],
+                                capture_output=True,
+                                text=True,
+                                timeout=5
+                            )
+                            
+                            if info_result.returncode == 0:
+                                for line in info_result.stdout.split('\n'):
+                                    if 'Mount Point:' in line:
+                                        mount_pt = line.split(':')[1].strip()
+                                        if mount_pt and mount_pt != 'Not applicable':
+                                            self.mount_point = mount_pt
+                                            print_success(f"Mounted at: {self.mount_point}")
+                                            self.first_instance_boot_process(self.mount_point)
+                                            return self.mount_point
+                        
+                        print_error(f"Failed to mount: {result.stderr}")
+                        return None
+                    except Exception as e:
+                        print_error(f"Mount error: {e}")
+                        return None
+            else:
+                print_error("No partition found to mount")
+                return None
         
         # On Windows, drives are already mounted
         if self.is_windows:
@@ -346,11 +578,49 @@ class USBManager:
             return None
     
     def unmount_device(self, mount_point: str = None) -> bool:
-        """Unmount a device - on Windows, this is a no-op"""
+        """Unmount a device"""
         target = mount_point or self.mount_point
         if not target:
             print_warning("No mount point to unmount")
             return True
+        
+        # On macOS, use diskutil to unmount
+        if self.is_macos:
+            try:
+                print_info("Unmounting volume...")
+                result = subprocess.run(
+                    ['diskutil', 'unmount', target],
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                
+                if result.returncode == 0:
+                    print_success(f"Unmounted {target}")
+                    if target == self.mount_point:
+                        self.mount_point = None
+                    return True
+                else:
+                    # Try force unmount
+                    print_warning("Trying force unmount...")
+                    result = subprocess.run(
+                        ['diskutil', 'unmount', 'force', target],
+                        capture_output=True,
+                        text=True,
+                        timeout=30
+                    )
+                    
+                    if result.returncode == 0:
+                        print_success(f"Force unmounted {target}")
+                        if target == self.mount_point:
+                            self.mount_point = None
+                        return True
+                    else:
+                        print_error(f"Unmount failed: {result.stderr}")
+                        return False
+            except Exception as e:
+                print_error(f"Unmount error: {e}")
+                return False
         
         # On Windows, we don't need to unmount drives
         if self.is_windows:
@@ -436,7 +706,7 @@ class USBManager:
             except:
                 return False
         else:
-            # On Linux/Unix
+            # On Linux/macOS/Unix
             return os.geteuid() == 0
     
     def check_permissions(self) -> bool:
@@ -444,6 +714,19 @@ class USBManager:
         # On Windows, admin privileges are less critical for basic USB access
         if self.is_windows:
             return True
+        
+        # On macOS, some operations may require sudo but diskutil often works without
+        if self.is_macos:
+            # Try to check if we can run diskutil
+            try:
+                result = subprocess.run(
+                    ['diskutil', 'list'],
+                    capture_output=True,
+                    timeout=5
+                )
+                return result.returncode == 0
+            except:
+                return True  # Assume we have permissions
         
         # On Linux, root is required for mount operations
         if not self.is_root():
