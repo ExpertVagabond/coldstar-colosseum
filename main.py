@@ -252,10 +252,14 @@ class SolanaColdWalletCLI:
         print_warning(f"⚠️  ALL DATA ON {device['device']} WILL BE ERASED! ⚠️")
         console.print()
         
-        if not confirm_dangerous_action(
-            f"Erase and flash {device['device']}?",
-            "FLASH"
-        ):
+        # Simple yes/no confirmation is sufficient
+        from src.ui import select_menu_option
+        confirm_choice = select_menu_option(
+            ["Yes, erase and flash", "Cancel"],
+            f"Erase and flash {device['device']}?"
+        )
+        
+        if not confirm_choice or "Cancel" in confirm_choice:
             print_info("Flash operation cancelled")
             return
         
