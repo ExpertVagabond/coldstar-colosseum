@@ -337,6 +337,7 @@ Write down or photograph this address to receive payments."""
         if len(devices) == 1:
             idx = 0
             device = devices[0]
+            print_info(f"Auto-selected: {device['device']} ({device['size']})")
         else:
             device_options = [f"{i+1}. {d['device']} ({d['size']})" for i, d in enumerate(devices)]
             device_options.append("Cancel")
@@ -395,16 +396,7 @@ Write down or photograph this address to receive payments."""
         
         console.print()
         
-        confirm = confirm_dangerous_action(
-            "Generate wallet on this USB drive?",
-            "CREATE"
-        )
-        
-        if not confirm:
-            print_info("Wallet creation cancelled")
-            return
-        
-        # save_keypair will prompt for password and encrypt
+        # save_keypair will prompt for password which serves as confirmation
         if self.wallet_manager.save_keypair():
             self.usb_is_cold_wallet = True
             self.current_public_key = public_key
@@ -425,12 +417,6 @@ Write down or photograph this address to receive payments."""
     def quick_send_transaction(self):
         """Create, sign, and broadcast a transaction in one step"""
         print_section_header("QUICK SEND")
-        
-        print_info("For maximum security, consider using the 3-step process:")
-        print_info("  1. Create Unsigned Transaction")
-        print_info("  2. Sign on Air-Gapped Device")
-        print_info("  3. Broadcast Signed Transaction")
-        console.print()
         
         if not self.current_public_key:
             print_error("No wallet connected. Mount a USB with a cold wallet first.")
@@ -623,15 +609,9 @@ Write down or photograph this address to receive payments."""
                     print_info(f"Signed file: {output_name}")
                     print_info("You can now broadcast this transaction.")
                     
-                    # Optionally delete the unsigned transaction
-                    delete_choice = select_menu_option(
-                        ["Yes", "No"],
-                        "Delete the unsigned transaction from inbox?"
-                    )
-                    
-                    if delete_choice and "Yes" in delete_choice:
-                        tx_path.unlink()
-                        print_success("Unsigned transaction removed from inbox.")
+                    # Auto-delete the unsigned transaction to keep inbox clean
+                    tx_path.unlink()
+                    print_success("Unsigned transaction removed from inbox.")
         finally:
             self.wallet_manager.clear_memory()
 
@@ -670,10 +650,6 @@ Write down or photograph this address to receive payments."""
         console.print()
         print_transaction_summary(from_address, to_address, amount)
         console.print()
-        
-        if not confirm_dangerous_action("Create this transaction?", "CREATE"):
-            print_info("Transaction cancelled")
-            return
         
         blockhash_result = self.network.get_latest_blockhash()
         if not blockhash_result:
@@ -732,16 +708,12 @@ Write down or photograph this address to receive payments."""
         console.print()
         
         # Offer signing options
-        print_info("For maximum security, transactions should be signed on an AIR-GAPPED device.")
-        print_info("This device has the private key loaded and is ONLINE.")
-        console.print()
-        
         sign_choice = select_menu_option(
-            ["Yes, sign on this device", "No, I'll sign offline"],
-            "Sign transaction on this online device?"
+            ["Sign now", "Sign offline later"],
+            "How would you like to proceed?"
         )
         
-        if not sign_choice or "No" in sign_choice:
+        if not sign_choice or "offline" in sign_choice:
             print_info("Copy unsigned transactions to an air-gapped device for secure signing.")
             return
         
