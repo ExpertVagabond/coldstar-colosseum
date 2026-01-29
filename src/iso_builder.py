@@ -790,11 +790,12 @@ fi
                     existing_pubkey = f.read().strip()
                 print_info(f"Existing Public Key: {existing_pubkey}")
                 
-                overwrite = confirm_dangerous_action(
-                    "Overwrite existing wallet?",
-                    "OVERWRITE"
+                from src.ui import select_menu_option
+                overwrite_choice = select_menu_option(
+                    ["Keep existing wallet", "Create new wallet (overwrites)"],
+                    "What would you like to do?"
                 )
-                if not overwrite:
+                if not overwrite_choice or "Keep" in overwrite_choice:
                     print_info("Using existing wallet")
                     self.generated_pubkey = existing_pubkey
                     return True

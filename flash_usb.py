@@ -393,8 +393,8 @@ def confirm_flash(device: str, image: Path) -> bool:
     console.print(f"\n[yellow]ALL DATA ON {device} WILL BE PERMANENTLY ERASED![/yellow]")
     console.print()
     
-    confirm = input("Type 'FLASH' to confirm: ").strip()
-    return confirm == 'FLASH'
+    confirm = input("Continue? [y/N]: ").strip().lower()
+    return confirm == 'y'
 
 
 def flash_image(device: str, image: Path) -> bool:
