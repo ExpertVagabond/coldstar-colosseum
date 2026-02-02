@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - Flash USB Interface</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        .terminal {
+            background: #1e1e1e;
+            border: 3px solid #fff;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        .header {
+            background: #0178d4;
+            color: #ddedf9;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .panel {
+            border: 2px solid #fd971f;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .panel-title {
+            color: #fd971f;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .device-info {
+            color: #e0e0e0;
+            padding: 10px;
+        }
+        .lock-icon { color: #58d1eb; }
+        .status {
+            text-align: center;
+            color: #ffff00;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        .step {
+            padding: 5px 20px;
+            margin: 5px 0;
+        }
+        .step-done { color: #98e024; }
+        .step-active { color: #fff; }
+        .step-pending { color: #666; }
+        .progress-bar {
+            background: #333;
+            height: 20px;
+            margin: 10px 0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #98e024, #66cc00);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .warning {
+            text-align: center;
+            color: #fd971f;
+            border-top: 1px solid #666;
+            border-bottom: 1px solid #666;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        .shortcuts {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">FLASH COLD WALLET USB</div>
+
+        <div class="panel">
+            <div class="panel-title">━━━━━━━━ TARGET USB VAULT ━━━━━━━━</div>
+            <div class="device-info">
+                <span class="lock-icon">🔒</span>  <strong>KIOXIA 32GB</strong> <span style="color:#9e9e9e">/dev/sdb</span>
+            </div>
+            <div class="device-info" style="padding-left: 40px; color: #9e9e9e">
+                1CD6-FFFF removable • SN:L4330...
+            </div>
+        </div>
+
+        <div class="status">Flashing vault to USB drive...</div>
+
+        <div style="padding: 20px;">
+            <div class="step step-done">
+                ····  ✓ 1 / 4 <strong>Formatting /dev/sdb</strong>
+                <span style="float: right; color: #98e024;">Done</span>
+            </div>
+
+            <div class="step step-active">
+                ····  ├ 2 / 4 <strong>Writing secure vault</strong>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 57%"></div>
+                </div>
+                <span style="float: right;">57%</span>
+            </div>
+
+            <div class="step step-pending">
+                ····  ├ 3 / 4 <strong>Encrypting master key</strong>
+                <span style="float: right; color: #666;">················································</span>
+            </div>
+
+            <div class="step step-pending">
+                ····  ├ 4 / 4 <strong>Verifying integrity</strong>
+                <span style="float: right; color: #666;">················································</span>
+            </div>
+
+            <div style="margin: 15px 0; color: #666;">
+                ······ Hardware ID <span style="color: #58d1eb;">SFOD-Vy9X-H9xz-S3Ru</span>
+            </div>
+
+            <div class="progress-bar" style="margin-top: 20px;">
+                <div class="progress-fill" style="width: 57%"></div>
+            </div>
+            <div style="text-align: right; margin-top: 5px;">Progress 57%</div>
+        </div>
+
+        <div class="warning">
+            ━━━━━━━━━━━━━━━━━ DO NOT REMOVE THE DRIVE ━━━━━━━━━━━━━━━━━
+        </div>
+
+        <div class="shortcuts">
+            [x] Abort immediately and wipe ────────────── [ESC] Abort  Ctrl+C Abort immediately<br>
+            [e] Eject safely when ready
+        </div>
+    </div>
+</body>
+</html>
