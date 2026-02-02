@@ -29,6 +29,7 @@ from src.transaction import TransactionManager
 from src.iso_builder import ISOBuilder
 from src.backup import WalletBackup
 from src.jupiter_integration import JupiterSwapManager, sol_to_lamports, lamports_to_sol
+from src.pyth_integration import PythPriceClient, format_usd
 
 
 class SolanaColdWalletCLI:
@@ -40,6 +41,7 @@ class SolanaColdWalletCLI:
         self.iso_builder = ISOBuilder()
         self.backup_manager = WalletBackup()
         self.jupiter_manager = JupiterSwapManager(slippage_bps=50)  # 0.5% slippage
+        self.pyth_client = PythPriceClient()
 
         self.current_usb_device = None
         self.current_public_key = None
@@ -56,10 +58,21 @@ class SolanaColdWalletCLI:
     def _display_wallet_balance(self):
         if not self.current_public_key:
             return
-        
+
         print_section_header("WALLET STATUS")
         balance = self.network.get_balance(self.current_public_key)
         print_wallet_info(self.current_public_key, balance)
+
+        # Show USD value if online
+        if self.network.is_connected() and balance is not None and balance > 0:
+            try:
+                sol_price = self.pyth_client.get_price("SOL/USD")
+                if sol_price:
+                    usd_value = balance * sol_price["price"]
+                    print_info(f"≈ {format_usd(usd_value)} USD (SOL @ ${sol_price['price']:.2f})")
+            except:
+                pass  # Silently fail if price fetch fails
+
         console.print()
     
     def run(self):
