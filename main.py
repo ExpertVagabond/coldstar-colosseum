@@ -28,6 +28,7 @@ from src.network import SolanaNetwork
 from src.transaction import TransactionManager
 from src.iso_builder import ISOBuilder
 from src.backup import WalletBackup
+from src.jupiter_integration import JupiterSwapManager, sol_to_lamports, lamports_to_sol
 
 
 class SolanaColdWalletCLI:
@@ -38,6 +39,7 @@ class SolanaColdWalletCLI:
         self.transaction_manager = TransactionManager()
         self.iso_builder = ISOBuilder()
         self.backup_manager = WalletBackup()
+        self.jupiter_manager = JupiterSwapManager(slippage_bps=50)  # 0.5% slippage
 
         self.current_usb_device = None
         self.current_public_key = None
@@ -256,6 +258,7 @@ class SolanaColdWalletCLI:
             "7. Backup / Restore Wallet",
             "8. Request Devnet Airdrop",
             "9. Network Status",
+            "J. Jupiter Swap (Create Unsigned Swap)",
             "A. Unmount USB / Switch Device",
             "0. Exit"
         ]
@@ -302,6 +305,10 @@ class SolanaColdWalletCLI:
         elif choice_num == "9":
             self._draw_header()
             self.show_network_status()
+            self._wait_for_key()
+        elif choice_num.upper() == "J":
+            self._draw_header()
+            self.jupiter_swap()
             self._wait_for_key()
         elif choice_num.upper() == "A":
             self._unmount_usb()
@@ -1163,6 +1170,156 @@ class SolanaColdWalletCLI:
             print_error("Connection: FAILED")
             print_info("Check your internet connection or RPC URL")
     
+    def jupiter_swap(self):
+        """Create unsigned Jupiter swap transaction for air-gapped signing"""
+        print_section_header("JUPITER SWAP - CREATE UNSIGNED TRANSACTION")
+
+        if not self.current_public_key:
+            print_error("No wallet connected. Mount a USB with a cold wallet first.")
+            return
+
+        if not self.network.is_connected():
+            print_error("No network connection. Jupiter requires online access.")
+            return
+
+        print_info(f"Wallet: {self.current_public_key}")
+        console.print()
+
+        # Show available tokens
+        print_info("Common tokens: SOL, USDC, USDT, BONK, JUP, RAY")
+        print_info("Or enter a custom mint address")
+        console.print()
+
+        # Get input token
+        from_token = get_text_input("From token (e.g., SOL): ", "SOL").strip()
+        from_mint = self.jupiter_manager.get_token_address(from_token)
+
+        # Get output token
+        to_token = get_text_input("To token (e.g., USDC): ", "USDC").strip()
+        to_mint = self.jupiter_manager.get_token_address(to_token)
+
+        # Get amount
+        amount_float = get_float_input(f"Amount of {from_token} to swap: ", 0.1)
+
+        # Convert to smallest unit (lamports for SOL)
+        if from_token.upper() == "SOL":
+            amount = sol_to_lamports(amount_float)
+            print_info(f"Amount in lamports: {amount}")
+        else:
+            # For SPL tokens, assume 6 decimals (USDC/USDT)
+            # TODO: Fetch actual decimals from chain
+            decimals = 6
+            amount = int(amount_float * (10 ** decimals))
+            print_info(f"Amount in smallest unit: {amount}")
+
+        console.print()
+        print_info("Fetching best route from Jupiter...")
+
+        # Get quote
+        quote = self.jupiter_manager.get_quote(
+            input_mint=from_mint,
+            output_mint=to_mint,
+            amount=amount
+        )
+
+        if not quote:
+            print_error("Failed to get quote from Jupiter")
+            return
+
+        # Display quote details
+        console.print()
+        in_amount = int(quote.get("inAmount", 0))
+        out_amount = int(quote.get("outAmount", 0))
+        price_impact = float(quote.get("priceImpactPct", 0))
+
+        # Convert back to human-readable
+        if from_token.upper() == "SOL":
+            display_in = lamports_to_sol(in_amount)
+        else:
+            display_in = in_amount / (10 ** decimals)
+
+        if to_token.upper() == "SOL":
+            display_out = lamports_to_sol(out_amount)
+        else:
+            display_out = out_amount / (10 ** 6)  # Assume 6 decimals for output
+
+        # Show swap summary
+        summary = self.jupiter_manager.get_swap_summary(
+            input_symbol=from_token,
+            output_symbol=to_token,
+            input_amount=display_in,
+            output_amount=display_out,
+            price_impact=price_impact,
+            route_steps=len(quote.get('routePlan', []))
+        )
+        console.print(summary)
+        console.print()
+
+        # Warn about high price impact
+        if price_impact > 1.0:
+            print_warning(f"⚠️  HIGH PRICE IMPACT: {price_impact:.2f}%")
+            console.print()
+
+        # Confirm swap creation
+        confirm = select_menu_option(
+            ["Yes, create swap transaction", "No, cancel"],
+            "Create unsigned swap transaction?"
+        )
+
+        if not confirm or "No" in confirm:
+            print_info("Swap cancelled")
+            return
+
+        # Create unsigned transaction
+        print_info("Creating unsigned swap transaction...")
+        unsigned_tx = self.jupiter_manager.create_swap_transaction(
+            quote=quote,
+            user_pubkey=self.current_public_key,
+            wrap_unwrap_sol=True
+        )
+
+        if not unsigned_tx:
+            print_error("Failed to create swap transaction")
+            return
+
+        # Save to file
+        wallet_dir = Path(self.wallet_manager.wallet_dir) if self.wallet_manager.wallet_dir else Path.cwd()
+        inbox_dir = wallet_dir.parent / "inbox"
+        inbox_dir.mkdir(parents=True, exist_ok=True)
+
+        import time
+        timestamp = int(time.time())
+        filename = f"swap_{from_token}_to_{to_token}_{timestamp}.json"
+        filepath = inbox_dir / filename
+
+        # Prepare quote info for saving
+        quote_info = {
+            "from_token": from_token,
+            "to_token": to_token,
+            "from_amount": str(display_in),
+            "to_amount": str(display_out),
+            "inAmount": quote.get("inAmount"),
+            "outAmount": quote.get("outAmount"),
+            "priceImpactPct": price_impact,
+            "timestamp": timestamp
+        }
+
+        if self.jupiter_manager.save_swap_transaction(unsigned_tx, str(filepath), quote_info):
+            console.print()
+            print_success("✓ Unsigned swap transaction created!")
+            print_info(f"Saved to: {filepath}")
+            console.print()
+
+            print_section_header("NEXT STEPS")
+            print_info("1. Transfer this file to your air-gapped device")
+            print_info("2. Sign the transaction on the offline device")
+            print_info("3. Transfer the signed transaction back")
+            print_info("4. Broadcast using option 4 in the wallet menu")
+            console.print()
+
+            print_warning("⚠️  IMPORTANT: Review transaction details on offline device before signing!")
+            print_warning("Jupiter swaps interact with multiple programs and accounts.")
+
     def exit_app(self):
         print_info("Cleaning up...")
         self.cleanup()
