@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Coldstar Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #14F195;
+            font-family: 'SF Mono', monospace;
+            font-size: 18px;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #333;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background: #9945FF;
+            box-shadow: 0 0 15px #9945FF;
+        }
+
+        .progress-dot.completed {
+            background: #14F195;
+        }
+
+        .step-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-number {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .step-description {
+            font-size: 18px;
+            color: #aaa;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+
+        .visual {
+            margin: 40px 0;
+        }
+
+        .terminal {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: left;
+            max-width: 700px;
+            margin: 0 auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            border: 1px solid #9945FF44;
+            box-shadow: 0 0 40px #9945FF22;
+        }
+
+        .terminal-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-line {
+            margin: 8px 0;
+            opacity: 0;
+            animation: typeLine 0.3s ease forwards;
+        }
+
+        .terminal-line.success { color: #14F195; }
+        .terminal-line.info { color: #00D1FF; }
+        .terminal-line.warning { color: #9945FF; }
+        .terminal-line.command { color: #fff; }
+
+        @keyframes typeLine {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .icon-box {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 50px;
+            background: linear-gradient(135deg, #9945FF22, #14F19522);
+            border-radius: 20px;
+            border: 1px solid #9945FF44;
+        }
+
+        .icon-box .icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .icon-box .label {
+            font-size: 16px;
+            color: #aaa;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .flow-item {
+            text-align: center;
+        }
+
+        .flow-item .icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .flow-item .text {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .flow-arrow {
+            font-size: 24px;
+            color: #666;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #9945FF, #14F195);
+            color: #0f0f0f;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #9945FF66;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+        }
+
+        .btn-secondary:hover {
+            border-color: #666;
+            color: #fff;
+        }
+
+        .highlight {
+            color: #14F195;
+        }
+
+        .highlight-purple {
+            color: #9945FF;
+        }
+
+        .comparison {
+            display: flex;
+            gap: 60px;
+            justify-content: center;
+        }
+
+        .comparison-item {
+            text-align: center;
+        }
+
+        .comparison-item .price {
+            font-size: 60px;
+            font-weight: 800;
+        }
+
+        .comparison-item .label {
+            font-size: 18px;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .comparison-item.bad .price { color: #ff4444; }
+        .comparison-item.good .price { color: #14F195; }
+
+        .github-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 15px 30px;
+            background: #1a1a2e;
+            border-radius: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-family: 'SF Mono', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .github-link:hover {
+            background: #2a2a4e;
+            transform: translateY(-2px);
+        }
+
+        .logo {
+            height: 60px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        .logo-large {
+            height: 80px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="header">
+            <h1><img src="coldstar-logo.png" alt="Coldstar" class="logo">Coldstar</h1>
+            <p>Interactive Demo</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-dot active" data-step="0"></div>
+            <div class="progress-dot" data-step="1"></div>
+            <div class="progress-dot" data-step="2"></div>
+            <div class="progress-dot" data-step="3"></div>
+            <div class="progress-dot" data-step="4"></div>
+            <div class="progress-dot" data-step="5"></div>
+        </div>
+
+        <div class="step-container">
+            <!-- Step 0: Intro -->
+            <div class="step active" data-step="0">
+                <div class="step-number">Welcome</div>
+                <div class="step-title">Air-Gapped <span class="highlight">Solana</span> Cold Wallet</div>
+                <div class="step-description">
+                    Coldstar turns any USB drive into a hardware wallet.
+                    Your private keys never touch the internet.
+                </div>
+                <div class="comparison">
+                    <div class="comparison-item bad">
+                        <div class="price">$200</div>
+                        <div class="label">Hardware Wallet</div>
+                    </div>
+                    <div class="comparison-item good">
+                        <div class="price">$0</div>
+                        <div class="label">Coldstar</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: USB -->
+            <div class="step" data-step="1">
+                <div class="step-number">Step 1</div>
+                <div class="step-title">Store Wallet on <span class="highlight-purple">USB Drive</span></div>
+                <div class="step-description">
+                    Generate a Solana keypair and store it on any external drive.
+                    The private key stays on the device.
+                </div>
+                <div class="visual">
+                    <div class="icon-box">
+                        <div class="icon">💾</div>
+                        <div class="label">USB / External Drive</div>
+                    </div>
+                </div>
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f57;"></div>
+                        <div class="terminal-dot" style="background: #febc2e;"></div>
+                        <div class="terminal-dot" style="background: #28c840;"></div>
+                    </div>
+                    <div class="terminal-line command" style="animation-delay: 0.1s;">$ python3 coldstar.py</div>
+                    <div class="terminal-line success" style="animation-delay: 0.3s;">✓ Generated new Solana keypair</div>
+                    <div class="terminal-line success" style="animation-delay: 0.5s;">✓ Saved to /Volumes/USB/wallet/keypair.json</div>
+                </div>
+            </div>
+
+            <!-- Step 2: Create TX -->
+            <div class="step" data-step="2">
+                <div class="step-number">Step 2</div>
+                <div class="step-title">Create <span class="highlight">Unsigned Transaction</span></div>
+                <div class="step-description">
+                    Build your transaction on any online computer.
+                    No private key needed yet.
+                </div>
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f57;"></div>
+                        <div class="terminal-dot" style="background: #febc2e;"></div>
+                        <div class="terminal-dot" style="background: #28c840;"></div>
+                    </div>
+                    <div class="terminal-line info" style="animation-delay: 0.1s;">→ Creating transfer transaction...</div>
+                    <div class="terminal-line command" style="animation-delay: 0.3s;">  To: ABC...XYZ</div>
+                    <div class="terminal-line command" style="animation-delay: 0.5s;">  Amount: 1 SOL</div>
+                    <div class="terminal-line success" style="animation-delay: 0.7s;">✓ Saved to /inbox/unsigned_tx.json</div>
+                </div>
+            </div>
+
+            <!-- Step 3: Sign Offline -->
+            <div class="step" data-step="3">
+                <div class="step-number">Step 3</div>
+                <div class="step-title">Sign <span class="highlight-purple">Offline</span></div>
+                <div class="step-description">
+                    Take the USB to an air-gapped machine. Sign the transaction
+                    without any network connection.
+                </div>
+                <div class="visual">
+                    <div class="flow-diagram">
+                        <div class="flow-item">
+                            <div class="icon">📝</div>
+                            <div class="text">Unsigned TX</div>
+                        </div>
+                        <div class="flow-arrow">+</div>
+                        <div class="flow-item">
+                            <div class="icon">🔐</div>
+                            <div class="text">Private Key</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-item">
+                            <div class="icon">✅</div>
+                            <div class="text">Signed TX</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f57;"></div>
+                        <div class="terminal-dot" style="background: #febc2e;"></div>
+                        <div class="terminal-dot" style="background: #28c840;"></div>
+                    </div>
+                    <div class="terminal-line warning" style="animation-delay: 0.1s;">⚠ OFFLINE MODE - No network access</div>
+                    <div class="terminal-line info" style="animation-delay: 0.3s;">→ Signing with private key...</div>
+                    <div class="terminal-line success" style="animation-delay: 0.6s;">✓ Transaction signed!</div>
+                    <div class="terminal-line success" style="animation-delay: 0.8s;">✓ Saved to /outbox/signed_tx.json</div>
+                </div>
+            </div>
+
+            <!-- Step 4: Broadcast -->
+            <div class="step" data-step="4">
+                <div class="step-number">Step 4</div>
+                <div class="step-title">Broadcast to <span class="highlight">Solana</span></div>
+                <div class="step-description">
+                    Take the signed transaction back online and broadcast it.
+                    Your private key was never exposed to the network.
+                </div>
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot" style="background: #ff5f57;"></div>
+                        <div class="terminal-dot" style="background: #febc2e;"></div>
+                        <div class="terminal-dot" style="background: #28c840;"></div>
+                    </div>
+                    <div class="terminal-line info" style="animation-delay: 0.1s;">→ Broadcasting to Solana Devnet...</div>
+                    <div class="terminal-line success" style="animation-delay: 0.4s;">✓ Transaction sent!</div>
+                    <div class="terminal-line info" style="animation-delay: 0.6s;">→ Confirming...</div>
+                    <div class="terminal-line success" style="animation-delay: 1s;">✓ CONFIRMED!</div>
+                    <div class="terminal-line command" style="animation-delay: 1.2s;">  Signature: 476Cu...vSw</div>
+                </div>
+            </div>
+
+            <!-- Step 5: Summary -->
+            <div class="step" data-step="5">
+                <div class="step-number">Complete</div>
+                <div class="step-title"><img src="coldstar-logo.png" alt="Coldstar" class="logo-large"><br><span class="highlight">Coldstar</span></div>
+                <div class="step-description">
+                    Air-gapped security. Open source. Free.
+                    <br><br>
+                    <strong>Private key never touches the network.</strong>
+                </div>
+                <a href="https://github.com/ChainLabs-Technologies/coldstar" class="github-link" target="_blank">
+                    github.com/ChainLabs-Technologies/coldstar
+                </a>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" id="prevBtn" onclick="prevStep()">← Back</button>
+            <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Next →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 6;
+
+        function updateStep() {
+            // Update steps
+            document.querySelectorAll('.step').forEach((step, i) => {
+                step.classList.remove('active');
+                if (i === currentStep) step.classList.add('active');
+            });
+
+            // Update progress dots
+            document.querySelectorAll('.progress-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'completed');
+                if (i === currentStep) dot.classList.add('active');
+                if (i < currentStep) dot.classList.add('completed');
+            });
+
+            // Update buttons
+            document.getElementById('prevBtn').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+            document.getElementById('nextBtn').textContent = currentStep === totalSteps - 1 ? 'Restart' : 'Next →';
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+            } else {
+                currentStep = 0;
+            }
+            updateStep();
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextStep();
+            if (e.key === 'ArrowLeft') prevStep();
+        });
+
+        // Click on progress dots
+        document.querySelectorAll('.progress-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                currentStep = parseInt(dot.dataset.step);
+                updateStep();
+            });
+        });
+
+        updateStep();
+    </script>
+</body>
+</html>

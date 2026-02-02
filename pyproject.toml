@@ -8,8 +8,10 @@ dependencies = [
     "base58>=2.1.1",
     "httpx>=0.28.1",
     "pynacl>=1.6.1",
+    "qrcode>=8.0",
     "questionary>=2.1.1",
     "rich>=14.2.0",
     "solana>=0.36.10",
     "solders>=0.27.1",
+    "textual>=0.89.0",
 ]

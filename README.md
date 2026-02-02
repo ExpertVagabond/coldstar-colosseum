@@ -1,134 +1,265 @@
-# Solana Cold Wallet USB Tool
+# Coldstar - Air-Gapped Solana Cold Wallet
 
-A Python-based terminal application for creating and managing Solana cold wallets on USB drives. This tool enables offline transaction signing for maximum security.
+<p align="center">
+  <img src="https://img.shields.io/badge/Solana-14F195?style=for-the-badge&logo=solana&logoColor=white" alt="Solana"/>
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License"/>
+</p>
+
+A Python-based cold wallet that turns any USB drive into a hardware wallet. Your private keys **never** touch the internet.
 
 ## Features
 
-- **USB Detection & Flashing**: Detect USB devices and flash them with a minimal offline Linux OS
-- **Wallet Generation**: Create Solana keypairs with Ed25519 cryptography
-- **Offline Signing**: Sign transactions on air-gapped devices without network access
-- **Transaction Management**: Create, sign, and broadcast SOL transfer transactions
-- **Balance Checking**: Query wallet balances via Solana RPC
-- **Devnet Airdrop**: Request test SOL on Devnet for testing
+- **Air-Gap Security** - Private keys generated and stored on offline devices only
+- **USB Cold Wallet** - Flash any USB drive with minimal Alpine Linux OS (~50MB)
+- **QR Code Transfer** - Easy transaction transfer via QR codes (no file copying needed)
+- **Companion App** - Mobile-friendly PWA for creating transactions online
+- **SPL Token Support** - Transfer USDC, USDT, BONK, JUP, and any SPL token
+- **SOL Transfers** - Create, sign, and broadcast SOL transactions
+- **Devnet Airdrop** - Test on devnet before using mainnet
+- **🎨 NEW: Beautiful Terminal UI** - Modern TUI with progress bars, multi-panel layouts, and keyboard shortcuts
 
-## Requirements
+## 🎨 New Terminal UI
 
-- Python 3.11+
-- Windows or Linux operating system
-- Root/Administrator privileges (for USB operations)
+Coldstar now includes beautiful terminal interfaces for a modern CLI experience:
 
-## Installation
-
-### Step 1: Install Python Dependencies
-
-**Before launching VS Code**, install the required Python packages by running this command in your terminal:
-
+### Flash USB Interface
 ```bash
-pip install rich questionary solana solders pynacl httpx aiofiles base58
+python flash_usb_tui.py
+```
+- Real-time progress visualization
+- Step-by-step flashing (Format → Write → Encrypt → Verify)
+- Hardware ID display
+- Safety controls with keyboard shortcuts
+
+### Vault Dashboard
+```bash
+python vault_dashboard_tui.py
+```
+- Three-panel layout: Portfolio | Token Details | Send
+- Real-time balance tracking
+- Transaction history
+- Risk warnings for tokens
+- Interactive send interface
+
+**Quick Launch:**
+```bash
+python launch_tui.py  # Interactive menu
 ```
 
-### Step 2: Run in VS Code
+See [TUI_GUIDE.md](TUI_GUIDE.md) for full documentation.
 
-1. Clone this repository
-2. Open the project folder in VS Code
-3. If you haven't installed dependencies yet, open the VS Code terminal (`` Ctrl+` ``) and run:
+## Quick Start
+
+### 1. Install Dependencies
 
 ```bash
-pip install rich questionary solana solders pynacl httpx aiofiles base58
+pip install rich questionary solana solders pynacl httpx aiofiles base58 qrcode textual
 ```
 
-4. Run the application:
+Or use the project file:
+```bash
+pip install -e .
+```
+
+### 2. Clone & Run
 
 ```bash
+git clone https://github.com/ChainLabs-Technologies/coldstar.git
+cd coldstar
 python main.py
 ```
 
-**Note for Linux users**: USB operations (flashing, mounting) may require root privileges:
+### 3. Launch Companion App (Optional)
+
 ```bash
-sudo python main.py
+cd companion-app
+python3 -m http.server 8080
+# Open http://localhost:8080 on your phone or browser
+```
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ONLINE DEVICE                            │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │           Companion App (PWA)                       │    │
+│  │  • Check balance           • Create unsigned TX    │    │
+│  │  • View token holdings     • Generate QR codes     │    │
+│  │  • Broadcast signed TX     • SPL token support     │    │
+│  └────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                    QR Code / USB Transfer
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                  OFFLINE DEVICE (Air-Gapped)                │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │              USB Cold Wallet                        │    │
+│  │  • Generate keypair        • Sign transactions     │    │
+│  │  • Store private key       • Display QR codes      │    │
+│  │  • ZERO network access     • Alpine Linux (~50MB)  │    │
+│  └────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Usage
 
-### Main Menu Options
+### Main CLI Menu
 
-1. **Detect USB Devices** - Scan and list connected USB drives
-2. **Flash Cold Wallet OS to USB** - Create a bootable offline wallet USB
-3. **Generate New Wallet (Local)** - Create a new Solana keypair locally
-4. **View Wallet Information** - Check wallet public key and balance
-5. **Create Unsigned Transaction** - Build a SOL transfer transaction
-6. **Sign Transaction (Offline)** - Sign a transaction with your private key
-7. **Broadcast Signed Transaction** - Send a signed transaction to the network
-8. **Request Devnet Airdrop** - Get free test SOL on Devnet
-9. **Network Status** - Check Solana RPC connection status
+```
+1. Detect USB Devices         - Scan connected USB drives
+2. Flash Cold Wallet OS       - Create bootable offline wallet USB
+3. Generate New Wallet        - Create Solana keypair (local)
+4. View Wallet Information    - Check balance and address
+5. Create Unsigned TX         - Build SOL transfer transaction
+6. Sign Transaction (Offline) - Sign with private key
+7. Broadcast Signed TX        - Send to Solana network
+8. Request Devnet Airdrop     - Get test SOL
+9. Network Status             - Check RPC connection
+```
 
-### Workflow: End-to-End Transaction
+### QR Code Signing Workflow
 
-1. **Generate a wallet** (Option 3)
-2. **Request airdrop** to fund the wallet (Option 8)
-3. **Create unsigned transaction** specifying recipient and amount (Option 5)
-4. **Sign the transaction** with your keypair (Option 6)
-5. **Broadcast** the signed transaction to the network (Option 7)
+```bash
+# On air-gapped device - show wallet QR
+python3 qr_sign.py --show-wallet
 
-### Cold Wallet USB Flow
+# On air-gapped device - sign transaction with QR output
+python3 qr_sign.py
+```
 
-For true offline signing:
+### Companion App Features
 
-1. Flash a USB with the cold wallet OS (Option 2)
-2. Boot from the USB on an air-gapped machine
-3. Generate wallet on the USB (keys never leave the device)
-4. Copy unsigned transactions to `/inbox` on the USB
-5. Sign using the `sign_tx.sh` script on the USB
-6. Copy signed transactions from `/outbox` back to online host
-7. Broadcast from the online host
+| Tab | Function |
+|-----|----------|
+| **Wallet** | Enter address, check SOL balance |
+| **SOL** | Create unsigned SOL transfers with QR output |
+| **Tokens** | View SPL tokens, create token transfers |
+| **Send** | Upload signed TX file, broadcast to network |
+| **More** | Network settings, devnet airdrops |
 
 ## Directory Structure
 
 ```
-.
-├── main.py              # Main CLI entry point
-├── config.py            # Configuration settings
+coldstar/
+├── main.py                 # Main CLI application
+├── qr_sign.py              # QR-based offline signing
+├── flash_usb.py            # USB flashing tool
+├── config.py               # Network configuration
 ├── src/
-│   ├── __init__.py
-│   ├── ui.py            # Terminal UI components
-│   ├── wallet.py        # Wallet/keypair management
-│   ├── network.py       # Solana RPC communication
-│   ├── transaction.py   # Transaction creation/signing
-│   ├── usb.py           # USB device detection/mounting
-│   └── iso_builder.py   # Bootable ISO creation
-├── local_wallet/        # Local wallet storage
-│   ├── keypair.json     # Private keypair (KEEP SECURE!)
-│   ├── pubkey.txt       # Public key
-│   └── transactions/    # Transaction files
-└── README.md
+│   ├── wallet.py           # Keypair management
+│   ├── transaction.py      # Transaction creation/signing
+│   ├── network.py          # Solana RPC client
+│   ├── token_transfer.py   # SPL token support
+│   ├── qr_transfer.py      # QR code generation
+│   ├── usb.py              # USB device detection
+│   ├── iso_builder.py      # Bootable ISO creation
+│   └── ui.py               # Terminal UI components
+├── companion-app/          # Web companion app (PWA)
+│   ├── index.html          # Main app
+│   ├── manifest.json       # PWA manifest
+│   └── sw.js               # Service worker
+├── local_wallet/           # Local wallet storage
+│   ├── keypair.json        # Private key (KEEP SECURE!)
+│   └── pubkey.txt          # Public address
+├── inbox/                  # Unsigned transactions
+├── outbox/                 # Signed transactions
+└── whitepaper.md           # Technical documentation
 ```
 
-## Security Notes
+## Security Model
 
-- **Private keys** are stored in `keypair.json` - NEVER share this file
-- The cold wallet USB has **no network drivers** - private keys cannot be exfiltrated
-- Always verify transaction details before signing
-- Use Devnet for testing before moving to Mainnet
+### Air-Gap Principles
+
+1. **Private keys never touch networked computers**
+   - Generated on offline device
+   - Stored on USB only
+   - Used only for signing on air-gapped machine
+
+2. **Network isolation on USB**
+   - Alpine Linux with all network drivers blacklisted
+   - No WiFi, Ethernet, or Bluetooth
+   - Firewall drops all traffic
+
+3. **Manual transaction transfer**
+   - QR codes for small transactions
+   - File copy via USB for larger data
+   - No automatic sync
+
+### Threat Mitigation
+
+| Threat | Mitigation |
+|--------|------------|
+| Malware on host PC | Keys never on host |
+| Network attacks | Air-gap isolation |
+| Transaction tampering | Verify on offline screen |
+| USB compromise | Read-only filesystem |
+
+## SPL Token Support
+
+Supported tokens with auto-detected decimals:
+
+| Token | Mint Address | Decimals |
+|-------|--------------|----------|
+| USDC | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` | 6 |
+| USDT | `Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB` | 6 |
+| BONK | `DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263` | 5 |
+| JUP | `JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN` | 6 |
+| RAY | `4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R` | 6 |
+
+Custom tokens supported via mint address.
 
 ## Network Configuration
 
-Currently configured for **Devnet**. To switch to Mainnet, edit `config.py`:
-
 ```python
-# For Mainnet
+# config.py - Switch networks
+
+# Mainnet
 SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com"
 
-# For Devnet (default)
+# Devnet (default - for testing)
 SOLANA_RPC_URL = "https://api.devnet.solana.com"
+
+# Testnet
+SOLANA_RPC_URL = "https://api.testnet.solana.com"
 ```
 
-## Known Limitations
+## Requirements
 
-- USB flashing requires Linux with root privileges
-- No encrypted wallet storage (planned for future)
-- No hardware wallet integration (planned)
-- No staking support (planned)
+- **Python**: 3.11+
+- **OS**: macOS, Linux, or Windows
+- **USB**: 4GB+ drive (for cold wallet)
+- **Root/Admin**: Required for USB operations
+
+## Demo Videos
+
+Check out our demo videos:
+- [Remotion explainer video](./demos/)
+- [Interactive HTML walkthrough](./demos/)
+- [Manim educational animation](./demos/)
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing`)
+5. Open a Pull Request
+
+## Security Disclosure
+
+Found a vulnerability? Email: security@chainlabs.uno
 
 ## License
 
-MIT License
+MIT License - See [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+  <strong>Your keys, your responsibility. Open source, open trust.</strong>
+  <br><br>
+  Made with ✦ by <a href="https://github.com/ChainLabs-Technologies">ChainLabs Technologies</a>
+</p>

@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+"""
+Create animated HTML previews of Coldstar TUI interfaces
+"""
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+
+def create_animated_html():
+    """Create an animated HTML preview using CSS animations"""
+
+    html = """<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - Flash USB Animation</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        .terminal {
+            background: #1e1e1e;
+            border: 3px solid #fff;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        .header {
+            background: #0178d4;
+            color: #ddedf9;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .panel {
+            border: 2px solid #fd971f;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .panel-title {
+            color: #fd971f;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .device-info {
+            color: #e0e0e0;
+            padding: 10px;
+        }
+        .lock-icon { color: #58d1eb; }
+        .status {
+            text-align: center;
+            color: #ffff00;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        .step {
+            padding: 5px 20px;
+            margin: 5px 0;
+        }
+        .step-done { color: #98e024; }
+        .step-active { color: #fff; }
+        .step-pending { color: #666; }
+        .progress-bar {
+            background: #333;
+            height: 20px;
+            margin: 10px 0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #98e024, #66cc00);
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        /* Animations */
+        @keyframes step2-progress {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 100%; }
+        }
+        @keyframes step3-progress {
+            0%, 50% { width: 0%; }
+            75% { width: 100%; }
+            100% { width: 100%; }
+        }
+        @keyframes step4-progress {
+            0%, 75% { width: 0%; }
+            100% { width: 100%; }
+        }
+        @keyframes overall-progress {
+            0% { width: 25%; }
+            50% { width: 50%; }
+            75% { width: 75%; }
+            100% { width: 100%; }
+        }
+        @keyframes complete-message {
+            0%, 95% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .step2-bar { animation: step2-progress 20s linear forwards; }
+        .step3-bar { animation: step3-progress 20s linear forwards; }
+        .step4-bar { animation: step4-progress 20s linear forwards; }
+        .overall-bar { animation: overall-progress 20s linear forwards; }
+
+        .step2-icon {
+            animation: step-complete 10s steps(1) forwards;
+        }
+        .step3-icon {
+            animation: step-complete 15s steps(1) forwards;
+        }
+        .step4-icon {
+            animation: step-complete 20s steps(1) forwards;
+        }
+
+        @keyframes step-complete {
+            0% { content: "├"; color: #fd971f; }
+            100% { content: "✓"; color: #98e024; }
+        }
+
+        .complete-msg {
+            animation: complete-message 20s forwards;
+            opacity: 0;
+        }
+
+        .warning {
+            text-align: center;
+            color: #fd971f;
+            border-top: 1px solid #666;
+            border-bottom: 1px solid #666;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        .shortcuts {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+
+        .replay-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #0178d4;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .replay-btn:hover {
+            background: #0263b8;
+        }
+    </style>
+</head>
+<body>
+    <button class="replay-btn" onclick="location.reload()">🔄 Replay Animation</button>
+
+    <div class="terminal">
+        <div class="header">FLASH COLD WALLET USB</div>
+
+        <div class="panel">
+            <div class="panel-title">━━━━━━━━ TARGET USB VAULT ━━━━━━━━</div>
+            <div class="device-info">
+                <span class="lock-icon">🔒</span>  <strong>KIOXIA 32GB</strong> <span style="color:#9e9e9e">/dev/sdb</span>
+            </div>
+            <div class="device-info" style="padding-left: 40px; color: #9e9e9e">
+                1CD6-FFFF removable • SN:L4330...
+            </div>
+        </div>
+
+        <div class="status">
+            <span class="complete-msg" style="color: #98e024;">✓ Flash complete! Safe to eject.</span>
+            <span style="display: inline-block; animation: complete-message 20s reverse forwards;">Flashing vault to USB drive...</span>
+        </div>
+
+        <div style="padding: 20px;">
+            <div class="step step-done">
+                ····  ✓ 1 / 4 <strong>Formatting /dev/sdb</strong>
+                <span style="float: right; color: #98e024;">Done</span>
+            </div>
+
+            <div class="step" id="step2">
+                ····  <span class="step2-icon">├</span> 2 / 4 <strong>Writing secure vault</strong>
+                <div class="progress-bar">
+                    <div class="progress-fill step2-bar"></div>
+                </div>
+            </div>
+
+            <div class="step" id="step3">
+                ····  <span class="step3-icon">├</span> 3 / 4 <strong>Encrypting master key</strong>
+                <div class="progress-bar">
+                    <div class="progress-fill step3-bar"></div>
+                </div>
+            </div>
+
+            <div class="step" id="step4">
+                ····  <span class="step4-icon">├</span> 4 / 4 <strong>Verifying integrity</strong>
+                <div class="progress-bar">
+                    <div class="progress-fill step4-bar"></div>
+                </div>
+            </div>
+
+            <div style="margin: 15px 0; color: #666;">
+                ······ Hardware ID <span style="color: #58d1eb;">SFOD-Vy9X-H9xz-S3Ru</span>
+            </div>
+
+            <div class="progress-bar" style="margin-top: 20px; height: 30px;">
+                <div class="progress-fill overall-bar" style="width: 25%;"></div>
+            </div>
+            <div style="text-align: center; margin-top: 5px;" id="overall-percent">
+                Overall Progress: 25%
+            </div>
+        </div>
+
+        <div class="warning">
+            ━━━━━━━━━━━━━━━━━ DO NOT REMOVE THE DRIVE ━━━━━━━━━━━━━━━━━
+        </div>
+
+        <div class="shortcuts">
+            [x] Abort immediately and wipe ────────────── [ESC] Abort  Ctrl+C Abort immediately<br>
+            [e] Eject safely when ready
+        </div>
+    </div>
+
+    <script>
+        // Update percentage display
+        function updatePercent() {
+            const elapsed = (Date.now() - startTime) / 1000;
+            const total = 20;
+            const progress = Math.min(100, Math.floor(25 + (elapsed / total) * 75));
+            document.getElementById('overall-percent').textContent = `Overall Progress: ${progress}%`;
+
+            if (elapsed < total) {
+                requestAnimationFrame(updatePercent);
+            } else {
+                document.getElementById('overall-percent').textContent = 'Overall Progress: 100% - Complete!';
+            }
+        }
+
+        const startTime = Date.now();
+        updatePercent();
+    </script>
+</body>
+</html>"""
+
+    return html
+
+
+if __name__ == "__main__":
+    print("Creating animated TUI preview...")
+
+    output_dir = Path("screenshots")
+    output_dir.mkdir(exist_ok=True)
+
+    html = create_animated_html()
+    output_file = output_dir / "flash_usb_animated.html"
+    output_file.write_text(html)
+
+    print(f"✅ Created: {output_file}")
+    print("\nOpen this file in your browser to see the animation!")
+    print("The animation shows the full flashing process (20 seconds)")

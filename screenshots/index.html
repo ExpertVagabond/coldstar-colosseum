@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar TUI Gallery</title>
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #0178d4, #58d1eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 50px;
+            font-size: 1.2em;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .card {
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #0178d4;
+        }
+        .card h2 {
+            color: #58d1eb;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+        .card p {
+            color: #aaa;
+            line-height: 1.6;
+        }
+        .preview-link {
+            display: inline-block;
+            background: #0178d4;
+            color: #fff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .preview-link:hover {
+            background: #0263b8;
+        }
+        .animated-badge {
+            display: inline-block;
+            background: #fd971f;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        .feature-list li {
+            padding: 5px 0;
+            color: #ccc;
+        }
+        .feature-list li:before {
+            content: "✓ ";
+            color: #98e024;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .instructions {
+            background: #2a2a2a;
+            border-left: 4px solid #0178d4;
+            padding: 20px;
+            margin: 40px 0;
+            border-radius: 4px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #58d1eb;
+        }
+        .code {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: #98e024;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #333;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 Coldstar TUI Gallery</h1>
+        <div class="subtitle">Beautiful Terminal User Interfaces for Cold Wallet Management</div>
+
+        <div class="instructions">
+            <h3>🚀 How to Run Live</h3>
+            <p>For the full interactive experience with working keyboard shortcuts:</p>
+            <div class="code">
+cd "/Volumes/Virtual Server/projects/coldstar"
+
+# Flash USB interface
+python3 flash_usb_tui.py
+
+# Vault Dashboard
+python3 vault_dashboard_tui.py
+
+# Interactive launcher
+python3 launch_tui.py
+            </div>
+        </div>
+
+        <div class="gallery">
+            <!-- Flash USB Static -->
+            <div class="card">
+                <h2>Flash USB Interface</h2>
+                <p>Static preview of the USB flashing screen showing device info, progress steps, and safety controls.</p>
+                <ul class="feature-list">
+                    <li>4-step progress visualization</li>
+                    <li>Device information panel</li>
+                    <li>Hardware ID display</li>
+                    <li>Safety warnings</li>
+                    <li>Keyboard shortcuts</li>
+                </ul>
+                <a href="flash_usb_preview.html" class="preview-link">View Static Preview →</a>
+            </div>
+
+            <!-- Flash USB Animated -->
+            <div class="card">
+                <h2>
+                    Flash USB Animation
+                    <span class="animated-badge">ANIMATED</span>
+                </h2>
+                <p>Watch the full flashing process with animated progress bars and step completion. 20-second loop.</p>
+                <ul class="feature-list">
+                    <li>Real-time progress bars</li>
+                    <li>Step-by-step completion</li>
+                    <li>Overall progress tracking</li>
+                    <li>Smooth animations</li>
+                    <li>Replay button</li>
+                </ul>
+                <a href="flash_usb_animated.html" class="preview-link">Watch Animation →</a>
+            </div>
+
+            <!-- Vault Dashboard -->
+            <div class="card">
+                <h2>Vault Dashboard</h2>
+                <p>Complete portfolio management interface with three-panel layout showing tokens, details, and sending.</p>
+                <ul class="feature-list">
+                    <li>Portfolio with 6 tokens</li>
+                    <li>Transaction history</li>
+                    <li>Risk warnings</li>
+                    <li>Send interface</li>
+                    <li>Fee estimation</li>
+                </ul>
+                <a href="vault_dashboard_preview.html" class="preview-link">View Dashboard →</a>
+            </div>
+        </div>
+
+        <div class="instructions" style="margin-top: 60px;">
+            <h3>📸 Take Your Own Screenshots</h3>
+            <p><strong>macOS:</strong></p>
+            <div class="code">
+# 1. Run the TUI
+python3 flash_usb_tui.py
+
+# 2. Press Cmd + Shift + 4, then Space
+
+# 3. Click on the Terminal window
+            </div>
+
+            <p style="margin-top: 20px;"><strong>Regenerate Previews:</strong></p>
+            <div class="code">
+# Static previews
+python3 create_screenshots.py
+
+# Animated preview
+python3 create_animated_preview.py
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Built with ❄️ Coldstar • Powered by Textual & Rich</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                <a href="https://github.com/devsyrem/coldstar" style="color: #58d1eb; text-decoration: none;">View on GitHub</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

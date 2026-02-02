@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f0f0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Coldstar Companion</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/@aspect-ratio/core@1.0.0/dist/qrcode.min.js" defer></script>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --card-bg: #1a1a2e;
+            --primary: #9945FF;
+            --secondary: #14F195;
+            --text: #ffffff;
+            --muted: #888888;
+            --danger: #ff4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--secondary);
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+        }
+
+        .network-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--primary);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(153, 69, 255, 0.2);
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .balance-display {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .balance-display span {
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 16px;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #7b2fff);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(20, 241, 149, 0.1);
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+        }
+
+        .btn-danger {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .qr-container canvas, .qr-container img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .status-success {
+            background: rgba(20, 241, 149, 0.1);
+            color: var(--secondary);
+            border: 1px solid rgba(20, 241, 149, 0.3);
+        }
+
+        .status-error {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+        }
+
+        .status-info {
+            background: rgba(153, 69, 255, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(153, 69, 255, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 25px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .address-display {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            word-break: break-all;
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+
+        .tx-preview {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .tx-preview-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tx-preview-row:last-child {
+            border-bottom: none;
+        }
+
+        .tx-preview-label {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .tx-preview-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-all;
+        }
+
+        .warning-box {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .warning-box h4 {
+            color: #ffc107;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .warning-box p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .nav-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item span {
+            font-size: 20px;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Coldstar</h1>
+        <p>Companion App</p>
+        <div class="network-badge" id="networkBadge">DEVNET</div>
+    </div>
+
+    <!-- Wallet Tab -->
+    <div class="tab-content active" id="walletTab">
+        <div class="card">
+            <div class="card-title">Wallet Address</div>
+            <div class="input-group">
+                <input type="text" id="walletAddress" placeholder="Enter your Solana public key...">
+            </div>
+            <button class="btn btn-primary" onclick="checkBalance()">Check Balance</button>
+        </div>
+
+        <div class="card" id="balanceCard" style="display: none;">
+            <div class="card-title">Balance</div>
+            <div class="balance-display" id="balanceDisplay">0.00 <span>SOL</span></div>
+            <div class="address-display" id="addressDisplay"></div>
+        </div>
+    </div>
+
+    <!-- Create TX Tab -->
+    <div class="tab-content" id="createTab">
+        <div class="card">
+            <div class="card-title">Create Unsigned Transaction</div>
+
+            <div class="input-group">
+                <label>From Address (Your Cold Wallet)</label>
+                <input type="text" id="fromAddress" placeholder="Your cold wallet public key">
+            </div>
+
+            <div class="input-group">
+                <label>To Address (Recipient)</label>
+                <input type="text" id="toAddress" placeholder="Recipient's Solana address">
+            </div>
+
+            <div class="input-group">
+                <label>Amount (SOL)</label>
+                <input type="number" id="amount" step="0.000000001" placeholder="0.0">
+            </div>
+
+            <button class="btn btn-primary" onclick="createTransaction()">Create Transaction</button>
+        </div>
+
+        <div class="card hidden" id="unsignedTxCard">
+            <div class="card-title">Unsigned Transaction</div>
+
+            <div class="tx-preview">
+                <div class="tx-preview-row">
+                    <span class="tx-preview-label">From</span>
+                    <span class="tx-preview-value" id="txFrom"></span>
+                </div>
+                <div class="tx-preview-row">
+                    <span class="tx-preview-label">To</span>
+                    <span class="tx-preview-value" id="txTo"></span>
+                </div>
+                <div class="tx-preview-row">
+                    <span class="tx-preview-label">Amount</span>
+                    <span class="tx-preview-value" id="txAmount"></span>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>Air-Gap Transfer</h4>
+                <p>Scan this QR code with your offline device or download the transaction file to sign on your air-gapped machine.</p>
+            </div>
+
+            <div class="qr-container" id="unsignedQr"></div>
+
+            <button class="btn btn-secondary" onclick="downloadUnsignedTx()">Download Transaction File</button>
+        </div>
+    </div>
+
+    <!-- Broadcast Tab -->
+    <div class="tab-content" id="broadcastTab">
+        <div class="card">
+            <div class="card-title">Broadcast Signed Transaction</div>
+
+            <div class="warning-box">
+                <h4>Upload Signed Transaction</h4>
+                <p>Upload the signed transaction file from your air-gapped device to broadcast it to the Solana network.</p>
+            </div>
+
+            <div class="file-input-wrapper">
+                <button class="btn btn-secondary">Choose Signed Transaction File</button>
+                <input type="file" id="signedTxFile" accept=".json" onchange="loadSignedTx(event)">
+            </div>
+
+            <div class="input-group" style="margin-top: 15px;">
+                <label>Or Paste Signed Transaction (Base64)</label>
+                <textarea id="signedTxData" placeholder="Paste signed transaction data here..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" onclick="broadcastTransaction()">Broadcast to Solana</button>
+        </div>
+
+        <div class="card hidden" id="broadcastResultCard">
+            <div class="card-title">Transaction Result</div>
+            <div id="broadcastResult"></div>
+        </div>
+    </div>
+
+    <!-- Backup Tab -->
+    <div class="tab-content" id="backupTab">
+        <div class="card">
+            <div class="card-title">Wallet Address QR</div>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 15px;">
+                Display your public address as a QR code for easy sharing and receiving SOL.
+            </p>
+            <div class="input-group">
+                <input type="text" id="backupWalletAddress" placeholder="Enter your public key">
+            </div>
+            <button class="btn btn-primary" onclick="generateWalletQR()">Generate QR Code</button>
+            <div class="qr-container hidden" id="walletQrContainer"></div>
+            <div class="address-display hidden" id="walletQrAddress"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Backup Options</div>
+            <div class="warning-box">
+                <h4>Security Reminder</h4>
+                <p>Your private keys should ONLY exist on your air-gapped device. The backup features below are for your PUBLIC address only.</p>
+            </div>
+
+            <button class="btn btn-secondary" onclick="downloadWalletInfo()" style="margin-bottom: 10px;">
+                Download Wallet Info (Public Only)
+            </button>
+
+            <button class="btn btn-secondary" onclick="printWalletQR()">
+                Print Wallet QR Code
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Recovery Guide</div>
+            <p style="color: var(--muted); font-size: 13px; line-height: 1.6;">
+                <strong>To backup your wallet securely:</strong>
+                <br><br>
+                1. On your air-gapped device, run:<br>
+                <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">python main.py</code>
+                <br><br>
+                2. Select "Backup / Restore Wallet"
+                <br><br>
+                3. Choose one of:<br>
+                • Paper Wallet (printable HTML with QR)<br>
+                • Encrypted Backup (password protected)<br>
+                • Mnemonic Seed Phrase (12/24 words)
+                <br><br>
+                <strong style="color: var(--danger);">Never store private keys digitally on internet-connected devices!</strong>
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Watch-Only Import</div>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 15px;">
+                Add a wallet address to monitor without the private key.
+            </p>
+            <div class="input-group">
+                <label>Public Address</label>
+                <input type="text" id="watchOnlyAddress" placeholder="Solana public key to watch">
+            </div>
+            <div class="input-group">
+                <label>Label (optional)</label>
+                <input type="text" id="watchOnlyLabel" placeholder="e.g., Main Wallet, Savings">
+            </div>
+            <button class="btn btn-secondary" onclick="addWatchOnlyWallet()">Add Watch-Only Wallet</button>
+
+            <div id="watchOnlyList" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settingsTab">
+        <div class="card">
+            <div class="card-title">Network Settings</div>
+            <div class="input-group">
+                <label>Solana Network</label>
+                <select id="networkSelect" onchange="updateNetwork()">
+                    <option value="devnet">Devnet (Testing)</option>
+                    <option value="testnet">Testnet</option>
+                    <option value="mainnet-beta">Mainnet</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">About</div>
+            <p style="color: var(--muted); font-size: 14px; line-height: 1.6;">
+                Coldstar Companion is a web app for managing air-gapped Solana cold wallet transactions.
+                <br><br>
+                <strong>Private keys never leave your offline device.</strong>
+                <br><br>
+                <a href="https://github.com/ChainLabs-Technologies/coldstar" target="_blank" style="color: var(--primary);">View on GitHub</a>
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Request Devnet Airdrop</div>
+            <div class="input-group">
+                <label>Wallet Address</label>
+                <input type="text" id="airdropAddress" placeholder="Solana public key">
+            </div>
+            <button class="btn btn-secondary" onclick="requestAirdrop()">Request 1 SOL Airdrop</button>
+        </div>
+    </div>
+
+    <!-- Tokens Tab -->
+    <div class="tab-content" id="tokensTab">
+        <div class="card">
+            <div class="card-title">SPL Token Balances</div>
+            <div class="input-group">
+                <input type="text" id="tokenWalletAddress" placeholder="Enter wallet address to view tokens">
+            </div>
+            <button class="btn btn-primary" onclick="fetchTokenBalances()">Load Tokens</button>
+        </div>
+
+        <div class="card hidden" id="tokenListCard">
+            <div class="card-title">Your Tokens</div>
+            <div id="tokenList"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Send SPL Token</div>
+
+            <div class="input-group">
+                <label>Token</label>
+                <select id="tokenSelect">
+                    <option value="">Select a token...</option>
+                    <option value="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v">USDC</option>
+                    <option value="Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB">USDT</option>
+                    <option value="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263">BONK</option>
+                    <option value="JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN">JUP</option>
+                    <option value="custom">Custom Token...</option>
+                </select>
+            </div>
+
+            <div class="input-group hidden" id="customMintGroup">
+                <label>Token Mint Address</label>
+                <input type="text" id="customMint" placeholder="Token mint address">
+            </div>
+
+            <div class="input-group">
+                <label>From Wallet</label>
+                <input type="text" id="tokenFromAddress" placeholder="Your wallet address">
+            </div>
+
+            <div class="input-group">
+                <label>To Wallet</label>
+                <input type="text" id="tokenToAddress" placeholder="Recipient address">
+            </div>
+
+            <div class="input-group">
+                <label>Amount</label>
+                <input type="number" id="tokenAmount" step="0.000001" placeholder="0.0">
+            </div>
+
+            <div class="input-group">
+                <label>Decimals (usually 6 or 9)</label>
+                <input type="number" id="tokenDecimals" value="6" min="0" max="18">
+            </div>
+
+            <button class="btn btn-primary" onclick="createTokenTransaction()">Create Token Transfer</button>
+        </div>
+
+        <div class="card hidden" id="unsignedTokenTxCard">
+            <div class="card-title">Unsigned Token Transaction</div>
+
+            <div class="tx-preview">
+                <div class="tx-preview-row">
+                    <span class="tx-preview-label">Token</span>
+                    <span class="tx-preview-value" id="tokenTxToken"></span>
+                </div>
+                <div class="tx-preview-row">
+                    <span class="tx-preview-label">From</span>
+                    <span class="tx-preview-value" id="tokenTxFrom"></span>
+                </div>
+                <div class="tx-preview-row">
+                    <span class="tx-preview-label">To</span>
+                    <span class="tx-preview-value" id="tokenTxTo"></span>
+                </div>
+                <div class="tx-preview-row">
+                    <span class="tx-preview-label">Amount</span>
+                    <span class="tx-preview-value" id="tokenTxAmount"></span>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>Air-Gap Transfer</h4>
+                <p>Download the transaction file and sign it on your air-gapped device.</p>
+            </div>
+
+            <button class="btn btn-secondary" onclick="downloadTokenTx()">Download Transaction File</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav-bottom">
+        <button class="nav-item active" onclick="switchTab('wallet')">
+            <span>💳</span>
+            Wallet
+        </button>
+        <button class="nav-item" onclick="switchTab('create')">
+            <span>📝</span>
+            SOL
+        </button>
+        <button class="nav-item" onclick="switchTab('tokens')">
+            <span>🪙</span>
+            Tokens
+        </button>
+        <button class="nav-item" onclick="switchTab('broadcast')">
+            <span>📡</span>
+            Send
+        </button>
+        <button class="nav-item" onclick="switchTab('backup')">
+            <span>🔐</span>
+            Backup
+        </button>
+        <button class="nav-item" onclick="switchTab('settings')">
+            <span>⚙️</span>
+            More
+        </button>
+    </nav>
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+    <script>
+        // Configuration
+        const NETWORKS = {
+            'devnet': 'https://api.devnet.solana.com',
+            'testnet': 'https://api.testnet.solana.com',
+            'mainnet-beta': 'https://api.mainnet-beta.solana.com'
+        };
+
+        let currentNetwork = 'devnet';
+        let unsignedTxData = null;
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        // Update network
+        function updateNetwork() {
+            currentNetwork = document.getElementById('networkSelect').value;
+            document.getElementById('networkBadge').textContent = currentNetwork.toUpperCase();
+            localStorage.setItem('coldstar_network', currentNetwork);
+        }
+
+        // Check balance
+        async function checkBalance() {
+            const address = document.getElementById('walletAddress').value.trim();
+            if (!address) {
+                showStatus('walletTab', 'Please enter a wallet address', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(NETWORKS[currentNetwork], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'getBalance',
+                        params: [address]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                const balance = (data.result.value / 1e9).toFixed(9);
+                document.getElementById('balanceDisplay').innerHTML = `${balance} <span>SOL</span>`;
+                document.getElementById('addressDisplay').textContent = address;
+                document.getElementById('balanceCard').style.display = 'block';
+
+                // Save for later use
+                localStorage.setItem('coldstar_wallet', address);
+                document.getElementById('fromAddress').value = address;
+                document.getElementById('airdropAddress').value = address;
+
+            } catch (error) {
+                showStatus('walletTab', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        // Create unsigned transaction
+        async function createTransaction() {
+            const from = document.getElementById('fromAddress').value.trim();
+            const to = document.getElementById('toAddress').value.trim();
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            if (!from || !to || !amount) {
+                showStatus('createTab', 'Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                // Get recent blockhash
+                const response = await fetch(NETWORKS[currentNetwork], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'getLatestBlockhash',
+                        params: [{ commitment: 'confirmed' }]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                const blockhash = data.result.value.blockhash;
+                const lamports = Math.floor(amount * 1e9);
+
+                // Create transaction data (simplified format for QR)
+                unsignedTxData = {
+                    type: 'unsigned_transaction',
+                    version: '1.0',
+                    network: currentNetwork,
+                    from: from,
+                    to: to,
+                    lamports: lamports,
+                    amount_sol: amount,
+                    blockhash: blockhash,
+                    created_at: new Date().toISOString()
+                };
+
+                // Update preview
+                document.getElementById('txFrom').textContent = from.slice(0, 8) + '...' + from.slice(-8);
+                document.getElementById('txTo').textContent = to.slice(0, 8) + '...' + to.slice(-8);
+                document.getElementById('txAmount').textContent = amount + ' SOL';
+
+                // Generate QR code
+                const qrContainer = document.getElementById('unsignedQr');
+                qrContainer.innerHTML = '';
+
+                // For large data, we'll use a compressed format
+                const qrData = JSON.stringify(unsignedTxData);
+
+                await QRCode.toCanvas(qrContainer, qrData, {
+                    width: 280,
+                    margin: 2,
+                    color: { dark: '#000', light: '#fff' }
+                });
+
+                document.getElementById('unsignedTxCard').classList.remove('hidden');
+                showStatus('createTab', 'Transaction created! Transfer to your offline device.', 'success');
+
+            } catch (error) {
+                showStatus('createTab', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        // Download unsigned transaction
+        function downloadUnsignedTx() {
+            if (!unsignedTxData) return;
+
+            const blob = new Blob([JSON.stringify(unsignedTxData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `unsigned_tx_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Load signed transaction file
+        function loadSignedTx(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.type === 'signed_transaction' && data.data) {
+                        document.getElementById('signedTxData').value = data.data;
+                        showStatus('broadcastTab', 'Signed transaction loaded!', 'success');
+                    } else {
+                        showStatus('broadcastTab', 'Invalid transaction file format', 'error');
+                    }
+                } catch (err) {
+                    showStatus('broadcastTab', 'Error reading file: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Broadcast transaction
+        async function broadcastTransaction() {
+            const signedTx = document.getElementById('signedTxData').value.trim();
+
+            if (!signedTx) {
+                showStatus('broadcastTab', 'Please load or paste a signed transaction', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(NETWORKS[currentNetwork], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'sendTransaction',
+                        params: [signedTx, { encoding: 'base64', preflightCommitment: 'confirmed' }]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                const signature = data.result;
+                const explorerUrl = currentNetwork === 'mainnet-beta'
+                    ? `https://explorer.solana.com/tx/${signature}`
+                    : `https://explorer.solana.com/tx/${signature}?cluster=${currentNetwork}`;
+
+                document.getElementById('broadcastResult').innerHTML = `
+                    <div class="status status-success">
+                        Transaction sent successfully!
+                    </div>
+                    <div class="tx-preview" style="margin-top: 15px;">
+                        <div class="tx-preview-row">
+                            <span class="tx-preview-label">Signature</span>
+                            <span class="tx-preview-value">${signature.slice(0, 20)}...</span>
+                        </div>
+                    </div>
+                    <a href="${explorerUrl}" target="_blank" class="btn btn-secondary" style="display: block; text-align: center; text-decoration: none; margin-top: 10px;">
+                        View on Explorer
+                    </a>
+                `;
+                document.getElementById('broadcastResultCard').classList.remove('hidden');
+
+            } catch (error) {
+                document.getElementById('broadcastResult').innerHTML = `
+                    <div class="status status-error">
+                        Error: ${error.message}
+                    </div>
+                `;
+                document.getElementById('broadcastResultCard').classList.remove('hidden');
+            }
+        }
+
+        // Request airdrop
+        async function requestAirdrop() {
+            const address = document.getElementById('airdropAddress').value.trim();
+
+            if (!address) {
+                showStatus('settingsTab', 'Please enter a wallet address', 'error');
+                return;
+            }
+
+            if (currentNetwork === 'mainnet-beta') {
+                showStatus('settingsTab', 'Airdrops only available on Devnet/Testnet', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(NETWORKS[currentNetwork], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'requestAirdrop',
+                        params: [address, 1000000000]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                showStatus('settingsTab', 'Airdrop requested! Check your balance in a few seconds.', 'success');
+
+            } catch (error) {
+                showStatus('settingsTab', 'Airdrop error: ' + error.message, 'error');
+            }
+        }
+
+        // Show status message
+        function showStatus(tabId, message, type) {
+            const existingStatus = document.querySelector(`#${tabId} .status-message`);
+            if (existingStatus) existingStatus.remove();
+
+            const status = document.createElement('div');
+            status.className = `status status-${type} status-message`;
+            status.textContent = message;
+
+            const tab = document.getElementById(tabId);
+            const firstCard = tab.querySelector('.card');
+            if (firstCard) {
+                firstCard.insertAdjacentElement('afterend', status);
+            }
+
+            setTimeout(() => status.remove(), 5000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load saved settings
+            const savedNetwork = localStorage.getItem('coldstar_network');
+            if (savedNetwork) {
+                currentNetwork = savedNetwork;
+                document.getElementById('networkSelect').value = savedNetwork;
+                document.getElementById('networkBadge').textContent = savedNetwork.toUpperCase();
+            }
+
+            const savedWallet = localStorage.getItem('coldstar_wallet');
+            if (savedWallet) {
+                document.getElementById('walletAddress').value = savedWallet;
+                document.getElementById('fromAddress').value = savedWallet;
+                document.getElementById('airdropAddress').value = savedWallet;
+            }
+        });
+
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
+        // Token-related functions
+        const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+
+        const KNOWN_TOKENS = {
+            'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': { symbol: 'USDC', name: 'USD Coin', decimals: 6 },
+            'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': { symbol: 'USDT', name: 'Tether USD', decimals: 6 },
+            'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263': { symbol: 'BONK', name: 'Bonk', decimals: 5 },
+            'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN': { symbol: 'JUP', name: 'Jupiter', decimals: 6 },
+            '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R': { symbol: 'RAY', name: 'Raydium', decimals: 6 },
+        };
+
+        let unsignedTokenTxData = null;
+
+        // Token select handler
+        document.getElementById('tokenSelect').addEventListener('change', function() {
+            const customGroup = document.getElementById('customMintGroup');
+            if (this.value === 'custom') {
+                customGroup.classList.remove('hidden');
+            } else {
+                customGroup.classList.add('hidden');
+                // Set decimals for known tokens
+                const token = KNOWN_TOKENS[this.value];
+                if (token) {
+                    document.getElementById('tokenDecimals').value = token.decimals;
+                }
+            }
+        });
+
+        // Fetch token balances
+        async function fetchTokenBalances() {
+            const address = document.getElementById('tokenWalletAddress').value.trim() ||
+                            document.getElementById('walletAddress').value.trim();
+
+            if (!address) {
+                showStatus('tokensTab', 'Please enter a wallet address', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(NETWORKS[currentNetwork], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'getTokenAccountsByOwner',
+                        params: [
+                            address,
+                            { programId: TOKEN_PROGRAM_ID },
+                            { encoding: 'jsonParsed' }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                const tokenList = document.getElementById('tokenList');
+                const accounts = data.result?.value || [];
+
+                if (accounts.length === 0) {
+                    tokenList.innerHTML = '<p style="color: var(--muted);">No tokens found</p>';
+                } else {
+                    tokenList.innerHTML = accounts.map(acc => {
+                        const info = acc.account.data.parsed.info;
+                        const amount = info.tokenAmount;
+                        const mint = info.mint;
+                        const known = KNOWN_TOKENS[mint];
+
+                        return `
+                            <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-weight: 600;">${known?.symbol || mint.slice(0, 8) + '...'}</div>
+                                    <div style="font-size: 12px; color: var(--muted);">${known?.name || 'Unknown Token'}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="color: var(--secondary); font-weight: 600;">${amount.uiAmount || 0}</div>
+                                    <div style="font-size: 12px; color: var(--muted);">${amount.decimals} decimals</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                document.getElementById('tokenListCard').classList.remove('hidden');
+                document.getElementById('tokenFromAddress').value = address;
+
+            } catch (error) {
+                showStatus('tokensTab', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        // Create token transaction
+        async function createTokenTransaction() {
+            const tokenSelect = document.getElementById('tokenSelect').value;
+            const mint = tokenSelect === 'custom'
+                ? document.getElementById('customMint').value.trim()
+                : tokenSelect;
+
+            const from = document.getElementById('tokenFromAddress').value.trim();
+            const to = document.getElementById('tokenToAddress').value.trim();
+            const amount = parseFloat(document.getElementById('tokenAmount').value);
+            const decimals = parseInt(document.getElementById('tokenDecimals').value);
+
+            if (!mint || !from || !to || !amount) {
+                showStatus('tokensTab', 'Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                // Get recent blockhash
+                const response = await fetch(NETWORKS[currentNetwork], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'getLatestBlockhash',
+                        params: [{ commitment: 'confirmed' }]
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
+
+                const blockhash = data.result.value.blockhash;
+                const tokenAmount = Math.floor(amount * Math.pow(10, decimals));
+
+                const known = KNOWN_TOKENS[mint];
+
+                unsignedTokenTxData = {
+                    type: 'unsigned_token_transaction',
+                    version: '1.0',
+                    network: currentNetwork,
+                    from: from,
+                    to: to,
+                    mint: mint,
+                    token_symbol: known?.symbol || 'UNKNOWN',
+                    amount: amount,
+                    token_amount: tokenAmount,
+                    decimals: decimals,
+                    blockhash: blockhash,
+                    created_at: new Date().toISOString()
+                };
+
+                // Update preview
+                document.getElementById('tokenTxToken').textContent = known?.symbol || mint.slice(0, 12) + '...';
+                document.getElementById('tokenTxFrom').textContent = from.slice(0, 8) + '...' + from.slice(-8);
+                document.getElementById('tokenTxTo').textContent = to.slice(0, 8) + '...' + to.slice(-8);
+                document.getElementById('tokenTxAmount').textContent = amount + ' ' + (known?.symbol || 'tokens');
+
+                document.getElementById('unsignedTokenTxCard').classList.remove('hidden');
+                showStatus('tokensTab', 'Token transaction created! Download to sign offline.', 'success');
+
+            } catch (error) {
+                showStatus('tokensTab', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        // Download token transaction
+        function downloadTokenTx() {
+            if (!unsignedTokenTxData) return;
+
+            const blob = new Blob([JSON.stringify(unsignedTokenTxData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `token_tx_${unsignedTokenTxData.token_symbol}_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Backup tab functions
+        let watchOnlyWallets = JSON.parse(localStorage.getItem('coldstar_watch_wallets') || '[]');
+
+        // Generate wallet QR code
+        async function generateWalletQR() {
+            const address = document.getElementById('backupWalletAddress').value.trim() ||
+                            document.getElementById('walletAddress').value.trim();
+
+            if (!address) {
+                showStatus('backupTab', 'Please enter a wallet address', 'error');
+                return;
+            }
+
+            try {
+                const qrContainer = document.getElementById('walletQrContainer');
+                qrContainer.innerHTML = '';
+
+                await QRCode.toCanvas(qrContainer, address, {
+                    width: 280,
+                    margin: 2,
+                    color: { dark: '#000', light: '#fff' }
+                });
+
+                qrContainer.classList.remove('hidden');
+                document.getElementById('walletQrAddress').textContent = address;
+                document.getElementById('walletQrAddress').classList.remove('hidden');
+
+                showStatus('backupTab', 'QR code generated!', 'success');
+
+            } catch (error) {
+                showStatus('backupTab', 'Error generating QR: ' + error.message, 'error');
+            }
+        }
+
+        // Download wallet info (public only)
+        function downloadWalletInfo() {
+            const address = document.getElementById('backupWalletAddress').value.trim() ||
+                            document.getElementById('walletAddress').value.trim();
+
+            if (!address) {
+                showStatus('backupTab', 'Please enter a wallet address first', 'error');
+                return;
+            }
+
+            const walletInfo = {
+                type: 'coldstar_wallet_info',
+                version: '1.0',
+                public_key: address,
+                network: currentNetwork,
+                created_at: new Date().toISOString(),
+                note: 'This file contains PUBLIC information only. Private keys are stored on your air-gapped device.'
+            };
+
+            const blob = new Blob([JSON.stringify(walletInfo, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `coldstar_wallet_${address.slice(0, 8)}_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showStatus('backupTab', 'Wallet info downloaded!', 'success');
+        }
+
+        // Print wallet QR
+        function printWalletQR() {
+            const address = document.getElementById('backupWalletAddress').value.trim() ||
+                            document.getElementById('walletAddress').value.trim();
+
+            if (!address) {
+                showStatus('backupTab', 'Please generate a QR code first', 'error');
+                return;
+            }
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Coldstar Wallet - ${address.slice(0, 8)}...</title>
+                    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>
+                    <style>
+                        body { font-family: monospace; text-align: center; padding: 40px; }
+                        h1 { font-size: 24px; margin-bottom: 10px; }
+                        .subtitle { color: #666; margin-bottom: 30px; }
+                        .address { word-break: break-all; font-size: 12px; margin: 20px auto; max-width: 400px; background: #f0f0f0; padding: 15px; border-radius: 8px; }
+                        .warning { color: #ff4444; font-size: 14px; margin-top: 30px; }
+                        canvas { margin: 20px auto; display: block; }
+                    </style>
+                </head>
+                <body>
+                    <h1>COLDSTAR WALLET</h1>
+                    <p class="subtitle">Solana Public Address</p>
+                    <div id="qr"></div>
+                    <div class="address">${address}</div>
+                    <p class="warning">This is your PUBLIC address for receiving SOL.<br>Never share your private key!</p>
+                    <script>
+                        QRCode.toCanvas(document.getElementById('qr'), '${address}', { width: 300 }, function() {
+                            setTimeout(() => window.print(), 500);
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // Add watch-only wallet
+        function addWatchOnlyWallet() {
+            const address = document.getElementById('watchOnlyAddress').value.trim();
+            const label = document.getElementById('watchOnlyLabel').value.trim() || 'Unnamed Wallet';
+
+            if (!address) {
+                showStatus('backupTab', 'Please enter a wallet address', 'error');
+                return;
+            }
+
+            // Check if already exists
+            if (watchOnlyWallets.find(w => w.address === address)) {
+                showStatus('backupTab', 'This wallet is already in your watch list', 'error');
+                return;
+            }
+
+            watchOnlyWallets.push({
+                address: address,
+                label: label,
+                added_at: new Date().toISOString()
+            });
+
+            localStorage.setItem('coldstar_watch_wallets', JSON.stringify(watchOnlyWallets));
+            renderWatchOnlyList();
+
+            document.getElementById('watchOnlyAddress').value = '';
+            document.getElementById('watchOnlyLabel').value = '';
+
+            showStatus('backupTab', 'Watch-only wallet added!', 'success');
+        }
+
+        // Render watch-only wallets
+        function renderWatchOnlyList() {
+            const container = document.getElementById('watchOnlyList');
+
+            if (watchOnlyWallets.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = watchOnlyWallets.map((wallet, idx) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 8px;">
+                    <div style="flex: 1; overflow: hidden;">
+                        <div style="font-weight: 600; font-size: 14px;">${wallet.label}</div>
+                        <div style="font-size: 11px; color: var(--muted); font-family: monospace;">${wallet.address.slice(0, 12)}...${wallet.address.slice(-8)}</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="selectWatchWallet('${wallet.address}')" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">Use</button>
+                        <button onclick="removeWatchWallet(${idx})" style="background: rgba(255,68,68,0.2); color: var(--danger); border: 1px solid var(--danger); padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Select watch wallet
+        function selectWatchWallet(address) {
+            document.getElementById('walletAddress').value = address;
+            document.getElementById('fromAddress').value = address;
+            document.getElementById('tokenFromAddress').value = address;
+            document.getElementById('airdropAddress').value = address;
+            document.getElementById('backupWalletAddress').value = address;
+            localStorage.setItem('coldstar_wallet', address);
+            showStatus('backupTab', 'Wallet selected! Switch to Wallet tab to check balance.', 'success');
+        }
+
+        // Remove watch wallet
+        function removeWatchWallet(idx) {
+            watchOnlyWallets.splice(idx, 1);
+            localStorage.setItem('coldstar_watch_wallets', JSON.stringify(watchOnlyWallets));
+            renderWatchOnlyList();
+        }
+
+        // Initialize watch list on load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderWatchOnlyList();
+
+            // Sync backup tab address with main wallet
+            const savedWallet = localStorage.getItem('coldstar_wallet');
+            if (savedWallet) {
+                document.getElementById('backupWalletAddress').value = savedWallet;
+                document.getElementById('tokenWalletAddress').value = savedWallet;
+            }
+        });
+    </script>
+</body>
+</html>

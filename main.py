@@ -27,6 +27,7 @@ from src.usb import USBManager
 from src.network import SolanaNetwork
 from src.transaction import TransactionManager
 from src.iso_builder import ISOBuilder
+from src.backup import WalletBackup
 
 
 class SolanaColdWalletCLI:
@@ -36,7 +37,8 @@ class SolanaColdWalletCLI:
         self.network = SolanaNetwork()
         self.transaction_manager = TransactionManager()
         self.iso_builder = ISOBuilder()
-        
+        self.backup_manager = WalletBackup()
+
         self.current_usb_device = None
         self.current_public_key = None
         self.usb_is_cold_wallet = False
@@ -251,9 +253,10 @@ class SolanaColdWalletCLI:
             "4. Broadcast Signed Transaction",
             "5. Quick Send (Create+Sign+Broadcast - INSECURE)",
             "6. View Transaction History",
-            "7. Request Devnet Airdrop",
-            "8. Network Status",
-            "9. Unmount USB / Switch Device",
+            "7. Backup / Restore Wallet",
+            "8. Request Devnet Airdrop",
+            "9. Network Status",
+            "A. Unmount USB / Switch Device",
             "0. Exit"
         ]
         
@@ -290,13 +293,17 @@ class SolanaColdWalletCLI:
             self._wait_for_key()
         elif choice_num == "7":
             self._draw_header()
-            self.request_airdrop()
+            self.backup_restore_wallet()
             self._wait_for_key()
         elif choice_num == "8":
             self._draw_header()
-            self.show_network_status()
+            self.request_airdrop()
             self._wait_for_key()
         elif choice_num == "9":
+            self._draw_header()
+            self.show_network_status()
+            self._wait_for_key()
+        elif choice_num.upper() == "A":
             self._unmount_usb()
         elif choice_num == "0":
             self.exit_app()
@@ -900,6 +907,204 @@ class SolanaColdWalletCLI:
         # Show explorer link
         print_explorer_link(signature, "devnet")
     
+    def backup_restore_wallet(self):
+        """Backup or restore wallet with multiple options"""
+        print_section_header("WALLET BACKUP / RESTORE")
+
+        if not self.usb_manager.mount_point:
+            print_error("No USB mounted. Mount your cold wallet USB first.")
+            return
+
+        wallet_dir = Path(self.usb_manager.mount_point) / "wallet"
+        keypair_path = wallet_dir / "keypair.json"
+
+        if not keypair_path.exists():
+            print_warning("No wallet found on USB.")
+            # Offer restore option
+            restore_choice = select_menu_option(
+                ["Yes, restore from backup", "No, go back"],
+                "Would you like to restore a wallet from backup?"
+            )
+            if restore_choice and "Yes" in restore_choice:
+                self._restore_wallet(wallet_dir)
+            return
+
+        # Load the keypair for backup
+        keypair = self.wallet_manager.load_keypair(str(keypair_path))
+        if not keypair:
+            print_error("Failed to load wallet keypair")
+            return
+
+        print_info(f"Wallet: {str(keypair.pubkey())[:16]}...")
+        console.print()
+
+        options = [
+            "1. Create Paper Wallet (Printable HTML with QR)",
+            "2. Export Encrypted Backup",
+            "3. Export Plaintext Backup (NOT SECURE)",
+            "4. Generate Mnemonic Seed Phrase",
+            "5. Restore from Backup File",
+            "6. Cancel"
+        ]
+
+        choice = select_menu_option(options, "Select backup option:")
+
+        if choice is None or "Cancel" in choice:
+            return
+
+        choice_num = choice.split(".")[0].strip()
+
+        # Create backups directory
+        backup_dir = Path(self.usb_manager.mount_point) / "backups"
+        backup_dir.mkdir(exist_ok=True)
+
+        if choice_num == "1":
+            # Paper wallet
+            print_info("Creating paper wallet...")
+            path = self.backup_manager.create_paper_wallet(keypair, str(backup_dir))
+            if path:
+                print_success(f"Paper wallet created: {path}")
+                print_info("Open this HTML file in a browser to print.")
+                print_warning("IMPORTANT: Print on a secure, offline printer!")
+
+        elif choice_num == "2":
+            # Encrypted backup
+            print_warning("Enter a strong password (minimum 8 characters)")
+            password = get_text_input("Password: ")
+            if len(password) < 8:
+                print_error("Password must be at least 8 characters")
+                return
+
+            confirm = get_text_input("Confirm password: ")
+            if password != confirm:
+                print_error("Passwords don't match")
+                return
+
+            import time
+            backup_path = backup_dir / f"encrypted_backup_{int(time.time())}.json"
+
+            if self.backup_manager.backup_to_file(keypair, str(backup_path), password):
+                print_success(f"Encrypted backup saved to: {backup_path}")
+                print_info("Store this file securely. You'll need the password to restore.")
+
+        elif choice_num == "3":
+            # Plaintext backup
+            print_warning("⚠️  WARNING: Plaintext backups are NOT secure!")
+            print_warning("Anyone with access to this file can steal your funds.")
+
+            confirm = confirm_dangerous_action(
+                "Create unencrypted backup?",
+                "INSECURE"
+            )
+
+            if confirm:
+                import time
+                backup_path = backup_dir / f"plaintext_backup_{int(time.time())}.json"
+                if self.backup_manager.backup_to_file(keypair, str(backup_path)):
+                    print_success(f"Plaintext backup saved to: {backup_path}")
+
+        elif choice_num == "4":
+            # Generate mnemonic
+            if not self.backup_manager.mnemonic_available:
+                print_warning("mnemonic library not installed")
+                print_info("Install with: pip install mnemonic")
+                return
+
+            print_warning("⚠️  IMPORTANT SECURITY NOTICE ⚠️")
+            print_warning("The mnemonic phrase gives FULL ACCESS to your wallet.")
+            print_warning("Write it down on paper - NEVER store digitally!")
+            console.print()
+
+            word_choice = select_menu_option(
+                ["12 words (standard)", "24 words (extra security)"],
+                "Select mnemonic length:"
+            )
+
+            if word_choice:
+                strength = 128 if "12" in word_choice else 256
+                mnemonic = self.backup_manager.generate_mnemonic(strength)
+
+                if mnemonic:
+                    console.print()
+                    print_section_header("YOUR SEED PHRASE")
+                    words = mnemonic.split()
+                    for i, word in enumerate(words, 1):
+                        console.print(f"  {i:2}. {word}")
+                    console.print()
+                    print_warning("Write these words down in order!")
+                    print_warning("NEVER share or store digitally!")
+                    print_info("You can use these words to recover your wallet.")
+
+        elif choice_num == "5":
+            self._restore_wallet(wallet_dir)
+
+    def _restore_wallet(self, wallet_dir: Path):
+        """Restore wallet from backup file"""
+        print_section_header("RESTORE WALLET")
+
+        backup_dir = Path(self.usb_manager.mount_point) / "backups"
+        backup_files = list(backup_dir.glob("*.json")) if backup_dir.exists() else []
+
+        if backup_files:
+            print_success(f"Found {len(backup_files)} backup file(s)")
+            file_options = [f.name for f in backup_files]
+            file_options.append("Enter custom path")
+            file_options.append("Cancel")
+
+            selection = select_menu_option(file_options, "Select backup file:")
+
+            if not selection or "Cancel" in selection:
+                return
+
+            if "Enter custom" in selection:
+                backup_path = get_text_input("Enter backup file path: ")
+            else:
+                backup_path = str(backup_dir / selection)
+        else:
+            backup_path = get_text_input("Enter backup file path: ")
+
+        if not backup_path or not Path(backup_path).exists():
+            print_error("Backup file not found")
+            return
+
+        # Check if encrypted
+        import json
+        with open(backup_path, 'r') as f:
+            data = json.load(f)
+
+        password = None
+        if data.get("type") == "encrypted_keypair":
+            password = get_text_input("Enter decryption password: ")
+
+        keypair = self.backup_manager.restore_from_file(backup_path, password)
+
+        if keypair:
+            # Save to wallet directory
+            wallet_dir.mkdir(parents=True, exist_ok=True)
+            keypair_path = wallet_dir / "keypair.json"
+            pubkey_path = wallet_dir / "pubkey.txt"
+
+            # Backup existing if present
+            if keypair_path.exists():
+                print_warning("Existing wallet will be replaced!")
+                if not confirm_dangerous_action("Replace existing wallet?", "REPLACE"):
+                    return
+                import time
+                old_backup = wallet_dir / f"keypair_old_{int(time.time())}.json"
+                keypair_path.rename(old_backup)
+                print_info(f"Old wallet backed up to: {old_backup}")
+
+            # Save new keypair
+            with open(keypair_path, 'w') as f:
+                json.dump(list(bytes(keypair)), f)
+
+            with open(pubkey_path, 'w') as f:
+                f.write(str(keypair.pubkey()))
+
+            self.current_public_key = str(keypair.pubkey())
+            print_success("Wallet restored successfully!")
+            print_info(f"Public key: {self.current_public_key}")
+
     def request_airdrop(self):
         print_section_header("REQUEST DEVNET AIRDROP")
         
