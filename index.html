@@ -14,7 +14,23 @@
     <link rel="icon" type="image/png" sizes="192x192" href="./assets/favicons/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="./assets/favicons/android-chrome-512x512.png">
 
+    <!-- Fonts from coldstar.dev -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            /* coldstar.dev color palette */
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --bg-card: #141414;
+            --accent-blue: #00A3FF;
+            --accent-green: #00D26A;
+            --accent-yellow: #FFB800;
+            --accent-red: #FF4D4D;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -22,11 +38,15 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
-            background: #000;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
             color: #fff;
             line-height: 1.6;
             overflow-x: hidden;
+        }
+
+        code, pre, .mono {
+            font-family: 'JetBrains Mono', monospace;
         }
 
         /* Hero Section */
@@ -357,11 +377,19 @@
     </style>
 </head>
 <body>
+    <!-- Top Banner -->
+    <div style="background: linear-gradient(90deg, var(--accent-blue), #0080cc); padding: 12px 20px; text-align: center; font-size: 0.95em; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+        <span style="color: #fff;">
+            🏆 <strong>Colosseum Agent Hackathon Demo</strong> •
+            Visit the main site: <a href="https://coldstar.dev" target="_blank" style="color: #fff; text-decoration: underline; font-weight: 600;">coldstar.dev</a>
+        </span>
+    </div>
+
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <img src="./assets/coldstar-logo.png" alt="Coldstar Logo" style="max-width: 300px; margin-bottom: 30px; filter: drop-shadow(0 10px 40px rgba(88, 209, 235, 0.3));">
-            <h1>💎 Coldstar</h1>
+            <img src="./assets/coldstar-logo-main.png" alt="Coldstar Logo" style="max-width: 400px; margin-bottom: 30px; filter: drop-shadow(0 10px 40px rgba(0, 163, 255, 0.4));">
+            <h1>Coldstar</h1>
             <p class="tagline">Air-Gapped Solana Cold Wallet for the Agent Economy</p>
             <p style="font-size: 1.2em; color: #ccc; max-width: 800px; margin: 0 auto;">
                 Turn any $10 USB drive into hardware-grade security. Your private keys never touch the internet.
@@ -593,6 +621,41 @@
                         </a>
                     </p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partners & Integrations Section -->
+    <section class="section" style="background: var(--bg-secondary); margin: 0; max-width: 100%; padding: 80px 20px;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h2 class="section-title">Built on Solana, Integrated with the Ecosystem</h2>
+            <p style="text-align: center; color: #999; font-size: 1.2em; margin-bottom: 60px; max-width: 700px; margin-left: auto; margin-right: auto;">
+                Coldstar integrates with leading Solana protocols to provide seamless DeFi access while maintaining air-gapped security.
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; align-items: center; justify-items: center;">
+                <div style="text-align: center;">
+                    <img src="./assets/partners/pyth.svg" alt="Pyth Network" style="height: 50px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Price Oracles</p>
+                </div>
+                <div style="text-align: center;">
+                    <img src="./assets/partners/meteora.svg" alt="Meteora" style="height: 50px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Liquidity Pools</p>
+                </div>
+                <div style="text-align: center;">
+                    <img src="./assets/partners/squads.svg" alt="Squads Protocol" style="height: 50px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Multi-Sig</p>
+                </div>
+                <div style="text-align: center;">
+                    <img src="./assets/partners/solana.svg" alt="Solana" style="height: 50px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Infrastructure</p>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 60px;">
+                <p style="color: #00A3FF; font-size: 1.1em;">
+                    🔗 Integration with Jupiter DEX for best swap routes across all Solana DEXes
+                </p>
             </div>
         </div>
     </section>
