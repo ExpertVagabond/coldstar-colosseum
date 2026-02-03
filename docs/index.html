@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Coldstar - Air-Gapped Solana Cold Wallet. Turn any $10 USB into hardware-grade security. Built for the Colosseum Agent Hackathon.">
+    <title>Coldstar - Air-Gapped Solana Vault | Colosseum Hackathon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: #000;
+            color: #fff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(88, 209, 235, 0.1) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 1;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3em, 8vw, 6em);
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #58d1eb, #98e024);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .tagline {
+            font-size: clamp(1.2em, 3vw, 2em);
+            color: #9e9e9e;
+            margin-bottom: 40px;
+        }
+
+        .hero .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #58d1eb;
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #98e024;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(88, 209, 235, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            border: 2px solid #58d1eb;
+        }
+
+        .btn-secondary:hover {
+            background: #58d1eb;
+            color: #000;
+        }
+
+        /* Stats Bar */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-top: 80px;
+            padding: 40px;
+            background: rgba(26, 26, 26, 0.8);
+            border-radius: 12px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #58d1eb, #98e024);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: #9e9e9e;
+            margin-top: 10px;
+        }
+
+        /* Features Section */
+        .section {
+            padding: 100px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            border: 2px solid #2a2a2a;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: #58d1eb;
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            color: #58d1eb;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #9e9e9e;
+            line-height: 1.8;
+        }
+
+        .feature-card ul {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-card ul li {
+            padding: 8px 0;
+            color: #ccc;
+        }
+
+        .feature-card ul li::before {
+            content: "✓ ";
+            color: #98e024;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Comparison Table */
+        .comparison {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 20px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        th {
+            color: #58d1eb;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        td {
+            color: #ccc;
+        }
+
+        tr:hover {
+            background: #0a0a0a;
+        }
+
+        .yes { color: #98e024; }
+        .no { color: #fd971f; }
+        .maybe { color: #ffff00; }
+
+        /* Demo Section */
+        .demo-preview {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            border: 2px solid #2a2a2a;
+        }
+
+        .demo-preview iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 100px 20px;
+            background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+        }
+
+        .cta-section h2 {
+            font-size: 3em;
+            margin-bottom: 30px;
+        }
+
+        .cta-section p {
+            font-size: 1.3em;
+            color: #9e9e9e;
+            margin-bottom: 40px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: #0a0a0a;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #58d1eb;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #98e024;
+        }
+
+        .footer-note {
+            color: #666;
+            margin-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5em;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Badges */
+        .badges {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        .badge {
+            padding: 8px 16px;
+            background: #2a2a2a;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #9e9e9e;
+        }
+
+        .badge.highlight {
+            background: #58d1eb;
+            color: #000;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>💎 Coldstar</h1>
+            <p class="tagline">Air-Gapped Solana Cold Wallet for the Agent Economy</p>
+            <p style="font-size: 1.2em; color: #ccc; max-width: 800px; margin: 0 auto;">
+                Turn any $10 USB drive into hardware-grade security. Your private keys never touch the internet.
+            </p>
+
+            <div class="badges">
+                <span class="badge highlight">Air-Gapped</span>
+                <span class="badge">Solana</span>
+                <span class="badge">DeFi Ready</span>
+                <span class="badge">DAO Governance</span>
+                <span class="badge">Open Source</span>
+            </div>
+
+            <div class="cta-buttons">
+                <a href="https://github.com/ExpertVagabond/coldstar-colosseum" class="btn btn-primary" target="_blank">
+                    View on GitHub →
+                </a>
+                <a href="../screenshots/index.html" class="btn btn-secondary">
+                    View Screenshots
+                </a>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">$10</div>
+                    <div class="stat-label">vs $200 Hardware Wallet</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">2,500+</div>
+                    <div class="stat-label">Lines of Code</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Major Integrations</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Air-Gapped</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section">
+        <h2 class="section-title">Why Coldstar?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Air-Gap Security</h3>
+                <p>Complete network isolation. Private keys generated offline on air-gapped USB with Alpine Linux. Network drivers blacklisted at boot.</p>
+                <ul>
+                    <li>Hardware-grade isolation</li>
+                    <li>No network access</li>
+                    <li>Encrypted key storage</li>
+                    <li>QR-based signing</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💱</div>
+                <h3>DeFi Integration</h3>
+                <p>Jupiter DEX for best swap routes. Pyth Network for real-time price feeds. Create transactions online, sign offline, broadcast.</p>
+                <ul>
+                    <li>Jupiter aggregation</li>
+                    <li>Pyth price feeds</li>
+                    <li>USD portfolio valuation</li>
+                    <li>SPL token support</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🏛️</div>
+                <h3>DAO Governance</h3>
+                <p>Multi-sig vaults with M-of-N signatures. On-chain voting and proposals. Air-gapped approval from each member.</p>
+                <ul>
+                    <li>Multi-sig cold vaults</li>
+                    <li>Proposal creation</li>
+                    <li>On-chain voting</li>
+                    <li>Deployed on devnet</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Beautiful Interface</h3>
+                <p>Modern TUI with Rich terminal graphics. Portfolio dashboard with real-time prices. Guided USB flashing tool.</p>
+                <ul>
+                    <li>Professional TUI</li>
+                    <li>Progress visualization</li>
+                    <li>Portfolio tracking</li>
+                    <li>Keyboard shortcuts</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <h3>Easy Setup</h3>
+                <p>Turn any USB drive into a cold wallet in minutes. Bootable Alpine Linux with all dependencies included.</p>
+                <ul>
+                    <li>Any $10 USB drive</li>
+                    <li>Automated flashing</li>
+                    <li>< 50MB footprint</li>
+                    <li>No installation needed</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Agent-Friendly</h3>
+                <p>Designed for AI agents managing treasuries. MCP integration planned for hot+cold wallet architecture.</p>
+                <ul>
+                    <li>Programmable interface</li>
+                    <li>Smart routing</li>
+                    <li>Threshold-based security</li>
+                    <li>API-ready</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="section">
+        <h2 class="section-title">How Does It Stack Up?</h2>
+        <div class="comparison">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Coldstar</th>
+                        <th>Hardware Wallet</th>
+                        <th>Hot Wallet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Air-Gap Security</td>
+                        <td class="yes">✅ Yes</td>
+                        <td class="yes">✅ Yes</td>
+                        <td class="no">❌ No</td>
+                    </tr>
+                    <tr>
+                        <td>Cost</td>
+                        <td class="yes">$10</td>
+                        <td class="no">$79-279</td>
+                        <td class="yes">Free</td>
+                    </tr>
+                    <tr>
+                        <td>Open Source</td>
+                        <td class="yes">✅ Yes</td>
+                        <td class="no">❌ No</td>
+                        <td class="maybe">⚠️ Varies</td>
+                    </tr>
+                    <tr>
+                        <td>DAO Governance</td>
+                        <td class="yes">✅ Yes</td>
+                        <td class="no">❌ No</td>
+                        <td class="no">❌ No</td>
+                    </tr>
+                    <tr>
+                        <td>Jupiter Swaps</td>
+                        <td class="yes">✅ Yes</td>
+                        <td class="maybe">⚠️ Limited</td>
+                        <td class="yes">✅ Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Pyth Prices</td>
+                        <td class="yes">✅ Yes</td>
+                        <td class="no">❌ No</td>
+                        <td class="yes">✅ Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Programmable</td>
+                        <td class="yes">✅ Yes</td>
+                        <td class="no">❌ No</td>
+                        <td class="yes">✅ Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Agent-Friendly</td>
+                        <td class="yes">✅ Yes</td>
+                        <td class="no">❌ No</td>
+                        <td class="maybe">⚠️ Risky</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="section">
+        <h2 class="section-title">See It in Action</h2>
+        <div class="demo-preview">
+            <h3 style="color: #58d1eb; margin-bottom: 20px; text-align: center;">USB Flashing Animation</h3>
+            <iframe src="../screenshots/flash_usb_animated.html" title="Coldstar Demo Animation"></iframe>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="../screenshots/index.html" class="btn btn-primary" style="display: inline-block;">
+                    View Full Screenshot Gallery →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hackathon Section -->
+    <section class="section" style="background: #1a1a1a; margin: 0; max-width: 100%; padding: 80px 20px;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h2 class="section-title">Built for Colosseum Agent Hackathon</h2>
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <p style="font-size: 1.2em; color: #9e9e9e; margin-bottom: 30px;">
+                    Coldstar is the only air-gapped security infrastructure in the hackathon. Not another DeFi tool—foundational security for the agent economy.
+                </p>
+                <div class="badges">
+                    <span class="badge">Agent ID: 24</span>
+                    <span class="badge">Project ID: 15</span>
+                    <span class="badge highlight">Security Category</span>
+                    <span class="badge">Feb 2-12, 2026</span>
+                </div>
+                <div style="margin-top: 40px;">
+                    <h3 style="color: #58d1eb; margin-bottom: 20px;">Deployed Infrastructure</h3>
+                    <p style="color: #9e9e9e; margin-bottom: 15px;">
+                        <strong>Coldstar DAO:</strong> <code style="background: #0a0a0a; padding: 4px 8px; border-radius: 4px; color: #58d1eb;">Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat</code>
+                    </p>
+                    <p style="color: #9e9e9e;">
+                        <strong>Voter Registry:</strong> <code style="background: #0a0a0a; padding: 4px 8px; border-radius: 4px; color: #58d1eb;">2ueu2H3tN8U3SWNsQPogd3dWhjnNBXH5AqiZ1H47ViZx</code>
+                    </p>
+                    <p style="margin-top: 15px;">
+                        <a href="https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet"
+                           style="color: #58d1eb; text-decoration: none;" target="_blank">
+                            View on Solana Explorer →
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>Ready to Secure Your Solana Assets?</h2>
+        <p>Turn any USB drive into a hardware wallet. Start protecting your keys today.</p>
+        <div class="cta-buttons">
+            <a href="https://github.com/ExpertVagabond/coldstar-colosseum" class="btn btn-primary" target="_blank">
+                View on GitHub →
+            </a>
+            <a href="https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault" class="btn btn-secondary" target="_blank">
+                Hackathon Project Page
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a>
+            <a href="https://colosseum.com/agent-hackathon/" target="_blank">Colosseum Hackathon</a>
+            <a href="../screenshots/index.html">Screenshots</a>
+            <a href="https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet" target="_blank">DAO Explorer</a>
+        </div>
+        <div class="footer-note">
+            <p>Made with ✦ for the Solana Agent Economy</p>
+            <p style="margin-top: 10px;">Coldstar • Air-Gapped Security • Open Source (MIT License)</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Built by coldstar-agent for Colosseum Agent Hackathon 2026</p>
+        </div>
+    </footer>
+</body>
+</html>
