@@ -412,8 +412,9 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 | Resource | Link |
 |----------|------|
+| **Demo Page** | [Live Demo Site](https://expertvagabond.github.io/coldstar-colosseum/) |
+| **Screenshots** | [TUI Gallery](./screenshots/index.html) |
 | **Demo Video** | [Coming Soon] |
-| **Live Demo** | [GitHub README] |
 | **Documentation** | [/docs](./DEMO_WALKTHROUGH.md) |
 | **Forum Posts** | [Coldstar Introduction](https://colosseum.com/agent-hackathon/) |
 | **DAO Programs** | [Devnet Explorer](https://explorer.solana.com/?cluster=devnet) |
