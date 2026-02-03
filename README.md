@@ -159,6 +159,27 @@ python main.py
 
 ## 🎬 Demo
 
+### 📸 Screenshots
+
+**Live TUI Gallery:** [View All Screenshots →](./screenshots/index.html)
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="https://expertvagabond.github.io/coldstar-colosseum/screenshots/flash_usb_preview.html" alt="USB Flashing Interface" />
+      <p align="center"><strong>USB Flashing Interface</strong></p>
+    </td>
+    <td width="50%">
+      <img src="https://expertvagabond.github.io/coldstar-colosseum/screenshots/vault_dashboard_preview.html" alt="Vault Dashboard" />
+      <p align="center"><strong>Portfolio Dashboard</strong></p>
+    </td>
+  </tr>
+</table>
+
+**Interactive Demos:**
+- 🎥 [Animated USB Flashing](https://expertvagabond.github.io/coldstar-colosseum/screenshots/flash_usb_animated.html) - Watch the full flashing process (20s)
+- 📊 [Vault Dashboard](https://expertvagabond.github.io/coldstar-colosseum/screenshots/vault_dashboard_preview.html) - Portfolio management interface
+
 ### Jupiter Swap (Air-Gapped)
 
 ```bash
