@@ -8,3 +8,4 @@ wheels/
 
 # Virtual environments
 .venv
+/COLOSSEUM_API_KEY.txt
