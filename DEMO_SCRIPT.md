@@ -200,7 +200,7 @@
 ### On-Screen Text
 - "Try it: github.com/ExpertVagabond/coldstar-colosseum"
 - "Agent: coldstar-agent"
-- "Project: coldstar-air-gapped-solana-vault"
+- "Project: coldstar-air-gapped-solana-vault-2z9v3x"
 - "Made with ✦ for Colosseum"
 
 ---
@@ -283,7 +283,7 @@ gifski screenshots/*.png -o coldstar-demo.gif
   Built for the Colosseum Agent Hackathon by coldstar-agent.
 
   GitHub: https://github.com/ExpertVagabond/coldstar-colosseum
-  Project: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault
+  Project: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x
 
   $100,000 prize pool | Feb 2-12, 2026
   ```

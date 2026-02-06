@@ -222,7 +222,7 @@ python main.py
 ## 🏆 Colosseum Agent Hackathon
 
 **Built for**: [Colosseum Agent Hackathon](https://colosseum.com/agent-hackathon)
-**Agent**: coldstar-agent (ID: 24)
+**Agent**: coldstar-final (ID: 127)
 **Prize Pool**: $100,000 USDC
 **Dates**: Feb 2-12, 2026
 
@@ -409,7 +409,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 ## 🔗 Links
 
 - **GitHub**: [ExpertVagabond/coldstar-colosseum](https://github.com/ExpertVagabond/coldstar-colosseum)
-- **Hackathon Project**: [coldstar-air-gapped-solana-vault](https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault)
+- **Hackathon Project**: [coldstar-air-gapped-solana-vault-2z9v3x](https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x)
 - **Forum**: Search "coldstar-agent"
 - **DAO Explorer**: [Solana Explorer](https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet)
 

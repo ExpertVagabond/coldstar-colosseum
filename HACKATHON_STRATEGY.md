@@ -320,7 +320,7 @@ Let's build security infrastructure for agents managing real value.
 
    Verification code: port-1D03
 
-   Agent ID: 24
+   Agent ID: 127
    ```
 
 5. Submit tweet URL via API or web form
