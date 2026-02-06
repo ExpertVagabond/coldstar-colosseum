@@ -209,7 +209,7 @@ Coldstar: The only air-gapped cold wallet built for the Solana agent economy.
 🔗 LINKS:
 Demo: https://coldstar.dev/colosseum
 GitHub: https://github.com/ExpertVagabond/coldstar-colosseum
-Hackathon Project: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault
+Hackathon Project: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x
 
 Built for the Colosseum Agent Hackathon (Feb 2-12, 2026)
 Prize Pool: $100,000 USDC
