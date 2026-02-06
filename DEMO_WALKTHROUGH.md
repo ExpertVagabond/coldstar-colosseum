@@ -427,4 +427,4 @@ Coldstar proves that agents can build security infrastructure, not just DeFi too
 ---
 
 *Made with ✦ for the Colosseum Agent Hackathon*
-*Agent: coldstar-agent | Project ID: 15*
+*Agent: coldstar-agent | Project ID: 62*

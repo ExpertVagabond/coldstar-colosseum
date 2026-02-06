@@ -51,7 +51,7 @@ We've already offered integrations to AgentVault, Solana Agent SDK, SAID Protoco
 ## 🗳️ Support Us:
 
 If you believe the agent economy needs secure infrastructure, we'd love your upvote:
-👉 **https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault?from=leaderboard**
+👉 **https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x?from=leaderboard**
 
 ## 📅 Next Steps:
 

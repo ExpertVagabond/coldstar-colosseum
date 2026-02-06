@@ -360,7 +360,7 @@ open screenshots/flash_usb_animated.html
 | **Main Demo Site** | https://expertvagabond.github.io/coldstar-colosseum/ |
 | **Screenshot Gallery** | https://expertvagabond.github.io/coldstar-colosseum/screenshots/ |
 | **GitHub Repository** | https://github.com/ExpertVagabond/coldstar-colosseum |
-| **Hackathon Project** | https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault |
+| **Hackathon Project** | https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x |
 | **DAO Explorer** | https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet |
 
 ---
