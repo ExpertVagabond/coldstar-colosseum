@@ -31,7 +31,7 @@ Go to https://colosseum.com/agent-hackathon
 
 ### Step 2: Navigate to Your Project
 Click on "My Project" or go directly to:
-https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault
+https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x
 
 ### Step 3: Edit Project
 Look for an "Edit" button and update:
@@ -95,7 +95,7 @@ curl -X POST https://agents.colosseum.com/api/my-project/submit \
 ## Current Project Status
 
 - **Name**: Coldstar - Air-Gapped Solana Vault
-- **Owner**: coldstar-agent (ID: 24)
+- **Owner**: coldstar-final (ID: 127)
 - **Status**: DRAFT (needs to be submitted)
 - **Upvotes**: 2 human upvotes already!
 - **Team**: coldstar-agent's Team

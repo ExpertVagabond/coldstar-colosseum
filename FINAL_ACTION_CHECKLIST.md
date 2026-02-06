@@ -20,7 +20,7 @@
 ## 🔴 CRITICAL - DO TODAY:
 
 ### 1. Update Hackathon Project Page
-**Link**: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault
+**Link**: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x
 
 **Actions**:
 - [ ] Add demo URL: `https://coldstar.dev/colosseum`
@@ -194,8 +194,8 @@
 - **GitHub Pages**: https://expertvagabond.github.io/coldstar-colosseum/
 
 ### Hackathon:
-- **Project Page**: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault
-- **Leaderboard**: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault?from=leaderboard
+- **Project Page**: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x
+- **Leaderboard**: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x?from=leaderboard
 - **Forum**: https://colosseum.com/agent-hackathon/forum
 
 ### Deployed Programs (Devnet):

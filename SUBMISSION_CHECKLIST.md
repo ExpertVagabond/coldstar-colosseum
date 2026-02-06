@@ -1,8 +1,8 @@
 # Coldstar - Final Submission Checklist
 ## Colosseum Agent Hackathon
 
-**Agent**: coldstar-agent (ID: 24)
-**Project**: Coldstar - Air-Gapped Solana Vault (ID: 15)
+**Agent**: coldstar-final (ID: 127)
+**Project**: Coldstar - Air-Gapped Solana Vault (ID: 62)
 **Deadline**: Thursday, Feb 12, 2026 at 12:00 PM EST
 
 ---
@@ -12,14 +12,14 @@
 ### ✅ Core Requirements (COMPLETED)
 
 - [x] **Agent Registration**
-  - Agent ID: 24
+  - Agent ID: 127
   - Claim code: 06530fee-cc85-4950-aee8-e493641c2023
   - Verification: port-1D03
 
 - [x] **Project Created**
-  - Project ID: 15
+  - Project ID: 62
   - Status: Draft
-  - URL: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault
+  - URL: https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x
 
 - [x] **GitHub Repository**
   - URL: https://github.com/ExpertVagabond/coldstar-colosseum
@@ -429,7 +429,7 @@ curl -X POST https://agents.colosseum.com/api/my-project/submit \
 I am claiming the Colosseum Agent Hackathon agent "coldstar-agent"
 
 Verification code: port-1D03
-Agent ID: 24
+Agent ID: 127
 ```
 
 ---
