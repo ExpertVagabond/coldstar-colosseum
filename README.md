@@ -5,14 +5,16 @@
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License"/>
   <img src="https://img.shields.io/badge/Security-Air--Gapped-red?style=for-the-badge" alt="Air-Gapped"/>
+  <img src="https://img.shields.io/badge/FairScore-Reputation_Gating-ff00ff?style=for-the-badge" alt="FairScore"/>
 </p>
 
 <p align="center">
-  <strong>Hardware-grade security at software cost. Your private keys never touch the internet.</strong>
+  <strong>Hardware-grade security meets reputation intelligence. FairScore-gated transactions on Solana.</strong>
 </p>
 
 <p align="center">
   <a href="#-features">Features</a> •
+  <a href="#-fairscore-integration">FairScore</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-architecture">Architecture</a> •
   <a href="#-demo">Demo</a> •
@@ -37,6 +39,40 @@ Create transactions online → Sign on air-gapped USB → Broadcast
 
 ---
 
+## 🛡️ FairScore Integration
+
+**Coldstar is the only cold wallet that checks counterparty reputation before every transaction.**
+
+Every outbound transfer is gated by [FairScale's FairScore API](https://fairscale.xyz) — a real-time reputation score (0-100) for any Solana wallet.
+
+| Recipient Tier | FairScore | Action | Transfer Limit |
+|---------------|-----------|--------|----------------|
+| 🔴 Bronze | 0-19 | **HARD BLOCK** | Blocked |
+| 🟡 Silver | 20-39 | **SOFT WARNING** | 10 SOL max |
+| 🟢 Gold | 40-59 | Proceed | 100 SOL max |
+| 🔵 Platinum | 60-79 | Proceed | 500 SOL max |
+| 🟣 Diamond | 80-100 | Proceed | Unlimited |
+
+**6 Integration Points:**
+1. **Transaction Gating** — Block/warn before air-gap crossing
+2. **Dynamic Transfer Limits** — Reputation-scaled amounts
+3. **DAO Governance** — Vote weight by FairScore
+4. **Jupiter Swap Screening** — Token contract reputation
+5. **Vault Dashboard** — Reputation badges in portfolio view
+6. **MCP Agent Gates** — Autonomy gradient for AI agents
+
+> *"The last checkpoint before the point of no return."*
+
+**Live API Example (Jupiter Wallet):**
+```
+FairScore: 34.2/100 | Tier: Silver | Badges: LST Staker, SOL Maxi
+Action: ⚠️ WARNING — Confirm to proceed
+```
+
+📖 [Full Integration Documentation →](docs/FAIRSCORE_INTEGRATION.md)
+
+---
+
 ## ✨ Features
 
 ### 🔐 Air-Gap Security
@@ -50,6 +86,13 @@ Create transactions online → Sign on air-gapped USB → Broadcast
 - **Pyth Network** - Real-time price feeds and USD portfolio valuation
 - **SPL Tokens** - Support for SOL, USDC, USDT, BONK, JUP, RAY
 - **Air-gapped swaps** - Create swap online, sign offline, broadcast
+
+### 🛡️ Reputation Gating (FairScore)
+- **FairScale API** - Real-time wallet reputation scoring (0-100)
+- **Transaction blocking** - Bronze tier addresses hard-blocked
+- **Soft warnings** - Silver tier requires explicit confirmation
+- **Dynamic limits** - Transfer caps scaled by counterparty reputation
+- **Badge display** - LST Staker, SOL Maxi, Early Adopter badges shown
 
 ### 🏛️ DAO Governance
 - **Multi-sig vaults** - M-of-N signatures for fund movements
@@ -136,6 +179,7 @@ python main.py
 | **Blockchain** | Solders (Solana Rust SDK bindings) |
 | **DEX** | Jupiter Aggregator API |
 | **Oracles** | Pyth Network Hermes API |
+| **Reputation** | FairScale FairScore API |
 | **Programs** | Anchor (DAO governance) |
 
 ---
@@ -150,6 +194,7 @@ python main.py
 | **DAO Governance** | ✅ Yes | ❌ No | ❌ No |
 | **Jupiter Swaps** | ✅ Yes | Limited | ✅ Yes |
 | **Pyth Prices** | ✅ Yes | ❌ No | ✅ Yes |
+| **Reputation Gating** | ✅ FairScore | ❌ No | ❌ No |
 | **Programmable** | ✅ Yes | ❌ No | ✅ Yes |
 | **Agent-Friendly** | ✅ Yes | ❌ No | ⚠️ Risky |
 
@@ -266,6 +311,7 @@ coldstar-colosseum/
 ├── src/
 │   ├── jupiter_integration.py # DEX swap integration
 │   ├── pyth_integration.py    # Price feed integration
+│   ├── fairscore_integration.py # FairScore reputation gating
 │   ├── wallet.py              # Keypair management
 │   ├── transaction.py         # TX creation/signing
 │   ├── network.py             # Solana RPC client
@@ -349,6 +395,7 @@ python flash_usb.py
 ## 🤝 Integration Partners
 
 Coldstar integrates with:
+- **FairScale** - Wallet reputation scoring and transaction gating
 - **Jupiter** - DEX aggregation for best swap routes
 - **Pyth Network** - Real-time price feeds
 - **Solana MCP Server** - Hot wallet operations
@@ -365,6 +412,7 @@ Coldstar integrates with:
 - [x] Jupiter DEX integration
 - [x] Pyth price feeds
 - [x] DAO governance programs
+- [x] FairScore reputation gating
 
 ### Phase 2: Enhanced Security (In Progress)
 - [ ] Hardware key import/export (BIP39)
@@ -417,9 +465,9 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ## 💬 Community
 
-**Built by**: coldstar-agent (AI) + Human oversight
-**For**: Colosseum Agent Hackathon
-**Prize**: Competing for $100,000 USDC prize pool
+**Built by**: Matthew Karsten ([@expertvagabond](https://x.com/expertvagabond))
+**Company**: Purple Squirrel Media LLC
+**Hackathons**: Colosseum Agent Hackathon (Project #62) + FairScale Fairathon
 
 <p align="center">
   <strong>Your keys, your responsibility. Open source, open trust.</strong>
@@ -435,7 +483,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 |----------|------|
 | **Demo Page** | [Live Demo Site](https://expertvagabond.github.io/coldstar-colosseum/) |
 | **Screenshots** | [TUI Gallery](./screenshots/index.html) |
-| **Demo Video** | [Coming Soon] |
+| **FairScore Docs** | [Integration Guide](docs/FAIRSCORE_INTEGRATION.md) |
 | **Documentation** | [/docs](./DEMO_WALKTHROUGH.md) |
 | **Forum Posts** | [Coldstar Introduction](https://colosseum.com/agent-hackathon/) |
 | **DAO Programs** | [Devnet Explorer](https://explorer.solana.com/?cluster=devnet) |
