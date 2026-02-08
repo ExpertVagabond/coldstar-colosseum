@@ -55,29 +55,43 @@ class PortfolioPanel(Static):
     def __init__(self):
         super().__init__()
         self.tokens = [
-            {"symbol": "SOL", "icon": "◎", "amount": 3.2546, "value": 476.80, "color": "magenta"},
-            {"symbol": "USDC", "icon": "◉", "amount": 1025.00, "value": 1025.00, "color": "cyan"},
-            {"symbol": "BTC", "icon": "฿", "amount": 0.0125, "value": 600.50, "color": "yellow"},
-            {"symbol": "RAY", "icon": "⚡", "amount": 500.0, "value": 85.00, "color": "yellow"},
-            {"symbol": "XYZ", "icon": "◆", "amount": 10.000, "value": 0.00, "color": "cyan"},
-            {"symbol": "Unknown Token", "icon": "⚠", "amount": 10.000, "value": 0.00, "color": "red"},
+            {"symbol": "SOL", "icon": "◎", "amount": 3.2546, "value": 476.80, "color": "magenta", "rep_tier": 5},
+            {"symbol": "USDC", "icon": "◉", "amount": 1025.00, "value": 1025.00, "color": "cyan", "rep_tier": 5},
+            {"symbol": "BTC", "icon": "฿", "amount": 0.0125, "value": 600.50, "color": "yellow", "rep_tier": 4},
+            {"symbol": "RAY", "icon": "⚡", "amount": 500.0, "value": 85.00, "color": "yellow", "rep_tier": 3},
+            {"symbol": "XYZ", "icon": "◆", "amount": 10.000, "value": 0.00, "color": "cyan", "rep_tier": 2},
+            {"symbol": "Unknown Token", "icon": "⚠", "amount": 10.000, "value": 0.00, "color": "red", "rep_tier": 1},
         ]
         self.selected_index = 1  # USDC selected
 
     def render(self) -> RenderableType:
+        # Reputation tier display mapping
+        _rep_icons = {
+            1: ("!!!", "red"),
+            2: ("(!)", "yellow"),
+            3: ("[+]", "green"),
+            4: ("[++]", "cyan"),
+            5: ("[***]", "magenta"),
+        }
+
         table = Table.grid(padding=(0, 1))
         table.add_column("Icon", style="bold", width=3)
         table.add_column("Symbol", style="bold white", no_wrap=True)
         table.add_column("Amount", justify="right", style="white")
         table.add_column("Value", justify="right", style="green")
+        table.add_column("Rep", justify="center", width=5)
 
         for idx, token in enumerate(self.tokens):
+            tier = token.get("rep_tier", 3)
+            rep_icon, rep_color = _rep_icons.get(tier, ("[+]", "green"))
+
             # Highlight selected token
             if idx == self.selected_index:
                 icon = f"[{token['color']} on #1a1a1a]>{token['icon']}[/]"
                 symbol = f"[bold white on #1a1a1a]{token['symbol']}[/]"
                 amount = f"[white on #1a1a1a]{token['amount']:,.4f}[/]"
                 value = f"[green on #1a1a1a]{token['value']:,.2f}[/]"
+                rep = f"[{rep_color} on #1a1a1a]{rep_icon}[/]"
             else:
                 icon = f"[{token['color']}]{token['icon']}[/]"
                 symbol = f"[white]{token['symbol']}[/]"
@@ -86,8 +100,9 @@ class PortfolioPanel(Static):
                     value = f"[red]{token['value']:.2f} F[/]"
                 else:
                     value = f"[green]{token['value']:,.2f}[/]"
+                rep = f"[{rep_color}]{rep_icon}[/]"
 
-            table.add_row(icon, symbol, amount, value)
+            table.add_row(icon, symbol, amount, value, rep)
 
         return Panel(
             table,

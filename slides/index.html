@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coldstar + FairScore - Hackathon Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            color: #00ffff;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #00ff88;
+        }
+
+        .subtitle {
+            font-size: 1.8rem;
+            color: #888;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .author {
+            font-size: 1.3rem;
+            color: #00ff88;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .company {
+            font-size: 1.1rem;
+            color: #888;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        ul {
+            list-style: none;
+            font-size: 1.8rem;
+            line-height: 2.5;
+            max-width: 1200px;
+        }
+
+        ul li {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        ul li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        .problem-highlight {
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        .solution-highlight {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .architecture {
+            background: #1a1a1a;
+            padding: 2rem;
+            border: 2px solid #00ffff;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            white-space: pre;
+            color: #e0e0e0;
+            max-width: 900px;
+        }
+
+        .terminal {
+            background: #0d0d0d;
+            padding: 2rem;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            font-size: 1.3rem;
+            line-height: 1.6;
+            white-space: pre;
+            color: #e0e0e0;
+            max-width: 1000px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .terminal-success {
+            color: #00ff88;
+        }
+
+        .terminal-error {
+            color: #ff4444;
+        }
+
+        .terminal-warning {
+            color: #ffaa00;
+        }
+
+        .terminal-info {
+            color: #00ffff;
+        }
+
+        .tier-1 {
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        .tier-2 {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+
+        .tier-3-5 {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .navigation-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            font-size: 1rem;
+            color: #444;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .business-item {
+            background: #1a1a1a;
+            padding: 1.5rem;
+            border-left: 4px solid #00ffff;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .business-item strong {
+            color: #00ffff;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .cta {
+            font-size: 2rem;
+            text-align: center;
+            line-height: 2;
+        }
+
+        .cta-link {
+            color: #00ffff;
+            text-decoration: none;
+            border-bottom: 2px solid #00ffff;
+        }
+
+        .cta-link:hover {
+            color: #ff00ff;
+            border-bottom-color: #ff00ff;
+        }
+
+        .tagline {
+            font-size: 2.5rem;
+            color: #ff00ff;
+            margin-top: 2rem;
+            font-style: italic;
+            text-align: center;
+        }
+
+        @media (max-width: 1200px) {
+            h1 { font-size: 3rem; }
+            h2 { font-size: 2.5rem; }
+            h3 { font-size: 1.8rem; }
+            ul { font-size: 1.5rem; }
+            .terminal, .architecture { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <h1>Coldstar + FairScore</h1>
+            <div class="subtitle">Reputation-Gated Air-Gapped Cold Wallet for Solana</div>
+            <div class="author">Built by Matthew Karsten | @expertvagabond</div>
+            <div class="company">Purple Squirrel Media LLC</div>
+        </div>
+
+        <!-- Slide 2: The Problem -->
+        <div class="slide">
+            <h2>The Problem</h2>
+            <ul>
+                <li>Cold wallets give you the <span class="solution-highlight">best physical security</span></li>
+                <li>But they're <span class="problem-highlight">blind to counterparty risk</span></li>
+                <li>You can air-gap sign a transaction to a <span class="problem-highlight">scam address</span> and lose everything</li>
+                <li><span class="problem-highlight">$1.2B+ hardware wallet market</span> has ZERO reputation layer</li>
+            </ul>
+        </div>
+
+        <!-- Slide 3: The Solution -->
+        <div class="slide">
+            <h2>The Solution</h2>
+            <ul>
+                <li><span class="solution-highlight">FairScore reputation tier (1-5)</span> checked before EVERY transaction</li>
+                <li><span class="tier-1">Tier 1: HARD BLOCK</span> - transaction cannot be created</li>
+                <li><span class="tier-2">Tier 2: SOFT WARNING</span> - must confirm explicitly</li>
+                <li><span class="tier-3-5">Tier 3-5: GREEN LIGHT</span> - proceed with confidence</li>
+                <li>All checks happen <span class="solution-highlight">BEFORE the point of no return</span> (air-gap crossing)</li>
+            </ul>
+        </div>
+
+        <!-- Slide 4: Architecture -->
+        <div class="slide">
+            <h2>Architecture</h2>
+            <div class="architecture">ONLINE DEVICE                    AIR-GAPPED USB
+┌─────────────────┐    QR     ┌─────────────────┐
+│ FairScore API   │ ────────> │ Alpine Linux     │
+│ Jupiter DEX     │           │ Ed25519 Signing  │
+│ Pyth Oracles    │ <──────── │ Key Storage      │
+│ Rich TUI        │    QR     │ Offline Only     │
+└────────┬────────┘           └─────────────────┘
+         │
+    Solana Mainnet</div>
+        </div>
+
+        <!-- Slide 5: FairScore Integration -->
+        <div class="slide">
+            <h2>FairScore Integration (Core)</h2>
+            <ul>
+                <li><span class="solution-highlight">6 integration points</span> (not decorative!)</li>
+                <li>Transaction gating with tier-based blocking</li>
+                <li>Dynamic transfer limits scaled by reputation</li>
+                <li>DAO governance vote weighting by FairScore</li>
+                <li>Portfolio dashboard reputation badges</li>
+                <li>MCP agent reputation gates for autonomous ops</li>
+            </ul>
+        </div>
+
+        <!-- Slide 6: Demo - Tier 1 BLOCK -->
+        <div class="slide">
+            <h2>Demo — Tier 1 BLOCK</h2>
+            <div class="terminal">═══════════════ FAIRSCORE REPUTATION CHECK ═══════════════
+Checking reputation for 5xGh...Tf8Y
+
+╭──────── FairScore Reputation ────────╮
+│  Address:     5xGh...Tf8Y            │
+│  Reputation:  <span class="terminal-error">!!! UNTRUSTED</span>          │
+│  Tier:        <span class="terminal-error">1/5</span>                    │
+│  TX Limit:    <span class="terminal-error">BLOCKED</span>                │
+│  Status:      <span class="terminal-error">High-risk wallet</span>       │
+╰──────────────────────────────────────╯
+
+<span class="terminal-error">✗ TRANSACTION BLOCKED</span>
+<span class="terminal-error">✗ Recipient has UNTRUSTED reputation (Tier 1)</span></div>
+        </div>
+
+        <!-- Slide 7: Demo - Tier 5 ALLOW -->
+        <div class="slide">
+            <h2>Demo — Tier 5 ALLOW</h2>
+            <div class="terminal">╭──────── FairScore Reputation ────────╮
+│  Address:     JUPy...vCN            │
+│  Reputation:  <span class="terminal-success">[***] EXCELLENT</span>        │
+│  Tier:        <span class="terminal-success">5/5</span>                    │
+│  TX Limit:    <span class="terminal-success">Unlimited</span>              │
+│  Status:      <span class="terminal-success">Top-tier reputation</span>    │
+╰──────────────────────────────────────╯
+
+<span class="terminal-success">✓ Reputation verified — proceed with transaction</span></div>
+        </div>
+
+        <!-- Slide 8: Business Model -->
+        <div class="slide">
+            <h2>Business Model</h2>
+            <div style="max-width: 1000px;">
+                <div class="business-item">
+                    <strong>Coldstar Pro:</strong> $9.99/mo (advanced analytics, higher limits)
+                </div>
+                <div class="business-item">
+                    <strong>Enterprise/DAO:</strong> $99/mo (multi-wallet, compliance reporting)
+                </div>
+                <div class="business-item">
+                    <strong>USB Hardware Kits:</strong> $29.99 (pre-configured)
+                </div>
+                <div class="business-item">
+                    <strong>Path to $10K MRR</strong> within 12 months
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Go-to-Market -->
+        <div class="slide">
+            <h2>Go-to-Market</h2>
+            <ul>
+                <li><span class="solution-highlight">First 100:</span> Hackathon community + Solana devs</li>
+                <li><span class="solution-highlight">First 1,000:</span> YouTube content + Jupiter/FairScale partnerships</li>
+                <li><span class="solution-highlight">First 10,000:</span> Agent economy growth + institutional adoption</li>
+            </ul>
+        </div>
+
+        <!-- Slide 10: Traction & Team -->
+        <div class="slide">
+            <h2>Traction & Team</h2>
+            <ul>
+                <li><span class="solution-highlight">Colosseum Agent Hackathon winner</span> (Project #62)</li>
+                <li>Recognized by <span class="solution-highlight">Superteam Earn</span></li>
+                <li>Live at <span class="terminal-info">coldstar.dev</span></li>
+                <li><span class="solution-highlight">2,500+ lines shipped</span>, DAO programs on devnet</li>
+                <li><span class="solution-highlight">Matthew Karsten</span> — 1,800+ commits, solo shipped in 10 days</li>
+                <li><span class="solution-highlight">Purple Squirrel Media LLC</span></li>
+            </ul>
+        </div>
+
+        <!-- Slide 11: Call to Action -->
+        <div class="slide">
+            <h2>Call to Action</h2>
+            <div class="cta">
+                <div style="margin-bottom: 1.5rem;">
+                    GitHub: <a href="https://github.com/ExpertVagabond/coldstar-colosseum" class="cta-link">ExpertVagabond/coldstar-colosseum</a>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    Live: <a href="https://coldstar.dev/colosseum" class="cta-link">coldstar.dev/colosseum</a>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    Twitter: <a href="https://twitter.com/expertvagabond" class="cta-link">@expertvagabond</a>
+                </div>
+            </div>
+            <div class="tagline">"The future of cold storage is intelligent."</div>
+        </div>
+    </div>
+
+    <div class="navigation-hint">◀ ▶ arrow keys to navigate</div>
+    <div class="slide-counter"><span id="current">1</span> / <span id="total">11</span></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('total').textContent = totalSlides;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            document.getElementById('current').textContent = currentSlide + 1;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Touch support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50) {
+                nextSlide();
+            } else if (touchEndX - touchStartX > 50) {
+                prevSlide();
+            }
+        });
+    </script>
+</body>
+</html>
