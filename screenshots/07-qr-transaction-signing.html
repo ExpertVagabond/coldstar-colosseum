@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - QR Code Transaction Signing</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 0; margin: 0;
+        }
+        .terminal {
+            background: #1a1a2e;
+            max-width: 960px;
+            margin: 30px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .title-bar {
+            background: #2a2a3e;
+            padding: 10px 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .title-text { color: #888; font-size: 13px; margin-left: 20px; }
+        .content { padding: 20px 30px 30px; }
+        .info { color: #58d1eb; }
+        .success { color: #98e024; }
+        .warn { color: #ffff00; }
+        .purple { color: #c080ff; }
+
+        .qr-code {
+            display: inline-block;
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .qr-grid {
+            display: grid;
+            gap: 0;
+            line-height: 0;
+        }
+        .qr-cell {
+            width: 6px;
+            height: 6px;
+            display: inline-block;
+        }
+        .qr-black { background: #000; }
+        .qr-white { background: #fff; }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #58d1eb;
+            margin: 15px 0;
+        }
+        .divider-purple {
+            border-top-color: #c080ff;
+        }
+        .divider-green {
+            border-top-color: #98e024;
+        }
+
+        .tx-detail {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .tx-label { color: #666; }
+        .air-gap-badge {
+            display: inline-block;
+            background: rgba(255, 87, 51, 0.15);
+            color: #ff5733;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid rgba(255, 87, 51, 0.4);
+            font-weight: bold;
+        }
+        .offline-badge {
+            display: inline-block;
+            background: rgba(152, 224, 36, 0.15);
+            color: #98e024;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid rgba(152, 224, 36, 0.4);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="title-bar">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <span class="title-text">coldstar -- qr_sign.py (AIR-GAPPED)</span>
+        </div>
+        <div class="content">
+            <!-- Banner -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="color: #58d1eb; font-size: 14px;">
+&#9556;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9559;<br>
+&#9553;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9553;<br>
+&#9553;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-weight: bold;">COLDSTAR QR SIGN</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9553;<br>
+&#9553;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Air-Gapped Transaction Signing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9553;<br>
+&#9553;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9553;<br>
+&#9562;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9565;
+                </div>
+            </div>
+
+            <div style="margin: 10px 0;">
+                <span class="success">&#10003;</span> Wallet loaded: <span style="color: #fff;">EbRUGhi2uLP5...ent5Zykp</span>
+                <span class="offline-badge">OFFLINE</span>
+            </div>
+
+            <!-- Transaction Details Box -->
+            <hr class="divider divider-purple">
+            <div style="text-align: center; margin: 15px 0;">
+                <div style="color: #c080ff; font-weight: bold; font-size: 15px;">TRANSACTION DETAILS - VERIFY CAREFULLY!</div>
+                <span class="air-gap-badge">AIR-GAPPED DEVICE</span>
+            </div>
+            <hr class="divider divider-purple">
+
+            <div style="margin: 15px 20px;">
+                <div class="tx-detail">
+                    <span class="tx-label">From:</span>
+                    <span class="info">EbRUGhi2uLP5TamZx8fjNwn3dnvqoN4VNFRcent5Zykp</span>
+                </div>
+                <div class="tx-detail">
+                    <span class="tx-label">To:</span>
+                    <span class="info">4xpzk8mvjDwL7R2oDJPCqT9VNwRYEk2iTf8Y6JsVKpqW</span>
+                </div>
+                <div class="tx-detail">
+                    <span class="tx-label">Amount:</span>
+                    <span class="success" style="font-weight: bold; font-size: 16px;">1.5 SOL</span>
+                </div>
+                <div class="tx-detail">
+                    <span class="tx-label">Network:</span>
+                    <span style="color: #fff;">devnet</span>
+                </div>
+            </div>
+
+            <hr class="divider divider-purple">
+
+            <!-- Sign confirmation -->
+            <div style="margin: 15px 0;">
+                <span class="warn">Type 'SIGN' to sign this transaction:</span> <span class="success">SIGN</span><br><br>
+                <span class="success">&#10003;</span> <span class="success" style="font-weight: bold;">Transaction SIGNED successfully!</span>
+            </div>
+
+            <!-- QR Code Display -->
+            <hr class="divider divider-green">
+            <div style="text-align: center; margin: 15px 0;">
+                <div style="color: #98e024; font-weight: bold; font-size: 15px;">SIGNED TRANSACTION - SCAN TO BROADCAST</div>
+            </div>
+            <hr class="divider divider-green">
+
+            <div style="text-align: center; margin: 20px 0;">
+                <div class="qr-code">
+                    <!-- Simplified QR representation -->
+                    <svg width="200" height="200" viewBox="0 0 200 200">
+                        <!-- QR positioning patterns (corners) -->
+                        <rect x="10" y="10" width="50" height="50" fill="#000"/>
+                        <rect x="15" y="15" width="40" height="40" fill="#fff"/>
+                        <rect x="20" y="20" width="30" height="30" fill="#000"/>
+
+                        <rect x="140" y="10" width="50" height="50" fill="#000"/>
+                        <rect x="145" y="15" width="40" height="40" fill="#fff"/>
+                        <rect x="150" y="20" width="30" height="30" fill="#000"/>
+
+                        <rect x="10" y="140" width="50" height="50" fill="#000"/>
+                        <rect x="15" y="145" width="40" height="40" fill="#fff"/>
+                        <rect x="20" y="150" width="30" height="30" fill="#000"/>
+
+                        <!-- Data modules (simulated) -->
+                        <rect x="70" y="10" width="8" height="8" fill="#000"/>
+                        <rect x="86" y="10" width="8" height="8" fill="#000"/>
+                        <rect x="102" y="10" width="8" height="8" fill="#000"/>
+                        <rect x="118" y="10" width="8" height="8" fill="#000"/>
+                        <rect x="70" y="26" width="8" height="8" fill="#000"/>
+                        <rect x="94" y="26" width="8" height="8" fill="#000"/>
+                        <rect x="110" y="26" width="8" height="8" fill="#000"/>
+                        <rect x="126" y="26" width="8" height="8" fill="#000"/>
+
+                        <rect x="70" y="42" width="8" height="8" fill="#000"/>
+                        <rect x="86" y="42" width="8" height="8" fill="#000"/>
+                        <rect x="102" y="42" width="8" height="8" fill="#000"/>
+                        <rect x="118" y="42" width="8" height="8" fill="#000"/>
+
+                        <!-- Middle section -->
+                        <rect x="10" y="70" width="8" height="8" fill="#000"/>
+                        <rect x="26" y="70" width="8" height="8" fill="#000"/>
+                        <rect x="42" y="70" width="8" height="8" fill="#000"/>
+                        <rect x="70" y="70" width="8" height="8" fill="#000"/>
+                        <rect x="86" y="70" width="8" height="8" fill="#000"/>
+                        <rect x="110" y="70" width="8" height="8" fill="#000"/>
+                        <rect x="134" y="70" width="8" height="8" fill="#000"/>
+                        <rect x="150" y="70" width="8" height="8" fill="#000"/>
+                        <rect x="174" y="70" width="8" height="8" fill="#000"/>
+
+                        <rect x="10" y="86" width="8" height="8" fill="#000"/>
+                        <rect x="34" y="86" width="8" height="8" fill="#000"/>
+                        <rect x="58" y="86" width="8" height="8" fill="#000"/>
+                        <rect x="78" y="86" width="8" height="8" fill="#000"/>
+                        <rect x="94" y="86" width="8" height="8" fill="#000"/>
+                        <rect x="118" y="86" width="8" height="8" fill="#000"/>
+                        <rect x="142" y="86" width="8" height="8" fill="#000"/>
+                        <rect x="166" y="86" width="8" height="8" fill="#000"/>
+                        <rect x="182" y="86" width="8" height="8" fill="#000"/>
+
+                        <rect x="18" y="102" width="8" height="8" fill="#000"/>
+                        <rect x="42" y="102" width="8" height="8" fill="#000"/>
+                        <rect x="70" y="102" width="8" height="8" fill="#000"/>
+                        <rect x="86" y="102" width="8" height="8" fill="#000"/>
+                        <rect x="102" y="102" width="8" height="8" fill="#000"/>
+                        <rect x="126" y="102" width="8" height="8" fill="#000"/>
+                        <rect x="150" y="102" width="8" height="8" fill="#000"/>
+                        <rect x="174" y="102" width="8" height="8" fill="#000"/>
+
+                        <rect x="10" y="118" width="8" height="8" fill="#000"/>
+                        <rect x="26" y="118" width="8" height="8" fill="#000"/>
+                        <rect x="50" y="118" width="8" height="8" fill="#000"/>
+                        <rect x="78" y="118" width="8" height="8" fill="#000"/>
+                        <rect x="94" y="118" width="8" height="8" fill="#000"/>
+                        <rect x="110" y="118" width="8" height="8" fill="#000"/>
+                        <rect x="134" y="118" width="8" height="8" fill="#000"/>
+                        <rect x="158" y="118" width="8" height="8" fill="#000"/>
+                        <rect x="182" y="118" width="8" height="8" fill="#000"/>
+
+                        <!-- Bottom right area -->
+                        <rect x="70" y="142" width="8" height="8" fill="#000"/>
+                        <rect x="94" y="142" width="8" height="8" fill="#000"/>
+                        <rect x="118" y="142" width="8" height="8" fill="#000"/>
+                        <rect x="142" y="142" width="8" height="8" fill="#000"/>
+                        <rect x="166" y="142" width="8" height="8" fill="#000"/>
+
+                        <rect x="70" y="158" width="8" height="8" fill="#000"/>
+                        <rect x="86" y="158" width="8" height="8" fill="#000"/>
+                        <rect x="110" y="158" width="8" height="8" fill="#000"/>
+                        <rect x="134" y="158" width="8" height="8" fill="#000"/>
+                        <rect x="158" y="158" width="8" height="8" fill="#000"/>
+                        <rect x="182" y="158" width="8" height="8" fill="#000"/>
+
+                        <rect x="78" y="174" width="8" height="8" fill="#000"/>
+                        <rect x="102" y="174" width="8" height="8" fill="#000"/>
+                        <rect x="126" y="174" width="8" height="8" fill="#000"/>
+                        <rect x="150" y="174" width="8" height="8" fill="#000"/>
+                        <rect x="174" y="174" width="8" height="8" fill="#000"/>
+                    </svg>
+                </div>
+            </div>
+
+            <hr class="divider divider-green">
+
+            <!-- Output -->
+            <div style="margin: 15px 0;">
+                <span class="success">&#10003;</span> Saved to: ./outbox/signed_tx_1738450089.json<br><br>
+                <span class="info">Next steps:</span><br>
+                <span style="color: #fff;">&nbsp;&nbsp;1. Scan the QR code with your companion app, OR</span><br>
+                <span style="color: #fff;">&nbsp;&nbsp;2. Copy ./outbox/signed_tx_1738450089.json to your online device</span><br>
+                <span style="color: #fff;">&nbsp;&nbsp;3. Broadcast from the companion app</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

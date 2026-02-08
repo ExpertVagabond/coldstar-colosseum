@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - DAO Governance Interface</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 0; margin: 0;
+        }
+        .terminal {
+            background: #1a1a2e;
+            max-width: 960px;
+            margin: 30px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .title-bar {
+            background: #2a2a3e;
+            padding: 10px 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .title-text { color: #888; font-size: 13px; margin-left: 20px; }
+        .content { padding: 20px 30px 30px; }
+        .section-header {
+            border: 2px solid #58d1eb;
+            border-radius: 8px;
+            padding: 8px 20px;
+            text-align: center;
+            color: #fff;
+            margin: 15px 0;
+        }
+        .info { color: #58d1eb; }
+        .success { color: #98e024; }
+        .warn { color: #ffff00; }
+        .dim { color: #666; }
+
+        .dao-card {
+            border: 2px solid #9945ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .dao-card-title {
+            color: #9945ff;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+        .dao-field {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .dao-label { color: #666; }
+        .dao-value { color: #fff; }
+
+        .vote-bar {
+            background: #333;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 8px 0;
+            position: relative;
+        }
+        .vote-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        .vote-approve { background: linear-gradient(90deg, #98e024, #66cc00); }
+        .vote-reject { background: linear-gradient(90deg, #ff5f56, #cc3333); }
+
+        .member-list {
+            margin: 10px 0;
+        }
+        .member-row {
+            display: grid;
+            grid-template-columns: 30px 1fr 100px 80px;
+            gap: 8px;
+            padding: 4px 0;
+            border-bottom: 1px solid #222;
+        }
+        .member-row:last-child { border-bottom: none; }
+
+        .program-badge {
+            display: inline-block;
+            background: rgba(153, 69, 255, 0.2);
+            color: #b088ff;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid rgba(153, 69, 255, 0.4);
+        }
+        .devnet-badge {
+            display: inline-block;
+            background: rgba(88, 209, 235, 0.15);
+            color: #58d1eb;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid rgba(88, 209, 235, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="title-bar">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <span class="title-text">coldstar -- DAO Governance</span>
+        </div>
+        <div class="content">
+            <div class="section-header">DAO GOVERNANCE - COLDSTAR VAULT</div>
+
+            <div style="margin: 10px 0;">
+                <span class="program-badge">Program: Ue6Z2MBm...YXeat</span>
+                <span class="devnet-badge">Solana Devnet</span>
+                <span class="program-badge">Voter Registry: 2ueu2H3t...ViZx</span>
+            </div>
+
+            <!-- Vault Info -->
+            <div class="dao-card">
+                <div class="dao-card-title">VAULT: Agent Treasury</div>
+                <div class="dao-field">
+                    <span class="dao-label">Vault Address:</span>
+                    <span class="info">GkDUAQunG9D8cPp4fuiiqtRKroQiSSYJF9UKxz27956k</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Type:</span>
+                    <span class="dao-value">Multi-Sig (3-of-5)</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Total Balance:</span>
+                    <span class="success" style="font-weight: bold;">500.00 SOL</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">CRT Tokens:</span>
+                    <span class="dao-value">10,000 CRT</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Active Proposals:</span>
+                    <span class="warn">1</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Members:</span>
+                    <span class="dao-value">5</span>
+                </div>
+            </div>
+
+            <!-- Members List -->
+            <div class="dao-card">
+                <div class="dao-card-title">VAULT MEMBERS (5)</div>
+                <div class="member-list">
+                    <div class="member-row" style="color: #58d1eb; font-weight: bold; font-size: 12px;">
+                        <span>#</span>
+                        <span>Address</span>
+                        <span>Stake (CRT)</span>
+                        <span>Status</span>
+                    </div>
+                    <div class="member-row">
+                        <span class="dim">1</span>
+                        <span class="info">Agent-1...7Kqp</span>
+                        <span style="color: #fff;">3,000</span>
+                        <span class="success">Active</span>
+                    </div>
+                    <div class="member-row">
+                        <span class="dim">2</span>
+                        <span class="info">Agent-2...mNx4</span>
+                        <span style="color: #fff;">2,500</span>
+                        <span class="success">Active</span>
+                    </div>
+                    <div class="member-row">
+                        <span class="dim">3</span>
+                        <span class="info">Agent-3...pR9w</span>
+                        <span style="color: #fff;">2,000</span>
+                        <span class="success">Active</span>
+                    </div>
+                    <div class="member-row">
+                        <span class="dim">4</span>
+                        <span class="info">Agent-4...zT5v</span>
+                        <span style="color: #fff;">1,500</span>
+                        <span class="success">Active</span>
+                    </div>
+                    <div class="member-row">
+                        <span class="dim">5</span>
+                        <span class="info">Agent-5...bY2j</span>
+                        <span style="color: #fff;">1,000</span>
+                        <span class="success">Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Proposal -->
+            <div class="dao-card" style="border-color: #ffff00;">
+                <div class="dao-card-title" style="color: #ffff00;">PROPOSAL #1 - ACTIVE</div>
+                <div class="dao-field">
+                    <span class="dao-label">Title:</span>
+                    <span class="dao-value" style="font-weight: bold;">Transfer 100 SOL to dev fund</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Type:</span>
+                    <span class="dao-value">Transfer</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Amount:</span>
+                    <span class="success" style="font-weight: bold;">100 SOL</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Recipient:</span>
+                    <span class="info">DevFund...4xpz</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Proposer:</span>
+                    <span class="info">Agent-1...7Kqp</span>
+                </div>
+                <div class="dao-field">
+                    <span class="dao-label">Threshold:</span>
+                    <span class="dao-value">3 of 5 signatures required</span>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <div style="margin-bottom: 5px;">
+                        <span style="color: #98e024; font-weight: bold;">Approve: 3/5</span>
+                        <span class="dim"> (60%)</span>
+                    </div>
+                    <div class="vote-bar">
+                        <div class="vote-fill vote-approve" style="width: 60%;"></div>
+                    </div>
+
+                    <div style="margin: 10px 0 5px;">
+                        <span style="color: #ff5f56; font-weight: bold;">Reject: 1/5</span>
+                        <span class="dim"> (20%)</span>
+                    </div>
+                    <div class="vote-bar">
+                        <div class="vote-fill vote-reject" style="width: 20%;"></div>
+                    </div>
+
+                    <div style="margin-top: 8px; color: #666;">Pending: 1/5 (20%)</div>
+                </div>
+
+                <div style="margin-top: 15px; padding: 10px; background: rgba(152, 224, 36, 0.1); border-radius: 6px; border: 1px solid rgba(152, 224, 36, 0.3);">
+                    <span class="success" style="font-weight: bold;">&#10003; THRESHOLD REACHED - Ready to execute!</span><br>
+                    <span class="dim">3 of 3 required signatures collected via air-gapped signing</span>
+                </div>
+
+                <div style="margin-top: 12px;">
+                    <div style="font-weight: bold; color: #fff; margin-bottom: 8px;">Vote Records:</div>
+                    <div style="padding: 3px 0;"><span class="success">&#10003;</span> Agent-1...7Kqp: <span class="success">APPROVE</span> <span class="dim">(air-gapped)</span></div>
+                    <div style="padding: 3px 0;"><span class="success">&#10003;</span> Agent-2...mNx4: <span class="success">APPROVE</span> <span class="dim">(air-gapped)</span></div>
+                    <div style="padding: 3px 0;"><span class="success">&#10003;</span> Agent-3...pR9w: <span class="success">APPROVE</span> <span class="dim">(air-gapped)</span></div>
+                    <div style="padding: 3px 0;"><span style="color: #ff5f56;">&#10007;</span> Agent-4...zT5v: <span style="color: #ff5f56;">REJECT</span> <span class="dim">(air-gapped)</span></div>
+                    <div style="padding: 3px 0;"><span class="dim">&#9679;</span> Agent-5...bY2j: <span class="dim">PENDING</span></div>
+                </div>
+            </div>
+
+            <!-- Execute button simulation -->
+            <div style="margin: 15px 0;">
+                <span class="info">?</span> Execute proposal? (threshold met)<br>
+                <div style="margin: 5px 0 5px 16px;">
+                    <span style="color: #58d1eb; font-weight: bold;">&gt;</span> <span style="color: #58d1eb;">Yes, execute proposal</span><br>
+                    <span style="color: #666;">&nbsp; No, wait for more votes</span>
+                </div>
+            </div>
+
+            <div style="margin: 10px 0;">
+                <span class="success">&#10003;</span> <span class="success">Proposal executed successfully!</span><br>
+                <span class="info">-></span> 100 SOL transferred to DevFund...4xpz<br>
+                <span class="info">-></span> Transaction: <span class="info">5xJhN2...explorer.solana.com</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

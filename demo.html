@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Coldstar Demo - Interactive walkthrough of air-gapped Solana cold wallet features. 9 key screens from the 3-minute demo.">
+    <title>Demo | Coldstar - Air-Gapped Solana Vault</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="./assets/favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicons/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicons/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/favicons/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./assets/favicons/android-chrome-512x512.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --bg-card: #141414;
+            --bg-card-hover: #1a1a1a;
+            --accent-cyan: #58d1eb;
+            --accent-green: #98e024;
+            --accent-purple: #9945ff;
+            --accent-purple-light: #b088ff;
+            --accent-yellow: #ffc107;
+            --border: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #9e9e9e;
+            --text-muted: #666666;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        code, pre, .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Top Banner */
+        .top-banner {
+            background: linear-gradient(90deg, #58d1eb, #0080cc);
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 0.95em;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .top-banner a { color: #fff; text-decoration: underline; font-weight: 600; }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 44px;
+            z-index: 999;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        .nav-brand img {
+            height: 36px;
+            filter: drop-shadow(0 2px 8px rgba(88, 209, 235, 0.3));
+        }
+        .nav-brand span {
+            font-weight: 800;
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #58d1eb, #98e024);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--accent-cyan);
+        }
+        .nav-links .btn-nav {
+            padding: 10px 22px;
+            background: var(--accent-cyan);
+            color: #000;
+            border-radius: 6px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .nav-links .btn-nav:hover {
+            background: var(--accent-green);
+            transform: translateY(-1px);
+        }
+
+        /* Hero */
+        .demo-hero {
+            text-align: center;
+            padding: 80px 20px 40px;
+            position: relative;
+        }
+        .demo-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(88, 209, 235, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .demo-hero h1 {
+            font-size: clamp(2em, 5vw, 3.5em);
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #58d1eb, #98e024);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+        .demo-hero .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2em;
+            max-width: 700px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+
+        /* Timeline Badges */
+        .timeline-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .timeline-badge {
+            padding: 6px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .timeline-badge.highlight {
+            background: rgba(88, 209, 235, 0.12);
+            border-color: rgba(88, 209, 235, 0.3);
+            color: var(--accent-cyan);
+        }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0 20px 40px;
+        }
+        .filter-tab {
+            padding: 8px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .filter-tab:hover,
+        .filter-tab.active {
+            background: rgba(88, 209, 235, 0.1);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        /* Gallery Grid */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 28px;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 30px 60px;
+        }
+
+        /* Screenshot Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: var(--accent-cyan);
+            box-shadow:
+                0 12px 40px rgba(88, 209, 235, 0.12),
+                0 0 0 1px rgba(88, 209, 235, 0.1);
+        }
+        .card-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .card-number {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #000;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+        .card-title {
+            font-size: 1.05em;
+            font-weight: 700;
+        }
+        .card-timestamp {
+            color: var(--text-muted);
+            font-size: 0.75em;
+            font-family: 'JetBrains Mono', monospace;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        /* Tech Badge */
+        .tech-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            font-weight: 700;
+            margin-left: 10px;
+            vertical-align: middle;
+            letter-spacing: 0.03em;
+        }
+        .tech-badge.rich { background: rgba(88, 209, 235, 0.12); color: var(--accent-cyan); border: 1px solid rgba(88, 209, 235, 0.25); }
+        .tech-badge.tui { background: rgba(152, 224, 36, 0.12); color: var(--accent-green); border: 1px solid rgba(152, 224, 36, 0.25); }
+        .tech-badge.textual { background: rgba(153, 69, 255, 0.12); color: var(--accent-purple-light); border: 1px solid rgba(153, 69, 255, 0.25); }
+        .tech-badge.web { background: rgba(255, 193, 7, 0.12); color: var(--accent-yellow); border: 1px solid rgba(255, 193, 7, 0.25); }
+        .tech-badge.airgap { background: rgba(255, 77, 77, 0.12); color: #ff6b6b; border: 1px solid rgba(255, 77, 77, 0.25); }
+
+        .card-body {
+            padding: 18px 22px 22px;
+        }
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.92em;
+            line-height: 1.65;
+            margin-bottom: 14px;
+        }
+        .card-features {
+            list-style: none;
+            margin-bottom: 18px;
+        }
+        .card-features li {
+            padding: 4px 0;
+            color: #ccc;
+            font-size: 0.88em;
+        }
+        .card-features li::before {
+            content: "\2713 ";
+            color: var(--accent-green);
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .btn-view {
+            display: inline-block;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--accent-cyan), #0178d4);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.25s;
+        }
+        .btn-view:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(88, 209, 235, 0.3);
+        }
+
+        /* Info Panels */
+        .info-section {
+            max-width: 1300px;
+            margin: 0 auto 60px;
+            padding: 0 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+        .info-panel {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 28px;
+            border-left: 4px solid var(--accent-purple);
+        }
+        .info-panel.cyan { border-left-color: var(--accent-cyan); }
+        .info-panel h3 {
+            color: var(--accent-purple-light);
+            font-size: 1.15em;
+            margin-bottom: 14px;
+        }
+        .info-panel.cyan h3 { color: var(--accent-cyan); }
+        .info-panel p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 0.92em;
+        }
+        .info-panel code {
+            background: rgba(255,255,255,0.06);
+            padding: 2px 7px;
+            border-radius: 4px;
+            color: var(--accent-green);
+            font-size: 0.88em;
+        }
+        .info-panel strong { color: #ddd; }
+
+        /* Companion App Section */
+        .companion-section {
+            max-width: 1300px;
+            margin: 0 auto 60px;
+            padding: 0 30px;
+        }
+        .companion-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 36px;
+            display: flex;
+            align-items: center;
+            gap: 36px;
+        }
+        .companion-card .companion-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(88, 209, 235, 0.15), rgba(153, 69, 255, 0.15));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            flex-shrink: 0;
+        }
+        .companion-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 8px;
+        }
+        .companion-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        /* Footer */
+        .demo-footer {
+            text-align: center;
+            padding: 50px 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+        .footer-links {
+            display: flex;
+            gap: 28px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: var(--accent-green); }
+        .footer-note {
+            color: var(--text-muted);
+            font-size: 0.88em;
+        }
+        .footer-note p + p { margin-top: 8px; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .gallery {
+                grid-template-columns: 1fr;
+                padding: 0 16px 40px;
+            }
+            .info-section {
+                grid-template-columns: 1fr;
+                padding: 0 16px;
+            }
+            .nav { padding: 16px 20px; }
+            .nav-links { gap: 14px; }
+            .companion-card { flex-direction: column; text-align: center; }
+        }
+        @media (max-width: 600px) {
+            .nav-links a:not(.btn-nav) { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Banner -->
+    <div class="top-banner">
+        <span style="color: #fff;">
+            <strong>Colosseum Agent Hackathon</strong> &bull;
+            <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a> &bull;
+            <a href="https://coldstar.dev" target="_blank">coldstar.dev</a>
+        </span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="./index.html" class="nav-brand">
+            <img src="./assets/coldstar-logo.png" alt="Coldstar">
+            <span>Coldstar</span>
+        </a>
+        <div class="nav-links">
+            <a href="./index.html">Home</a>
+            <a href="./demo.html" class="active">Demo</a>
+            <a href="./companion-app/index.html">Companion App</a>
+            <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank" class="btn-nav">GitHub</a>
+        </div>
+    </nav>
+
+    <!-- Demo Hero -->
+    <section class="demo-hero">
+        <h1>Interactive Demo</h1>
+        <p class="subtitle">
+            9 key screens from the Coldstar 3-minute walkthrough. Air-gapped security, DeFi integration, and DAO governance — all from your terminal.
+        </p>
+        <div class="timeline-bar">
+            <span class="timeline-badge highlight">3:00 Runtime</span>
+            <span class="timeline-badge">9 Screens</span>
+            <span class="timeline-badge">Rich CLI + Textual TUI</span>
+            <span class="timeline-badge">Air-Gapped Signing</span>
+        </div>
+    </section>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterCards('all')">All Screens</button>
+        <button class="filter-tab" onclick="filterCards('rich')">Rich CLI</button>
+        <button class="filter-tab" onclick="filterCards('airgap')">Air-Gapped</button>
+        <button class="filter-tab" onclick="filterCards('defi')">DeFi</button>
+        <button class="filter-tab" onclick="filterCards('dao')">DAO</button>
+    </div>
+
+    <!-- Screenshot Gallery -->
+    <div class="gallery">
+        <!-- 1. Welcome Banner -->
+        <div class="card" data-tags="rich">
+            <div class="card-header">
+                <div class="card-number">1</div>
+                <div class="card-title">Welcome / Main Menu<span class="tech-badge rich">Rich CLI</span></div>
+                <div class="card-timestamp">0:00 — 0:15</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    ASCII art banner with "SOLANA COLD WALLET USB TOOL" branding, security notice, network status indicator, and the main menu with USB device detection.
+                </div>
+                <ul class="card-features">
+                    <li>ASCII logo banner</li>
+                    <li>Network connection status</li>
+                    <li>USB device table</li>
+                    <li>Interactive menu (questionary)</li>
+                </ul>
+                <a href="./screenshots/01-welcome-banner.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+
+        <!-- 2. USB Device Selection -->
+        <div class="card" data-tags="rich">
+            <div class="card-header">
+                <div class="card-number">2</div>
+                <div class="card-title">USB Device Selection<span class="tech-badge rich">Rich CLI</span></div>
+                <div class="card-timestamp">0:50 — 1:10</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    Multi-device USB selection screen showing detected drives with size, model, and mount status. Includes the DANGER ZONE confirmation prompt.
+                </div>
+                <ul class="card-features">
+                    <li>Multi-device table</li>
+                    <li>Interactive device selector</li>
+                    <li>Danger zone confirmation</li>
+                    <li>Data erasure warning</li>
+                </ul>
+                <a href="./screenshots/02-usb-device-selection.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+
+        <!-- 3. Wallet Creation -->
+        <div class="card" data-tags="rich airgap">
+            <div class="card-header">
+                <div class="card-number">3</div>
+                <div class="card-title">Wallet Creation Flow<span class="tech-badge rich">Rich CLI</span></div>
+                <div class="card-timestamp">0:30 — 0:50</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    Full wallet creation workflow: keypair generation, security warnings about online generation, confirmation prompt, and resulting public key display.
+                </div>
+                <ul class="card-features">
+                    <li>Solana keypair generation</li>
+                    <li>Security warning display</li>
+                    <li>Wallet info panel (double border)</li>
+                    <li>Public key + balance display</li>
+                </ul>
+                <a href="./screenshots/03-wallet-creation.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+
+        <!-- 4. Balance Check -->
+        <div class="card" data-tags="rich defi">
+            <div class="card-header">
+                <div class="card-number">4</div>
+                <div class="card-title">Balance Check + Wallet Menu<span class="tech-badge rich">Rich CLI</span></div>
+                <div class="card-timestamp">2:00 — 2:15</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    Wallet balance display with USD valuation via Pyth Network. Full wallet operations menu including Jupiter swap, sign, broadcast, and DAO options.
+                </div>
+                <ul class="card-features">
+                    <li>SOL balance + USD value</li>
+                    <li>Pyth Network price integration</li>
+                    <li>12-option wallet menu</li>
+                    <li>Jupiter swap (J) option</li>
+                </ul>
+                <a href="./screenshots/04-balance-check.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+
+        <!-- 5. Jupiter Swap -->
+        <div class="card" data-tags="defi">
+            <div class="card-header">
+                <div class="card-number">5</div>
+                <div class="card-title">Jupiter DEX Swap Quote<span class="tech-badge tui">Jupiter V6</span></div>
+                <div class="card-timestamp">1:10 — 1:40</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    Complete Jupiter swap flow: token input, quote fetching, swap summary with price impact, route steps, and unsigned transaction creation for air-gapped signing.
+                </div>
+                <ul class="card-features">
+                    <li>SOL-to-USDC swap quote</li>
+                    <li>Swap summary box (ASCII border)</li>
+                    <li>Price impact + route display</li>
+                    <li>Saves to USB inbox for offline signing</li>
+                </ul>
+                <a href="./screenshots/05-jupiter-swap-quote.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+
+        <!-- 6. Pyth Price Feeds -->
+        <div class="card" data-tags="defi">
+            <div class="card-header">
+                <div class="card-number">6</div>
+                <div class="card-title">Pyth Price Feeds<span class="tech-badge tui">Pyth Network</span></div>
+                <div class="card-timestamp">2:00 — 2:15</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    Live price feed display for 7 tokens (SOL, BTC, ETH, USDC, RAY, JUP, BONK) with confidence intervals, 24h changes, and portfolio valuation summary.
+                </div>
+                <ul class="card-features">
+                    <li>7-token price table</li>
+                    <li>Confidence intervals</li>
+                    <li>Portfolio total in USD</li>
+                    <li>5-second auto-refresh</li>
+                </ul>
+                <a href="./screenshots/06-pyth-price-feeds.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+
+        <!-- 7. QR Signing -->
+        <div class="card" data-tags="airgap">
+            <div class="card-header">
+                <div class="card-number">7</div>
+                <div class="card-title">QR Transaction Signing<span class="tech-badge airgap">Air-Gapped</span></div>
+                <div class="card-timestamp">1:10 — 1:40</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    Air-gapped signing workflow on the offline device: banner, wallet load, transaction details verification, SIGN confirmation, and QR code output for broadcasting.
+                </div>
+                <ul class="card-features">
+                    <li>Offline device banner</li>
+                    <li>Transaction verification panel</li>
+                    <li>QR code generation (SVG)</li>
+                    <li>Outbox file save</li>
+                </ul>
+                <a href="./screenshots/07-qr-transaction-signing.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+
+        <!-- 8. DAO Governance -->
+        <div class="card" data-tags="dao">
+            <div class="card-header">
+                <div class="card-number">8</div>
+                <div class="card-title">DAO Governance Interface<span class="tech-badge textual">On-Chain</span></div>
+                <div class="card-timestamp">1:40 — 2:00</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    Full DAO governance: vault info (3-of-5 multi-sig), 5-member list, active proposal with vote progress bars, threshold reached status, and execution confirmation.
+                </div>
+                <ul class="card-features">
+                    <li>Multi-sig vault (3-of-5)</li>
+                    <li>Vote progress bars</li>
+                    <li>Air-gapped vote collection</li>
+                    <li>Deployed on Solana devnet</li>
+                </ul>
+                <a href="./screenshots/08-dao-governance.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+
+        <!-- 9. Vault Dashboard -->
+        <div class="card" data-tags="rich defi">
+            <div class="card-header">
+                <div class="card-number">9</div>
+                <div class="card-title">Vault Dashboard (Textual TUI)<span class="tech-badge textual">Textual</span></div>
+                <div class="card-timestamp">2:15 — 2:35</div>
+            </div>
+            <div class="card-body">
+                <div class="card-description">
+                    Full-screen Textual TUI with three-panel layout: Portfolio (6 tokens), Token Details (USDC with tx history + risk notes), and Send panel with fee controls.
+                </div>
+                <ul class="card-features">
+                    <li>Three-column layout</li>
+                    <li>Portfolio with 6 tokens + USD values</li>
+                    <li>Transaction history + risk warnings</li>
+                    <li>Send with fee estimation</li>
+                </ul>
+                <a href="./screenshots/09-vault-dashboard.html" class="btn-view">View Screenshot</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Panels -->
+    <div class="info-section">
+        <div class="info-panel">
+            <h3>Recording Notes</h3>
+            <p>
+                <strong>Existing TUI previews</strong> are in
+                <code>screenshots/</code>:
+                <br><code>flash_usb_animated.html</code> — Animated Flash USB TUI
+                <br><code>vault_dashboard_preview.html</code> — 3-panel dashboard
+                <br><br>
+                <strong>Live TUI capture:</strong>
+                <br><code>python3 flash_usb_tui.py</code> — Textual flash UI
+                <br><code>python3 vault_dashboard_tui.py</code> — Textual dashboard
+                <br><code>python3 main.py</code> — Full Rich CLI
+                <br><code>python3 qr_sign.py</code> — Air-gapped QR signing
+            </p>
+        </div>
+        <div class="info-panel cyan">
+            <h3>Demo Video Timeline</h3>
+            <p>
+                <strong>0:00 – 0:15</strong> Opening — Screen #1 (Welcome)<br>
+                <strong>0:15 – 0:30</strong> Problem Statement — Architecture B-roll<br>
+                <strong>0:30 – 0:50</strong> Solution — Screen #3 (Wallet Creation)<br>
+                <strong>0:50 – 1:10</strong> USB Creation — Screen #2 + flash animation<br>
+                <strong>1:10 – 1:40</strong> Jupiter Swap — Screens #5 + #7<br>
+                <strong>1:40 – 2:00</strong> DAO Governance — Screen #8<br>
+                <strong>2:00 – 2:15</strong> Price Feeds — Screens #4 + #6<br>
+                <strong>2:15 – 2:35</strong> Tech Highlights — Screen #9 + code<br>
+                <strong>2:35 – 2:50</strong> Differentiation — Comparison table<br>
+                <strong>2:50 – 3:00</strong> Call to Action — GitHub links
+            </p>
+        </div>
+    </div>
+
+    <!-- Companion App CTA -->
+    <div class="companion-section">
+        <div class="companion-card">
+            <div class="companion-icon">📱</div>
+            <div>
+                <h3>Companion Web App</h3>
+                <p>
+                    A PWA for the online side of the air-gapped workflow. Create unsigned transactions, generate QR codes, scan signed QR codes, and broadcast to Solana — all from your phone or browser.
+                </p>
+                <a href="./companion-app/index.html" class="btn-view">Open Companion App</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="demo-footer">
+        <div class="footer-links">
+            <a href="./index.html">Home</a>
+            <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a>
+            <a href="https://colosseum.com/agent-hackathon/" target="_blank">Colosseum Hackathon</a>
+            <a href="https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet" target="_blank">DAO Explorer</a>
+        </div>
+        <div class="footer-note">
+            <p>Coldstar — Air-Gapped Solana Vault — Open Source (MIT)</p>
+            <p>Built for the Colosseum Agent Hackathon 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        function filterCards(tag) {
+            const cards = document.querySelectorAll('.card');
+            const tabs = document.querySelectorAll('.filter-tab');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            cards.forEach(card => {
+                if (tag === 'all') {
+                    card.style.display = '';
+                } else {
+                    const tags = card.getAttribute('data-tags') || '';
+                    card.style.display = tags.includes(tag) ? '' : 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
