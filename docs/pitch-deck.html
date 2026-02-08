@@ -480,6 +480,79 @@
             left: 0;
             color: var(--cyan);
         }
+
+        /* Brand assets */
+        .logo-main {
+            height: 64px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 20px rgba(88,209,235,0.3));
+        }
+
+        .logo-small {
+            height: 28px;
+            vertical-align: middle;
+        }
+
+        .logo-tiny {
+            height: 20px;
+            vertical-align: middle;
+        }
+
+        .partner-row {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .partner-row img {
+            height: 32px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            filter: brightness(0) invert(1);
+        }
+
+        .partner-row img:hover { opacity: 1; }
+
+        .partner-row .partner-label {
+            font-size: 0.8rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-right: 1rem;
+        }
+
+        .powered-by {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-top: 2rem;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .powered-by span {
+            font-size: 0.85rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .powered-by img {
+            height: 24px;
+            filter: brightness(0) invert(1);
+        }
+
+        .promo-img {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -488,6 +561,7 @@
         <!-- Slide 1: Title -->
         <div class="slide active">
             <div class="slide-label">Pitch Deck — FairScale Fairathon 2026</div>
+            <img src="../assets/coldstar-logo-main.png" alt="Coldstar" class="logo-main">
             <h1><span class="gradient">Coldstar</span></h1>
             <h1 style="font-size: 2.2rem; font-weight: 300; color: var(--dim); margin-top: -0.5rem;">
                 Reputation-Gated Air-Gapped Cold Wallet for Solana
@@ -506,12 +580,16 @@
                     <div class="stat-label">Other cold wallets with reputation</div>
                 </div>
             </div>
-            <div style="margin-top: 3rem; display: flex; gap: 2rem; align-items: center;">
+            <div style="margin-top: 2rem; display: flex; gap: 2rem; align-items: center;">
                 <span style="font-size: 1rem; color: var(--dim);">@buildcoldstar</span>
                 <span style="color: var(--bg3);">|</span>
                 <span style="font-size: 1rem; color: var(--dim);">STIE Member</span>
                 <span style="color: var(--bg3);">|</span>
                 <span style="font-size: 1rem; color: var(--dim);">chainlabs.uno</span>
+            </div>
+            <div class="powered-by">
+                <span>Powered by</span>
+                <img src="../assets/partners/fairscale.svg" alt="FairScale">
             </div>
         </div>
 
@@ -541,7 +619,7 @@
         <!-- Slide 3: Solution -->
         <div class="slide">
             <div class="slide-label">The Solution</div>
-            <h2>FairScore at the<br><span class="hl-cyan">point of no return</span></h2>
+            <h2><img src="../assets/partners/fairscale.svg" alt="FairScale" class="logo-small" style="filter: brightness(0) invert(1); margin-right: 0.5rem;">FairScore at the<br><span class="hl-cyan">point of no return</span></h2>
             <p class="subtitle">Every outbound transaction is checked against FairScale's reputation API <strong>before</strong> it crosses the air gap for offline signing.</p>
 
             <table class="tier-table" style="max-width: 800px; margin-top: 2rem;">
@@ -591,8 +669,11 @@
         <!-- Slide 4: FairScore Integration Deep Dive -->
         <div class="slide">
             <div class="slide-label">Core Integration — 30% of Judging</div>
-            <h2>6 FairScore Integration Points</h2>
-            <p class="subtitle" style="margin-bottom: 1rem;">FairScore is not decorative. It is a core gating mechanism.</p>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <h2 style="margin-bottom: 0;">6 FairScore Integration Points</h2>
+                <img src="../assets/partners/fairscale.svg" alt="FairScale" style="height: 36px; filter: brightness(0) invert(1); opacity: 0.6;">
+            </div>
+            <p class="subtitle" style="margin-bottom: 1rem; margin-top: 1rem;">FairScore is not decorative. It is a core gating mechanism.</p>
 
             <div class="card-grid cols-3">
                 <div class="card card-accent">
@@ -659,6 +740,7 @@
                     </div>
                 </div>
             </div>
+            <img src="../promo/architecture-flow.png" alt="Coldstar Architecture" class="promo-img" style="max-width: 700px; margin-top: 1.5rem; opacity: 0.85;">
         </div>
 
         <!-- Slide 6: Market -->
@@ -877,6 +959,14 @@
                     </div>
                 </div>
             </div>
+            <div class="partner-row">
+                <span class="partner-label">Integrations</span>
+                <img src="../assets/partners/fairscale.svg" alt="FairScale" title="FairScale">
+                <img src="../assets/partners/solana.svg" alt="Solana" title="Solana">
+                <img src="../assets/partners/pyth.svg" alt="Pyth Network" title="Pyth Network">
+                <img src="../assets/partners/squads.svg" alt="Squads" title="Squads">
+                <img src="../assets/partners/meteora.svg" alt="Meteora" title="Meteora">
+            </div>
         </div>
 
         <!-- Slide 11: Team -->
@@ -937,6 +1027,7 @@
         <!-- Slide 13: CTA -->
         <div class="slide">
             <div class="slide-label">Try Coldstar</div>
+            <img src="../assets/coldstar-logo-main.png" alt="Coldstar" class="logo-main">
             <h1><span class="gradient">The future of cold storage<br>is intelligent.</span></h1>
 
             <div class="cta-links">
@@ -954,12 +1045,16 @@
                 </a>
             </div>
 
-            <div style="margin-top: 2.5rem; display: flex; gap: 2rem; align-items: center;">
+            <div style="margin-top: 2rem; display: flex; gap: 2rem; align-items: center;">
                 <span style="font-size: 1rem; color: var(--dim);">STIE Member</span>
                 <span style="color: var(--bg3);">|</span>
                 <span style="font-size: 1rem; color: var(--dim);">chainlabs.uno</span>
                 <span style="color: var(--bg3);">|</span>
                 <span style="font-size: 1rem; color: var(--dim);">FairScale Fairathon 2026</span>
+            </div>
+            <div class="powered-by" style="margin-top: 1.5rem;">
+                <span>Powered by</span>
+                <img src="../assets/partners/fairscale.svg" alt="FairScale">
             </div>
         </div>
 
@@ -968,7 +1063,7 @@
     <!-- Navigation -->
     <div class="progress-bar" id="progress"></div>
     <div class="nav-bar">
-        <div class="brand">coldstar.dev &nbsp;·&nbsp; @buildcoldstar &nbsp;·&nbsp; chainlabs.uno</div>
+        <div class="brand"><img src="../assets/coldstar-icon.png" alt="" style="height: 16px; vertical-align: middle; margin-right: 6px; opacity: 0.7;">coldstar.dev &nbsp;·&nbsp; @buildcoldstar &nbsp;·&nbsp; chainlabs.uno</div>
         <div class="counter"><span id="current">1</span> / <span id="total">13</span></div>
     </div>
 
