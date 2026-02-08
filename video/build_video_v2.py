@@ -63,7 +63,8 @@ def scene(title, duration, voiceover, accent="#ff00ff"):
 # ─── Rich Rendering Helpers ──────────────────────────────────────────
 
 def rich_to_png(render_func, out_path, console_width=100, title="coldstar — main.py"):
-    """Render Rich content to PNG via SVG export."""
+    """Render Rich content to PNG via SVG export — no chrome (we add our own)."""
+    import re
     c = Console(
         record=True,
         width=console_width,
@@ -72,6 +73,30 @@ def rich_to_png(render_func, out_path, console_width=100, title="coldstar — ma
     )
     render_func(c)
     svg = c.export_svg(title=title, theme=TERMINAL_THEME)
+
+    # Strip Rich's built-in terminal chrome (title bar + traffic lights)
+    # so we don't get a double title bar when compositing our own macOS frame.
+    # 1) Remove <circle> elements (traffic light dots)
+    svg = re.sub(r'<circle[^/]*/>', '', svg)
+    # 2) Remove the chrome title <text> element
+    svg = re.sub(r'<text[^>]*class="[^"]*-title"[^>]*>.*?</text>', '', svg)
+    # 3) Remove the rounded outer rect (stroke border) — it's the first <rect> with rx="8"
+    svg = re.sub(r'<rect[^>]*rx="8"[^/]*/>', '', svg, count=1)
+    # 4) Remove the title-bar background rect (first small rect, ~23px tall)
+    svg = re.sub(r'<rect x="0" y="0" width="[^"]*" height="2[0-9]\.[0-9]"[^/]*/>', '', svg, count=1)
+    # 5) Shift content up by removing the terminal_y offset in the transform
+    svg = re.sub(
+        r'transform="translate\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)\)"',
+        lambda m: f'transform="translate({m.group(1)}, 4)"',
+        svg,
+        count=1,
+    )
+    # 6) Add a plain background rect at the top
+    svg = svg.replace(
+        '<defs>',
+        f'<rect fill="rgb(13,13,13)" x="0" y="0" width="100%" height="100%"/>\n    <defs>',
+        1,
+    )
 
     # Write SVG
     svg_path = out_path.replace(".png", ".svg")
@@ -144,12 +169,8 @@ def composite_terminal_frame(content_png_path, output_path, window_title="coldst
     draw.text(((WIDTH - tw) // 2, (TITLEBAR_H - 14) // 2), window_title,
               fill=TITLEBAR_TEXT, font=title_font)
 
-    # Load content and crop Rich's built-in title bar to avoid double chrome
+    # Load content (Rich chrome already stripped in rich_to_png)
     content = Image.open(content_png_path)
-    # Rich SVG export adds a full terminal chrome bar (~8% of height) — crop it off
-    rich_titlebar_h = int(content.height * 0.09)
-    if content.height > 200:  # safety check
-        content = content.crop((0, rich_titlebar_h, content.width, content.height))
 
     # Scale content to fit within the frame
     max_w = WIDTH - PADDING * 2
@@ -205,7 +226,7 @@ def render_title(c):
     c.print("[dim]     X: @buildcoldstar  •  Insta: @devsyrem[/]")
     c.print()
     c.print()
-    c.print("[bold cyan]     FairScale Fairathon 2026  •  Colosseum Project #62[/]")
+    c.print("[bold cyan]     FairScale Fairathon 2026[/]")
     c.print()
 
 
@@ -776,7 +797,7 @@ def render_cta(c):
     c.print()
     c.print('  [bold white italic]"The future of cold storage is intelligent."[/]')
     c.print()
-    c.print("  [dim]FairScale Fairathon 2026  •  Colosseum Project #62[/]")
+    c.print("  [dim]FairScale Fairathon 2026[/]")
     c.print("  [dim]STIE Member  •  chainlabs.uno[/]")
     c.print()
 
