@@ -1,2 +1,3 @@
-# Build artifacts - regenerate with: python build_video.py
+# Build artifacts - regenerate with: python build_video.py / build_video_v2.py
 audio/
+audio_v2/
