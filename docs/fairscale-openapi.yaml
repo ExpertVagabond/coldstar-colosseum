@@ -1,0 +1,273 @@
+openapi: 3.0.3
+info:
+  title: FairScale API
+  description: |
+    FairScale provides APIs for wallet scoring and social reputation analysis on Solana.
+    
+    ## Authentication
+    All endpoints require API key authentication via the `fairkey` header.
+    
+    ## Rate Limiting
+    Rate limits are applied per API key. Exceeding limits returns a `429` status code.
+  version: 1.0.0
+  contact:
+    name: FairScale Team
+    url: https://fairscale.xyz
+
+servers:
+  - url: https://api2.fairscale.xyz
+    description: Production API
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: fairkey
+      description: API key for authentication
+
+  schemas:
+    Badge:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique badge identifier
+          example: "diamond_hands"
+        label:
+          type: string
+          description: Display name of the badge
+          example: "Diamond Hands"
+        description:
+          type: string
+          description: Badge description
+          example: "Long-term holder with conviction"
+        tier:
+          type: string
+          enum: [bronze, silver, gold, platinum]
+          description: Badge tier level
+          example: "platinum"
+
+    Features:
+      type: object
+      description: Detailed feature breakdown used in scoring
+      properties:
+        lst_percentile_score:
+          type: number
+          format: float
+        major_percentile_score:
+          type: number
+          format: float
+        native_sol_percentile:
+          type: number
+          format: float
+        stable_percentile_score:
+          type: number
+          format: float
+        tx_count:
+          type: number
+          format: float
+        active_days:
+          type: number
+          format: float
+        median_gap_hours:
+          type: number
+          format: float
+        tempo_cv:
+          type: number
+          format: float
+        burst_ratio:
+          type: number
+          format: float
+        net_sol_flow_30d:
+          type: number
+          format: float
+        median_hold_days:
+          type: number
+          format: float
+        no_instant_dumps:
+          type: number
+          format: float
+        conviction_ratio:
+          type: number
+          format: float
+        platform_diversity:
+          type: number
+          format: float
+        wallet_age_days:
+          type: number
+          format: float
+
+    ScoreResponse:
+      type: object
+      properties:
+        wallet:
+          type: string
+          description: Solana wallet address
+          example: "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+        fairscore_base:
+          type: number
+          format: float
+          description: Base FairScore without social factors
+          example: 58.1
+        social_score:
+          type: number
+          format: float
+          description: Social reputation score
+          example: 36.0
+        fairscore:
+          type: number
+          format: float
+          description: Combined FairScore (wallet + social)
+          example: 65.3
+        badges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Badge'
+        actions:
+          type: array
+          items:
+            type: object
+        tier:
+          type: string
+          enum: [bronze, silver, gold, platinum]
+          example: "gold"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-21T13:13:53.608725Z"
+        features:
+          $ref: '#/components/schemas/Features'
+
+    FairScoreResponse:
+      type: object
+      properties:
+        fair_score:
+          type: integer
+          example: 272
+
+    WalletScoreResponse:
+      type: object
+      properties:
+        wallet_score:
+          type: integer
+          example: 134
+
+    SocialScoreResponse:
+      type: object
+      properties:
+        social_score:
+          type: integer
+          example: 134
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "No API key found in request"
+
+  parameters:
+    WalletParam:
+      name: wallet
+      in: query
+      required: true
+      description: Solana wallet address
+      schema:
+        type: string
+      example: "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+    
+paths:
+  /score:
+    get:
+      summary: Get Complete Score
+      description: Returns the complete FairScore with full metadata, badges, feature breakdown, and tier information.
+      operationId: getScore
+      tags:
+        - Scoring
+      parameters:
+        - $ref: '#/components/parameters/WalletParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /fairScore:
+    get:
+      summary: Get FairScore Only
+      description: Returns only the FairScore value for a wallet.
+      operationId: getFairScore
+      tags:
+        - Scoring
+      parameters:
+        - $ref: '#/components/parameters/WalletParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FairScoreResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /walletScore:
+    get:
+      summary: Get Wallet Score Only
+      description: Returns only the wallet-based score, excluding social factors.
+      operationId: getWalletScore
+      tags:
+        - Scoring
+      parameters:
+        - $ref: '#/components/parameters/WalletParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletScoreResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Scoring
+    description: Wallet and social scoring endpoints
