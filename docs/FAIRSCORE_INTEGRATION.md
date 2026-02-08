@@ -671,13 +671,13 @@ AgentSecurityError: Agent transactions require Tier 3+ destination addresses
 
 **Document Version:** 1.0
 **Last Updated:** 2026-02-08
-**Maintainer:** Matthew Karsten (@expertvagabond)
+**Maintainer:** Matthew Karsten (@buildcoldstar)
 
 ```
 ╔═══════════════════════════════════════════════════════════════╗
 ║  "The most secure cold wallet is one that knows who it's     ║
 ║   talking to before the signature happens."                   ║
 ║                                                                ║
-║  — Purple Squirrel Media × Coldstar Team                      ║
+║  — Coldstar Team × chainlabs.uno                              ║
 ╚═══════════════════════════════════════════════════════════════╝
 ```

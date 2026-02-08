@@ -465,8 +465,8 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ## 💬 Community
 
-**Built by**: Matthew Karsten ([@expertvagabond](https://x.com/expertvagabond))
-**Company**: Purple Squirrel Media LLC
+**X**: [@buildcoldstar](https://x.com/buildcoldstar) | STIE Member
+**STIE Member** | [chainlabs.uno](https://chainlabs.uno)
 **Hackathons**: Colosseum Agent Hackathon (Project #62) + FairScale Fairathon
 
 <p align="center">
