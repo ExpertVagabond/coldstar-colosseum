@@ -388,7 +388,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <img src="./assets/coldstar-logo-main.png" alt="Coldstar Logo" style="max-width: 400px; margin-bottom: 40px; filter: drop-shadow(0 10px 40px rgba(0, 163, 255, 0.4));">
+            <img src="./promo/hero-image.png" alt="Coldstar - Your Cold Wallet Just Got Intelligent" style="max-width: 800px; width: 100%; margin-bottom: 30px; border-radius: 12px; filter: drop-shadow(0 10px 60px rgba(0, 163, 255, 0.3));">
             <p class="tagline">Reputation-Gated Air-Gapped Cold Wallet for Solana</p>
             <p style="font-size: 1.2em; color: #ccc; max-width: 800px; margin: 0 auto;">
                 The only cold wallet that checks counterparty reputation before every transaction.
@@ -408,8 +408,8 @@
                 <a href="https://github.com/ExpertVagabond/coldstar-colosseum" class="btn btn-primary" target="_blank">
                     View on GitHub →
                 </a>
-                <a href="./demo.html" class="btn btn-secondary">
-                    View Demo
+                <a href="./docs/pitch-deck.html" class="btn btn-secondary">
+                    Pitch Deck
                 </a>
             </div>
 
@@ -531,6 +531,11 @@
             <p style="text-align: center; color: #ccc; font-size: 1.3em; margin-bottom: 50px; max-width: 800px; margin-left: auto; margin-right: auto;">
                 Every outbound transaction is checked against FairScale's reputation API <strong style="color: #ff00ff;">before</strong> it crosses the air gap. The last checkpoint before the point of no return.
             </p>
+
+            <!-- Tier Chart Infographic -->
+            <div style="text-align: center; margin-bottom: 50px;">
+                <img src="./promo/tier-chart.png" alt="FairScore Reputation Tiers" style="max-width: 100%; border-radius: 12px; border: 2px solid #7B2FBE; box-shadow: 0 10px 40px rgba(123, 47, 190, 0.3);">
+            </div>
 
             <!-- Tier Table -->
             <div style="background: #1a1a2e; border-radius: 12px; padding: 40px; border: 2px solid #7B2FBE; margin-bottom: 50px;">
@@ -671,17 +676,20 @@
         </div>
     </section>
 
-    <!-- Demo Section -->
+    <!-- Architecture Section -->
     <section class="section">
-        <h2 class="section-title">See It in Action</h2>
-        <div class="demo-preview">
-            <h3 style="color: #58d1eb; margin-bottom: 20px; text-align: center;">USB Flashing Animation</h3>
-            <iframe src="./screenshots/flash_usb_animated.html" title="Coldstar Demo Animation"></iframe>
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="./demo.html" class="btn btn-primary" style="display: inline-block;">
-                    View Full Demo Gallery →
-                </a>
-            </div>
+        <h2 class="section-title">Architecture</h2>
+        <div style="text-align: center; margin-bottom: 40px;">
+            <img src="./promo/architecture-flow.png" alt="Coldstar Air-Gap Architecture" style="max-width: 100%; border-radius: 12px; border: 2px solid #2a2a2a; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+        </div>
+        <p style="text-align: center; color: #9e9e9e; font-size: 1.2em; max-width: 800px; margin: 0 auto;">
+            All FairScore checks happen on the online device. The air-gapped USB never touches the network.
+            QR codes transfer unsigned transactions across the gap. Your keys stay offline. Always.
+        </p>
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="./demo.html" class="btn btn-secondary" style="display: inline-block;">
+                View Demo Gallery →
+            </a>
         </div>
     </section>
 
@@ -776,6 +784,7 @@
         <div class="footer-links">
             <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a>
             <a href="docs/FAIRSCORE_INTEGRATION.md">FairScore Docs</a>
+            <a href="./docs/pitch-deck.html">Pitch Deck</a>
             <a href="https://superteam.fun/earn/listing/fairathon/" target="_blank">Fairathon</a>
             <a href="./demo.html">Demo</a>
             <a href="https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet" target="_blank">DAO Explorer</a>

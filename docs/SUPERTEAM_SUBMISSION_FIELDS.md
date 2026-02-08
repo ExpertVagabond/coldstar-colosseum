@@ -53,7 +53,7 @@ https://github.com/ExpertVagabond/coldstar-colosseum
 *(Required — "Business viability materials")*
 
 ```
-https://coldstar.dev/colosseum/slides/
+https://expertvagabond.github.io/coldstar-colosseum/docs/pitch-deck.html
 ```
 
 Alternative: Upload a PDF directly if the form supports file upload.
