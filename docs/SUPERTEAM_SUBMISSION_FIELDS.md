@@ -97,7 +97,7 @@ https://x.com/expertvagabond
 *(Required — "Names, roles, contact details, and relevant prior experience")*
 
 ```
-Matthew Karsten — Solo Founder & Full-Stack Developer
+@buildcoldstar — Solo Founder & Full-Stack Developer
 
 GitHub: @ExpertVagabond
 Twitter/X: @buildcoldstar
