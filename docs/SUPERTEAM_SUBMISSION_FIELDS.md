@@ -74,7 +74,7 @@ Alternative: Upload a PDF directly if the form supports file upload.
 *(Required — "Include tweets and threads plus traction evidence like user testimonials, analytics screenshots")*
 
 ```
-https://x.com/expertvagabond
+https://x.com/buildcoldstar
 ```
 
 **What to include alongside this URL:**
