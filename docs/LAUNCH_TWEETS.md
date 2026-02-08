@@ -300,7 +300,7 @@ If Tweet 1 underperforms, try these variants:
 
 **Document Version:** 1.0
 **Created:** 2026-02-08
-**Author:** Matthew Karsten (@buildcoldstar)
+**Author:** @buildcoldstar
 **Campaign Code:** CS-FS-LAUNCH-001
 
 ```

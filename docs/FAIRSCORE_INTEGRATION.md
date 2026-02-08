@@ -671,7 +671,7 @@ AgentSecurityError: Agent transactions require Tier 3+ destination addresses
 
 **Document Version:** 1.0
 **Last Updated:** 2026-02-08
-**Maintainer:** Matthew Karsten (@buildcoldstar)
+**Maintainer:** @buildcoldstar
 
 ```
 ╔═══════════════════════════════════════════════════════════════╗
