@@ -228,7 +228,7 @@ Give us an upvote if this is the future of cold storage 🚀
 
 **Engagement tactics:**
 - Tag @FairScore, @ColossiumOrg, @Solana in Tweet 1
-- Request RT from Purple Squirrel Media accounts
+- Request RT from @buildcoldstar and related accounts
 - Cross-post to Farcaster, Lens Protocol
 - Pin Tweet 1 to Coldstar profile for duration of hackathon
 
@@ -278,8 +278,8 @@ If Tweet 1 underperforms, try these variants:
 ## Community Amplification
 
 **Request RTs from:**
-- @expertvagabond (personal account)
-- @squirrel_eth (Purple Squirrel Media)
+- @buildcoldstar (project account)
+- @buildcoldstar (project account)
 - @americanmonks (travel/tech crossover)
 - FairScore official account
 - Colosseum official account
@@ -300,7 +300,7 @@ If Tweet 1 underperforms, try these variants:
 
 **Document Version:** 1.0
 **Created:** 2026-02-08
-**Author:** Matthew Karsten (@expertvagabond)
+**Author:** Matthew Karsten (@buildcoldstar)
 **Campaign Code:** CS-FS-LAUNCH-001
 
 ```

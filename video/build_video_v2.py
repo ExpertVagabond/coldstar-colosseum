@@ -144,8 +144,12 @@ def composite_terminal_frame(content_png_path, output_path, window_title="coldst
     draw.text(((WIDTH - tw) // 2, (TITLEBAR_H - 14) // 2), window_title,
               fill=TITLEBAR_TEXT, font=title_font)
 
-    # Load and paste content
+    # Load content and crop Rich's built-in title bar to avoid double chrome
     content = Image.open(content_png_path)
+    # Rich SVG export adds a full terminal chrome bar (~8% of height) — crop it off
+    rich_titlebar_h = int(content.height * 0.09)
+    if content.height > 200:  # safety check
+        content = content.crop((0, rich_titlebar_h, content.width, content.height))
 
     # Scale content to fit within the frame
     max_w = WIDTH - PADDING * 2
@@ -167,7 +171,7 @@ def composite_terminal_frame(content_png_path, output_path, window_title="coldst
         brand_font = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 13)
     except (OSError, IOError):
         brand_font = title_font
-    branding = "coldstar.dev  |  @expertvagabond  |  FairScale Fairathon 2026"
+    branding = "coldstar.dev  |  X: @buildcoldstar  |  chainlabs.uno  |  FairScale Fairathon 2026"
     bbox = draw.textbbox((0, 0), branding, font=brand_font)
     bw = bbox[2] - bbox[0]
     draw.text(((WIDTH - bw) // 2, HEIGHT - 28), branding, fill=BRANDING_COLOR, font=brand_font)
@@ -197,8 +201,8 @@ def render_title(c):
     c.print()
     c.print("[bold white]     Reputation-Gated Air-Gapped Cold Wallet for Solana[/]")
     c.print()
-    c.print("[dim]     Built by Matthew Karsten  •  Purple Squirrel Media[/]")
-    c.print("[dim]     @expertvagabond  •  coldstar.dev[/]")
+    c.print("[dim]     STIE Member  •  chainlabs.uno  •  coldstar.dev[/]")
+    c.print("[dim]     X: @buildcoldstar  •  Insta: @devsyrem[/]")
     c.print()
     c.print()
     c.print("[bold cyan]     FairScale Fairathon 2026  •  Colosseum Project #62[/]")
@@ -750,8 +754,8 @@ def render_live_api(c):
 @scene(
     "CTA",
     12,
-    "Coldstar is live at coldstar.dev. The code is open source on GitHub at "
-    "Expert Vagabond slash coldstar-colosseum. Follow at expert vagabond on X. "
+    "Coldstar is live at coldstar.dev. The code is open source on GitHub. "
+    "Follow build coldstar on X. STIE member, chainlabs.uno. "
     "The future of cold storage is intelligent. Thank you.",
     accent="#ff00ff",
 )
@@ -765,14 +769,15 @@ def render_cta(c):
     c.print()
     c.print("  [bold white]GitHub:[/]    [cyan]ExpertVagabond/coldstar-colosseum[/]")
     c.print()
-    c.print("  [bold white]Twitter:[/]   [cyan]@expertvagabond[/]")
+    c.print("  [bold white]X:[/]         [cyan]@buildcoldstar[/]")
+    c.print("  [bold white]Insta:[/]     [cyan]@devsyrem[/]")
     c.print()
+    c.print("  [bold white]STIE Member[/]  •  [cyan]chainlabs.uno[/]")
     c.print()
     c.print('  [bold white italic]"The future of cold storage is intelligent."[/]')
     c.print()
-    c.print()
     c.print("  [dim]FairScale Fairathon 2026  •  Colosseum Project #62[/]")
-    c.print("  [dim]Built by Matthew Karsten  •  Purple Squirrel Media LLC[/]")
+    c.print("  [dim]STIE Member  •  chainlabs.uno[/]")
     c.print()
 
 
@@ -788,7 +793,7 @@ def generate_voiceover(idx, text, duration):
     rate = int(target_wpm * 1.1)
 
     subprocess.run(
-        ["say", "-v", "Samantha", "-r", str(rate), "-o", aiff_path, text],
+        ["say", "-v", "Daniel", "-r", str(rate), "-o", aiff_path, text],
         check=True, capture_output=True,
     )
     subprocess.run(
@@ -800,19 +805,31 @@ def generate_voiceover(idx, text, duration):
 
 
 def generate_background_music(total_duration):
-    """Generate subtle ambient background music."""
+    """Generate faint ambient background music — warm pad with subtle movement."""
     music_path = os.path.join(AUDIO_DIR, "bgm.wav")
 
+    # Layer multiple harmonics for a warm ambient pad:
+    # A2 (110Hz) fundamental, E3 (165Hz) fifth, A1 (55Hz) sub-bass,
+    # C#3 (138.6Hz) major third, A3 (220Hz) octave
     cmd = [
         "ffmpeg", "-y",
         "-f", "lavfi", "-i", f"sine=frequency=110:duration={total_duration}",
         "-f", "lavfi", "-i", f"sine=frequency=165:duration={total_duration}",
-        "-f", "lavfi", "-i", f"sine=frequency=82.5:duration={total_duration}",
+        "-f", "lavfi", "-i", f"sine=frequency=55:duration={total_duration}",
+        "-f", "lavfi", "-i", f"sine=frequency=138.6:duration={total_duration}",
+        "-f", "lavfi", "-i", f"sine=frequency=220:duration={total_duration}",
         "-filter_complex",
-        f"[0]volume=0.02[a];[1]volume=0.012[b];[2]volume=0.008[d];"
-        f"[a][b][d]amix=inputs=3:duration=longest,"
-        f"lowpass=f=500,highpass=f=60,"
-        f"afade=t=in:st=0:d=4,afade=t=out:st={total_duration-4}:d=4[out]",
+        # Mix at very low volumes for faint ambient feel
+        f"[0]volume=0.012[a];"
+        f"[1]volume=0.008[b];"
+        f"[2]volume=0.006[d];"
+        f"[3]volume=0.005[e];"
+        f"[4]volume=0.004[f];"
+        f"[a][b][d][e][f]amix=inputs=5:duration=longest,"
+        # Warm filtering: cut harsh highs, keep body
+        f"lowpass=f=400,highpass=f=40,"
+        # Gentle fade in/out
+        f"afade=t=in:st=0:d=5,afade=t=out:st={total_duration-5}:d=5[out]",
         "-map", "[out]",
         "-ar", "44100", "-ac", "1",
         music_path,

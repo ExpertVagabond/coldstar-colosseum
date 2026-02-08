@@ -100,9 +100,9 @@ https://x.com/expertvagabond
 Matthew Karsten — Solo Founder & Full-Stack Developer
 
 GitHub: @ExpertVagabond
-Twitter/X: @expertvagabond
+Twitter/X: @buildcoldstar
 Email: MatthewKarstenConnects@gmail.com
-Company: Purple Squirrel Media LLC
+STIE Member | chainlabs.uno
 
 Built Coldstar as a solo developer during the 10-day Colosseum Agent Hackathon sprint (Project #62, submitted as Agent #127). Deep Solana ecosystem experience building with Jupiter, Pyth, Anchor, SPL tokens, and MCP agent integrations. Polyglot developer shipping production code in Python, TypeScript, Rust, Ruby, and Go. Track record of rapid execution — Coldstar went from zero to live deployment with FairScore integration, Jupiter swaps, Pyth price feeds, QR-code air-gap signing, and a Rich TUI dashboard in under two weeks.
 ```
@@ -163,7 +163,7 @@ As a cold wallet CLI tool targeting security-conscious Solana users, traction is
 - Full air-gap signing flow with QR code transfer between online and offline devices
 - Rich TUI dashboard with real-time portfolio, price feeds, and reputation badges
 - OpenAPI 3.0 documentation for FairScale API integration
-- Active on X/Twitter: @expertvagabond with Solana ecosystem engagement
+- Active on X/Twitter: @buildcoldstar with Solana ecosystem engagement
 
 User acquisition strategy: Solana developer community first (hackathon exposure) -> crypto security forums and cold wallet communities -> institutional DAO treasury managers needing reputation-gated signing.
 ```
@@ -188,7 +188,7 @@ User acquisition strategy: Solana developer community first (hackathon exposure)
 - [ ] **FairScale GitHub org:** Confirm whether repo must be forked into FairScale's GitHub org — this was explicitly mentioned in the listing requirements
 - [ ] **Demo video** recorded and uploaded (YouTube or Loom, 5 min max)
 - [ ] **Pitch deck** finalized with business viability section (revenue model, user acquisition path to 100/1K/10K users)
-- [ ] **Launch tweet thread** posted from @expertvagabond (draft in docs/LAUNCH_TWEETS.md)
+- [ ] **Launch tweet thread** posted from @buildcoldstar (draft in docs/LAUNCH_TWEETS.md)
 - [ ] **Analytics screenshots** captured after tweet thread gets engagement
 - [ ] **FairScale API key** obtained from https://sales.fairscale.xyz/ and tested
 - [ ] All form fields above filled in with final URLs
