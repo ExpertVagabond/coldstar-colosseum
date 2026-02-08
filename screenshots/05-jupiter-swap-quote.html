@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - Jupiter DEX Swap Quote</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 0; margin: 0;
+        }
+        .terminal {
+            background: #1a1a2e;
+            max-width: 960px;
+            margin: 30px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .title-bar {
+            background: #2a2a3e;
+            padding: 10px 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .title-text { color: #888; font-size: 13px; margin-left: 20px; }
+        .content { padding: 20px 30px 30px; }
+        .section-header {
+            border: 2px solid #58d1eb;
+            border-radius: 8px;
+            padding: 8px 20px;
+            text-align: center;
+            color: #fff;
+            margin: 15px 0;
+        }
+        .info { color: #58d1eb; }
+        .success { color: #98e024; }
+        .warn { color: #ffff00; }
+        .dim { color: #666; }
+
+        .swap-box {
+            border: 3px double #58d1eb;
+            padding: 0;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .swap-header {
+            background: #58d1eb;
+            color: #000;
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+        }
+        .swap-row {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 10px;
+            padding: 6px 20px;
+            border-bottom: 1px solid #333;
+        }
+        .swap-row:last-child { border-bottom: none; }
+        .swap-label { color: #666; }
+        .swap-value { color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="title-bar">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <span class="title-text">coldstar -- Jupiter Swap</span>
+        </div>
+        <div class="content">
+            <div class="section-header">JUPITER SWAP - CREATE UNSIGNED TRANSACTION</div>
+
+            <div style="margin: 10px 0;">
+                <span class="info">-></span> Wallet: EbRUGhi2uLP5TamZx8fjNwn3dnvqoN4VNFRcent5Zykp<br><br>
+                <span class="info">-></span> Common tokens: SOL, USDC, USDT, BONK, JUP, RAY<br>
+                <span class="info">-></span> Or enter a custom mint address
+            </div>
+
+            <!-- Input section -->
+            <div style="margin: 15px 0; padding: 10px; background: rgba(88,209,235,0.05); border-radius: 6px;">
+                <div style="margin: 6px 0;"><span class="info">?</span> From token (e.g., SOL): <span class="success">SOL</span></div>
+                <div style="margin: 6px 0;"><span class="info">?</span> To token (e.g., USDC): <span class="success">USDC</span></div>
+                <div style="margin: 6px 0;"><span class="info">?</span> Amount of SOL to swap: <span class="success">1.0</span></div>
+            </div>
+
+            <!-- Fetching quote -->
+            <div style="margin: 15px 0;">
+                <span class="info">-></span> Fetching best route from Jupiter...<br>
+                <span class="info">-></span> Fetching quote from Jupiter...<br>
+                <span class="info">&nbsp;&nbsp;&nbsp;</span> Input: SOL (So111111...)<br>
+                <span class="info">&nbsp;&nbsp;&nbsp;</span> Output: USDC (EPjFWdd5...)<br>
+                <span class="info">&nbsp;&nbsp;&nbsp;</span> Amount: 1000000000<br><br>
+                <span class="success">&#10003;</span> Quote received!<br>
+                <span class="info">&nbsp;&nbsp;&nbsp;</span> Input amount: 1000000000<br>
+                <span class="info">&nbsp;&nbsp;&nbsp;</span> Expected output: 99850000<br>
+                <span class="info">&nbsp;&nbsp;&nbsp;</span> Price impact: 0.01%<br>
+                <span class="info">&nbsp;&nbsp;&nbsp;</span> Route: 2 steps
+            </div>
+
+            <!-- Swap Summary Box -->
+            <div class="swap-box">
+                <div class="swap-header">SWAP TRANSACTION</div>
+                <div class="swap-row">
+                    <span class="swap-label">From:</span>
+                    <span class="swap-value">1.000000 SOL</span>
+                </div>
+                <div class="swap-row">
+                    <span class="swap-label">To:</span>
+                    <span class="swap-value" style="color: #98e024;">99.850000 USDC</span>
+                </div>
+                <div class="swap-row">
+                    <span class="swap-label">Price Impact:</span>
+                    <span class="swap-value" style="color: #98e024;">0.01%</span>
+                </div>
+                <div class="swap-row">
+                    <span class="swap-label">Route:</span>
+                    <span class="swap-value">2 step(s)</span>
+                </div>
+                <div class="swap-row">
+                    <span class="swap-label">Slippage:</span>
+                    <span class="swap-value">0.5%</span>
+                </div>
+            </div>
+
+            <!-- Confirmation -->
+            <div style="margin: 15px 0;">
+                <span class="info">?</span> Create unsigned swap transaction?<br>
+                <div style="margin: 5px 0 5px 16px;">
+                    <span style="color: #58d1eb; font-weight: bold;">&gt;</span> <span style="color: #58d1eb;">Yes, create swap transaction</span><br>
+                    <span style="color: #666;">&nbsp; No, cancel</span>
+                </div>
+            </div>
+
+            <!-- Created -->
+            <div style="margin: 15px 0;">
+                <span class="info">-></span> Creating unsigned swap transaction...<br>
+                <span class="success">&#10003;</span> Unsigned swap transaction created!<br>
+                <span class="info">&nbsp;&nbsp;&nbsp;</span> Transaction size: 684 bytes<br><br>
+                <span class="success">&#10003;</span> <span class="success">Unsigned swap transaction created!</span><br>
+                <span class="info">-></span> Saved to: /mnt/usb/inbox/swap_SOL_to_USDC_1738450021.json
+            </div>
+
+            <div class="section-header">NEXT STEPS</div>
+
+            <div style="margin: 10px 0;">
+                <span class="info">-></span> 1. Transfer this file to your air-gapped device<br>
+                <span class="info">-></span> 2. Sign the transaction on the offline device<br>
+                <span class="info">-></span> 3. Transfer the signed transaction back<br>
+                <span class="info">-></span> 4. Broadcast using option 4 in the wallet menu<br><br>
+                <span class="warn">&#9888;</span> <span class="warn">IMPORTANT: Review transaction details on offline device before signing!</span><br>
+                <span class="warn">&#9888;</span> <span class="warn">Jupiter swaps interact with multiple programs and accounts.</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
