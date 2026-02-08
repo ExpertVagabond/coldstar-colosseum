@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - Pyth Price Feeds Display</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 0; margin: 0;
+        }
+        .terminal {
+            background: #1a1a2e;
+            max-width: 960px;
+            margin: 30px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .title-bar {
+            background: #2a2a3e;
+            padding: 10px 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .title-text { color: #888; font-size: 13px; margin-left: 20px; }
+        .content { padding: 20px 30px 30px; }
+        .section-header {
+            border: 2px solid #58d1eb;
+            border-radius: 8px;
+            padding: 8px 20px;
+            text-align: center;
+            color: #fff;
+            margin: 15px 0;
+        }
+        .info { color: #58d1eb; }
+        .success { color: #98e024; }
+
+        .wallet-box {
+            border: 3px double #58d1eb;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .wallet-box-title {
+            color: #58d1eb;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .price-table th {
+            text-align: left;
+            color: #58d1eb;
+            padding: 8px 12px;
+            border-bottom: 2px solid #58d1eb;
+            font-size: 13px;
+        }
+        .price-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #333;
+        }
+        .price-table tr:hover {
+            background: rgba(88,209,235,0.05);
+        }
+        .price-positive { color: #98e024; }
+        .price-negative { color: #ff5f56; }
+        .price-neutral { color: #ffff00; }
+
+        .portfolio-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .summary-label { color: #666; font-size: 12px; margin-bottom: 5px; }
+        .summary-value { font-size: 18px; font-weight: bold; }
+        .pyth-badge {
+            display: inline-block;
+            background: rgba(153, 69, 255, 0.2);
+            color: #b088ff;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid rgba(153, 69, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="title-bar">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <span class="title-text">coldstar -- Portfolio Valuation</span>
+        </div>
+        <div class="content">
+            <div class="section-header">WALLET STATUS</div>
+
+            <div class="wallet-box">
+                <div class="wallet-box-title">WALLET PUBLIC KEY (Safe to Share)</div>
+                <div style="display: grid; grid-template-columns: 100px 1fr; gap: 10px; padding: 5px 0;">
+                    <span style="color: #666;">Public Key</span>
+                    <span style="color: #98e024; font-weight: bold; word-break: break-all;">EbRUGhi2uLP5TamZx8fjNwn3dnvqoN4VNFRcent5Zykp</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 100px 1fr; gap: 10px; padding: 5px 0;">
+                    <span style="color: #666;">Balance</span>
+                    <span style="color: #98e024; font-weight: bold;">5.234000000 SOL</span>
+                </div>
+            </div>
+
+            <div style="margin: 10px 0;">
+                <span class="info">-></span> &#8776; <span style="color: #98e024; font-weight: bold; font-size: 16px;">$523.40 USD</span>
+                <span style="color: #666;">(SOL @ $100.00)</span>
+                <span class="pyth-badge">Pyth Network</span>
+            </div>
+
+            <div class="section-header">LIVE PRICE FEEDS - PYTH NETWORK</div>
+
+            <div style="text-align: right; margin-bottom: 5px;">
+                <span style="color: #666; font-size: 11px;">Auto-refresh: 5s</span>
+                <span style="color: #98e024; font-size: 11px;"> &#9679; LIVE</span>
+            </div>
+
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Price (USD)</th>
+                        <th>Confidence</th>
+                        <th>Change</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: bold;">&#9678; SOL/USD</td>
+                        <td style="color: #fff; font-weight: bold;">$100.00</td>
+                        <td style="color: #666;">&plusmn;0.12%</td>
+                        <td class="price-positive">+2.4%</td>
+                        <td><span class="pyth-badge">Pyth</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">&#8383; BTC/USD</td>
+                        <td style="color: #fff; font-weight: bold;">$48,040.00</td>
+                        <td style="color: #666;">&plusmn;0.08%</td>
+                        <td class="price-positive">+1.1%</td>
+                        <td><span class="pyth-badge">Pyth</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">&#9830; ETH/USD</td>
+                        <td style="color: #fff; font-weight: bold;">$2,520.50</td>
+                        <td style="color: #666;">&plusmn;0.10%</td>
+                        <td class="price-negative">-0.3%</td>
+                        <td><span class="pyth-badge">Pyth</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">&#9673; USDC/USD</td>
+                        <td style="color: #fff; font-weight: bold;">$1.0000</td>
+                        <td style="color: #666;">&plusmn;0.01%</td>
+                        <td class="price-neutral">0.0%</td>
+                        <td><span class="pyth-badge">Pyth</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">&#9889; RAY/USD</td>
+                        <td style="color: #fff; font-weight: bold;">$0.1700</td>
+                        <td style="color: #666;">&plusmn;0.45%</td>
+                        <td class="price-positive">+5.2%</td>
+                        <td><span class="pyth-badge">Pyth</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">&#9733; JUP/USD</td>
+                        <td style="color: #fff; font-weight: bold;">$0.6840</td>
+                        <td style="color: #666;">&plusmn;0.22%</td>
+                        <td class="price-positive">+3.8%</td>
+                        <td><span class="pyth-badge">Pyth</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">&#127774; BONK/USD</td>
+                        <td style="color: #fff; font-weight: bold;">$0.00001240</td>
+                        <td style="color: #666;">&plusmn;1.20%</td>
+                        <td class="price-negative">-2.1%</td>
+                        <td><span class="pyth-badge">Pyth</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="portfolio-summary">
+                <div class="summary-card">
+                    <div class="summary-label">Total Portfolio</div>
+                    <div class="summary-value" style="color: #98e024;">$523.40</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">24h Change</div>
+                    <div class="summary-value" style="color: #98e024;">+$12.34</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">SOL Price</div>
+                    <div class="summary-value" style="color: #fff;">$100.00</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; color: #666; font-size: 12px; margin-top: 10px;">
+                Data source: Pyth Network (hermes.pyth.network) | Cache TTL: 5s | 8 feeds active
+            </div>
+        </div>
+    </div>
+</body>
+</html>

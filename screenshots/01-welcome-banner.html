@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - Welcome / Main Banner</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 0;
+            margin: 0;
+        }
+        .terminal {
+            background: #1a1a2e;
+            max-width: 960px;
+            margin: 30px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .title-bar {
+            background: #2a2a3e;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .title-text { color: #888; font-size: 13px; margin-left: 20px; }
+        .content {
+            padding: 20px 30px 30px;
+        }
+        .banner {
+            color: #58d1eb;
+            line-height: 1.1;
+            font-size: 14px;
+            white-space: pre;
+        }
+        .banner-box {
+            border: 2px solid #58d1eb;
+            border-radius: 4px;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+        }
+        .network-info {
+            margin: 15px 0;
+        }
+        .status-ok { color: #98e024; }
+        .status-label { color: #58d1eb; }
+        .menu-section {
+            border: 2px solid #58d1eb;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-top: 20px;
+        }
+        .menu-title {
+            color: #58d1eb;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .menu-item {
+            padding: 6px 0;
+            color: #e0e0e0;
+        }
+        .menu-item.selected {
+            background: rgba(88, 209, 235, 0.1);
+            color: #58d1eb;
+            padding-left: 10px;
+        }
+        .menu-arrow { color: #58d1eb; font-weight: bold; }
+        .dim { color: #666; }
+        .prompt { color: #58d1eb; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="title-bar">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <span class="title-text">coldstar -- main.py</span>
+        </div>
+        <div class="content">
+            <div class="banner-box">
+<pre class="banner">
+&#9556;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9559;
+&#9553;                                                               &#9553;
+&#9553;      &#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9580; &#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9580; &#9608;&#9608;&#9580;      &#9608;&#9608;&#9608;&#9608;&#9608;&#9580; &#9608;&#9608;&#9608;&#9580;   &#9608;&#9608;&#9580; &#9608;&#9608;&#9608;&#9608;&#9608;&#9580;       &#9553;
+&#9553;      &#9608;&#9608;&#9580;&#9552;&#9552;&#9552;&#9552;&#9617;&#9608;&#9608;&#9580;&#9552;&#9552;&#9552;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;     &#9608;&#9608;&#9580;&#9552;&#9552;&#9608;&#9608;&#9580;&#9608;&#9608;&#9608;&#9608;&#9580;  &#9608;&#9608;&#9580;&#9608;&#9608;&#9580;&#9552;&#9552;&#9608;&#9608;&#9580;      &#9553;
+&#9553;      &#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;   &#9608;&#9608;&#9580;&#9608;&#9608;&#9580;     &#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580; &#9608;&#9608;&#9580;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9580;      &#9553;
+&#9553;      &#9580;&#9552;&#9552;&#9552;&#9552;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;   &#9608;&#9608;&#9580;&#9608;&#9608;&#9580;     &#9608;&#9608;&#9580;&#9552;&#9552;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;&#9580;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;&#9552;&#9552;&#9608;&#9608;&#9580;      &#9553;
+&#9553;      &#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9580;&#9580;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9580; &#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;  &#9608;&#9608;&#9580;&#9608;&#9608;&#9580; &#9580;&#9608;&#9608;&#9608;&#9608;&#9580;&#9608;&#9608;&#9580;  &#9608;&#9608;&#9580;      &#9553;
+&#9553;      &#9580;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9617; &#9580;&#9552;&#9552;&#9552;&#9552;&#9552;&#9617; &#9580;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9617;&#9580;&#9552;&#9617;  &#9580;&#9552;&#9617;&#9580;&#9552;&#9617;  &#9580;&#9552;&#9552;&#9552;&#9617;&#9580;&#9552;&#9617;  &#9580;&#9552;&#9617;      &#9553;
+&#9553;                                                               &#9553;
+&#9553;           COLD WALLET USB TOOL v1.0.0 By &lt;/Syrem&gt;             &#9553;
+&#9553;                                                               &#9553;
+&#9568;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9571;
+&#9553;  SECURITY NOTICE: This tool creates offline Solana wallets.   &#9553;
+&#9553;  Private keys are stored ONLY on the USB device and NEVER     &#9553;
+&#9553;  transmitted over the network.                                &#9553;
+&#9562;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9565;
+</pre>
+            </div>
+
+            <div class="network-info">
+                <span class="status-label">-></span> Network: https://api.devnet.solana.com<br>
+                <span class="status-ok">&#10003;</span> Status: Connected
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-title">USB DEVICE DETECTED</div>
+
+                <div style="border: 1px solid #58d1eb; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+                    <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">Detected USB Devices</div>
+                    <div style="display: grid; grid-template-columns: 30px 100px 80px 120px 100px; gap: 5px; color: #58d1eb; font-size: 12px; padding: 5px 0; border-bottom: 1px solid #444;">
+                        <span>#</span><span>Device</span><span>Size</span><span>Model</span><span>Mount Point</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 30px 100px 80px 120px 100px; gap: 5px; padding: 5px 0;">
+                        <span style="color: #666;">1</span>
+                        <span style="color: #58d1eb;">/dev/sdb</span>
+                        <span style="color: #98e024;">32GB</span>
+                        <span style="color: #ffff00;">KIOXIA</span>
+                        <span style="color: #c080ff;">Not mounted</span>
+                    </div>
+                </div>
+
+                <div class="prompt">? Select an option:</div>
+                <div class="menu-item selected"><span class="menu-arrow">&gt;</span> 1. Flash Cold Wallet OS to USB</div>
+                <div class="menu-item">&nbsp; 2. Mount USB (Check for existing wallet)</div>
+                <div class="menu-item">&nbsp; 3. Network Status</div>
+                <div class="menu-item">&nbsp; 0. Exit</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

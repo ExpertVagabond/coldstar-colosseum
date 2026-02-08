@@ -5,11 +5,11 @@ import { ColdstarVertical } from "./ColdstarVertical";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* Main video - 24 seconds at 30fps */}
+      {/* Main video - 60 seconds at 30fps */}
       <Composition
         id="ColdstarVideo"
         component={ColdstarVideo}
-        durationInFrames={720}
+        durationInFrames={1800}
         fps={30}
         width={1920}
         height={1080}
@@ -19,7 +19,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="ColdstarSquare"
         component={ColdstarVideo}
-        durationInFrames={720}
+        durationInFrames={1800}
         fps={30}
         width={1080}
         height={1080}

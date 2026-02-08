@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - Balance Check Display</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 0; margin: 0;
+        }
+        .terminal {
+            background: #1a1a2e;
+            max-width: 960px;
+            margin: 30px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .title-bar {
+            background: #2a2a3e;
+            padding: 10px 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .title-text { color: #888; font-size: 13px; margin-left: 20px; }
+        .content { padding: 20px 30px 30px; }
+        .section-header {
+            border: 2px solid #58d1eb;
+            border-radius: 8px;
+            padding: 8px 20px;
+            text-align: center;
+            color: #fff;
+            margin: 15px 0;
+        }
+        .info { color: #58d1eb; }
+        .success { color: #98e024; }
+        .warn { color: #ffff00; }
+
+        .wallet-box {
+            border: 3px double #58d1eb;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .wallet-box-title {
+            color: #58d1eb;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .wallet-field {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 10px;
+            padding: 5px 0;
+        }
+        .wallet-field-label { color: #666; }
+        .wallet-field-value { color: #98e024; font-weight: bold; word-break: break-all; }
+
+        .menu-section {
+            border: 2px solid #58d1eb;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-top: 20px;
+        }
+        .menu-title {
+            color: #58d1eb;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .menu-item { padding: 4px 0; }
+        .menu-item.selected { color: #58d1eb; }
+        .menu-arrow { color: #58d1eb; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="title-bar">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <span class="title-text">coldstar -- Wallet Operations</span>
+        </div>
+        <div class="content">
+            <!-- Status line at top -->
+            <div style="margin-bottom: 10px;">
+                <span class="info">-></span> Network: https://api.devnet.solana.com<br>
+                <span class="success">&#10003;</span> Status: Connected
+            </div>
+
+            <div class="section-header">WALLET STATUS</div>
+
+            <div class="wallet-box">
+                <div class="wallet-box-title">WALLET PUBLIC KEY (Safe to Share)</div>
+                <div class="wallet-field">
+                    <span class="wallet-field-label">Public Key</span>
+                    <span class="wallet-field-value">EbRUGhi2uLP5TamZx8fjNwn3dnvqoN4VNFRcent5Zykp</span>
+                </div>
+                <div class="wallet-field">
+                    <span class="wallet-field-label">Balance</span>
+                    <span class="wallet-field-value">5.234000000 SOL</span>
+                </div>
+            </div>
+
+            <div style="margin: 10px 0;">
+                <span class="info">-></span> &#8776; $523.40 USD (SOL @ $100.00)
+                <span style="color: #666; font-size: 12px;"> via Pyth Network</span>
+            </div>
+
+            <div class="section-header">WALLET OPERATIONS</div>
+
+            <div style="color: #58d1eb; margin-bottom: 10px;">? Select an option:</div>
+            <div class="menu-item selected"><span class="menu-arrow">&gt;</span> 1. View Wallet / Balance</div>
+            <div class="menu-item">&nbsp; 2. Send SOL (Create Unsigned Transaction)</div>
+            <div class="menu-item">&nbsp; 3. Sign Transaction (Offline)</div>
+            <div class="menu-item">&nbsp; 4. Broadcast Signed Transaction</div>
+            <div class="menu-item">&nbsp; 5. Quick Send (Create+Sign+Broadcast - INSECURE)</div>
+            <div class="menu-item">&nbsp; 6. View Transaction History</div>
+            <div class="menu-item">&nbsp; 7. Backup / Restore Wallet</div>
+            <div class="menu-item">&nbsp; 8. Request Devnet Airdrop</div>
+            <div class="menu-item">&nbsp; 9. Network Status</div>
+            <div class="menu-item">&nbsp; J. Jupiter Swap (Create Unsigned Swap)</div>
+            <div class="menu-item">&nbsp; A. Unmount USB / Switch Device</div>
+            <div class="menu-item">&nbsp; 0. Exit</div>
+        </div>
+    </div>
+</body>
+</html>

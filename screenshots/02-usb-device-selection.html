@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coldstar - USB Device Selection</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            padding: 0; margin: 0;
+        }
+        .terminal {
+            background: #1a1a2e;
+            max-width: 960px;
+            margin: 30px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .title-bar {
+            background: #2a2a3e;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .title-text { color: #888; font-size: 13px; margin-left: 20px; }
+        .content { padding: 20px 30px 30px; }
+        .section-header {
+            border: 2px solid #58d1eb;
+            border-radius: 8px;
+            padding: 8px 20px;
+            text-align: center;
+            color: #fff;
+            margin: 20px 0 15px;
+        }
+        .info { color: #58d1eb; }
+        .warn { color: #ffff00; }
+        .error { color: #ff5f56; }
+        .success { color: #98e024; }
+        .device-table {
+            border: 1px solid #58d1eb;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin: 15px 0;
+        }
+        .device-table-title {
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .device-header {
+            display: grid;
+            grid-template-columns: 40px 100px 80px 150px 120px;
+            gap: 8px;
+            color: #58d1eb;
+            font-size: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #444;
+            font-weight: bold;
+        }
+        .device-row {
+            display: grid;
+            grid-template-columns: 40px 100px 80px 150px 120px;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #222;
+        }
+        .device-row:last-child { border-bottom: none; }
+        .device-row.selected { background: rgba(88, 209, 235, 0.1); }
+        .prompt {
+            color: #58d1eb;
+            margin: 15px 0 8px;
+            font-weight: bold;
+        }
+        .menu-item { padding: 4px 0; }
+        .menu-item.selected { color: #58d1eb; }
+        .menu-arrow { color: #58d1eb; font-weight: bold; }
+        .dim { color: #666; }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="title-bar">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <span class="title-text">coldstar -- Flash Cold Wallet</span>
+        </div>
+        <div class="content">
+            <div class="section-header">FLASH COLD WALLET OS TO USB</div>
+
+            <div style="margin: 10px 0;">
+                <span class="info">-></span> This will create a bootable cold wallet USB drive<br>
+                <span class="warn">&#9888;</span> <span class="warn">ALL DATA on the target USB will be ERASED!</span>
+            </div>
+
+            <div class="device-table">
+                <div class="device-table-title">Detected USB Devices</div>
+                <div class="device-header">
+                    <span>#</span>
+                    <span>Device</span>
+                    <span>Size</span>
+                    <span>Model</span>
+                    <span>Mount Point</span>
+                </div>
+                <div class="device-row">
+                    <span class="dim">1</span>
+                    <span class="info">/dev/sdb</span>
+                    <span class="success">32GB</span>
+                    <span style="color: #ffff00;">KIOXIA TransMemory</span>
+                    <span style="color: #c080ff;">Not mounted</span>
+                </div>
+                <div class="device-row">
+                    <span class="dim">2</span>
+                    <span class="info">/dev/sdc</span>
+                    <span class="success">64GB</span>
+                    <span style="color: #ffff00;">SanDisk Ultra</span>
+                    <span style="color: #c080ff;">/media/usb1</span>
+                </div>
+                <div class="device-row">
+                    <span class="dim">3</span>
+                    <span class="info">/dev/sdd</span>
+                    <span class="success">16GB</span>
+                    <span style="color: #ffff00;">Kingston DT50</span>
+                    <span style="color: #c080ff;">Not mounted</span>
+                </div>
+            </div>
+
+            <div class="prompt">? Select target USB device:</div>
+            <div class="menu-item selected"><span class="menu-arrow">&gt;</span> 1. /dev/sdb (32GB - KIOXIA TransMemory)</div>
+            <div class="menu-item">&nbsp; 2. /dev/sdc (64GB - SanDisk Ultra)</div>
+            <div class="menu-item">&nbsp; 3. /dev/sdd (16GB - Kingston DT50)</div>
+            <div class="menu-item">&nbsp; Cancel</div>
+
+            <div style="margin-top: 25px; border: 2px solid #ff5f56; border-radius: 8px; padding: 15px;">
+                <div style="color: #ff5f56; font-weight: bold; text-align: center; margin-bottom: 10px;">DANGER ZONE</div>
+                <div style="color: #ff5f56; font-weight: bold;">WARNING: This will ERASE all data on /dev/sdb</div>
+                <div style="margin-top: 8px;">This action is IRREVERSIBLE.</div>
+                <div style="margin-top: 8px;">Type '<span style="color: #ffff00;">CONFIRM</span>' to proceed:</div>
+                <div style="margin-top: 10px; color: #98e024;">CONFIRM<span class="dim" style="animation: blink 1s step-end infinite;">_</span></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
