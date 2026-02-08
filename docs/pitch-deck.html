@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coldstar — Pitch Deck</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a2e;
+            --fg: #e0e0e8;
+            --dim: #6b6b80;
+            --cyan: #58d1eb;
+            --magenta: #d946ef;
+            --green: #34d399;
+            --red: #f87171;
+            --yellow: #fbbf24;
+            --purple: #7B2FBE;
+            --accent: linear-gradient(135deg, #58d1eb, #d946ef);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .deck { width: 100%; height: 100vh; position: relative; }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5rem 6rem;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .slide.active { display: flex; opacity: 1; }
+
+        /* Typography */
+        .slide-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--magenta);
+            margin-bottom: 1.2rem;
+        }
+
+        h1 {
+            font-size: 4.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 .gradient {
+            background: var(--accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: var(--dim);
+            font-weight: 300;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .card-accent {
+            border-left: 3px solid var(--cyan);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: var(--cyan);
+        }
+
+        .card p, .card li {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--dim);
+        }
+
+        .card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .card ul li {
+            padding-left: 1.2rem;
+            position: relative;
+            margin-bottom: 0.4rem;
+        }
+
+        .card ul li::before {
+            content: "›";
+            position: absolute;
+            left: 0;
+            color: var(--cyan);
+            font-weight: bold;
+        }
+
+        /* Stat blocks */
+        .stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 2.5rem;
+        }
+
+        .stat-block .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-block .stat-label {
+            font-size: 0.95rem;
+            color: var(--dim);
+            margin-top: 0.3rem;
+        }
+
+        /* Tier table */
+        .tier-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .tier-table th {
+            text-align: left;
+            padding: 0.8rem 1.2rem;
+            font-weight: 600;
+            color: var(--cyan);
+            border-bottom: 2px solid rgba(88,209,235,0.3);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tier-table td {
+            padding: 0.7rem 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--dim);
+        }
+
+        .tier-table .t-bronze { color: var(--red); font-weight: 600; }
+        .tier-table .t-silver { color: var(--yellow); font-weight: 600; }
+        .tier-table .t-gold { color: var(--green); font-weight: 600; }
+        .tier-table .t-plat { color: var(--cyan); font-weight: 600; }
+        .tier-table .t-diamond { color: var(--magenta); font-weight: 600; }
+
+        /* Architecture diagram */
+        .arch {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            background: var(--bg2);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 2rem 2.5rem;
+            white-space: pre;
+            margin-top: 1.5rem;
+            max-width: 800px;
+        }
+
+        .arch .online { color: var(--green); }
+        .arch .offline { color: var(--yellow); }
+        .arch .flow { color: var(--magenta); }
+        .arch .label { color: var(--cyan); }
+
+        /* Revenue table */
+        .rev-row {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 1.2rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .rev-row .rev-tier {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--magenta);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            width: 120px;
+            flex-shrink: 0;
+        }
+
+        .rev-row .rev-price {
+            font-size: 2rem;
+            font-weight: 700;
+            width: 140px;
+            flex-shrink: 0;
+        }
+
+        .rev-row .rev-desc {
+            color: var(--dim);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Funnel */
+        .funnel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+            max-width: 700px;
+        }
+
+        .funnel-step {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .funnel-step .funnel-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--cyan);
+            width: 80px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .funnel-step .funnel-body h4 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .funnel-step .funnel-body p {
+            color: var(--dim);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .funnel-arrow {
+            width: 80px;
+            text-align: center;
+            color: var(--dim);
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        /* Competitive */
+        .comp-grid {
+            display: grid;
+            grid-template-columns: 180px repeat(4, 1fr);
+            gap: 0;
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .comp-grid .comp-header {
+            padding: 0.6rem 1rem;
+            font-weight: 600;
+            color: var(--cyan);
+            border-bottom: 2px solid rgba(88,209,235,0.3);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .comp-grid .comp-cell {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--dim);
+        }
+
+        .comp-grid .comp-label {
+            font-weight: 500;
+            color: var(--fg);
+        }
+
+        .comp-grid .comp-yes { color: var(--green); font-weight: 600; }
+        .comp-grid .comp-no { color: var(--red); font-weight: 600; }
+        .comp-grid .comp-highlight {
+            background: rgba(88,209,235,0.08);
+            color: var(--fg);
+            font-weight: 500;
+        }
+
+        /* Roadmap */
+        .timeline {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .timeline-item {
+            flex: 1;
+            position: relative;
+            padding-left: 1.5rem;
+            border-left: 2px solid var(--bg3);
+        }
+
+        .timeline-item.active { border-left-color: var(--cyan); }
+        .timeline-item.future { border-left-color: var(--magenta); }
+
+        .timeline-item .tl-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--magenta);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item p {
+            color: var(--dim);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* CTA */
+        .cta-links {
+            display: flex;
+            gap: 3rem;
+            margin-top: 2.5rem;
+        }
+
+        .cta-link {
+            text-decoration: none;
+        }
+
+        .cta-link .cta-label {
+            font-size: 0.8rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.4rem;
+        }
+
+        .cta-link .cta-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--cyan);
+        }
+
+        .cta-link:hover .cta-value { color: var(--magenta); }
+
+        .tagline {
+            font-size: 1.8rem;
+            font-weight: 300;
+            font-style: italic;
+            color: var(--dim);
+            margin-top: 3rem;
+        }
+
+        /* Navigation */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            background: rgba(10,10,15,0.9);
+            border-top: 1px solid rgba(255,255,255,0.04);
+            z-index: 100;
+        }
+
+        .nav-bar .brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--dim);
+            letter-spacing: 1px;
+        }
+
+        .nav-bar .counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--dim);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 3rem;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.4s ease;
+            z-index: 101;
+        }
+
+        /* Two-column layout */
+        .split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+        }
+
+        .split-wide {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 4rem;
+            align-items: start;
+        }
+
+        /* Highlight text */
+        .hl-cyan { color: var(--cyan); }
+        .hl-magenta { color: var(--magenta); }
+        .hl-green { color: var(--green); }
+        .hl-red { color: var(--red); }
+        .hl-yellow { color: var(--yellow); }
+        .bold { font-weight: 700; }
+
+        /* bullet list outside cards */
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+            font-size: 1.15rem;
+            line-height: 2.2;
+        }
+
+        .bullet-list li {
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .bullet-list li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="deck">
+
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="slide-label">Pitch Deck — FairScale Fairathon 2026</div>
+            <h1><span class="gradient">Coldstar</span></h1>
+            <h1 style="font-size: 2.2rem; font-weight: 300; color: var(--dim); margin-top: -0.5rem;">
+                Reputation-Gated Air-Gapped Cold Wallet for Solana
+            </h1>
+            <div class="stats">
+                <div class="stat-block">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">FairScore integration points</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Reputation tiers</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Other cold wallets with reputation</div>
+                </div>
+            </div>
+            <div style="margin-top: 3rem; display: flex; gap: 2rem; align-items: center;">
+                <span style="font-size: 1rem; color: var(--dim);">@buildcoldstar</span>
+                <span style="color: var(--bg3);">|</span>
+                <span style="font-size: 1rem; color: var(--dim);">STIE Member</span>
+                <span style="color: var(--bg3);">|</span>
+                <span style="font-size: 1rem; color: var(--dim);">chainlabs.uno</span>
+            </div>
+        </div>
+
+        <!-- Slide 2: Problem -->
+        <div class="slide">
+            <div class="slide-label">The Problem</div>
+            <h2>Cold wallets are secure.<br><span class="hl-red">But blind.</span></h2>
+            <div class="split" style="margin-top: 2rem;">
+                <div>
+                    <ul class="bullet-list">
+                        <li>Best physical security in crypto — keys never touch the internet</li>
+                        <li><span class="hl-red bold">Zero counterparty intelligence</span> — no idea who you're sending to</li>
+                        <li>Once signed offline, <span class="hl-red">transactions are irreversible</span></li>
+                        <li>Every cold wallet today: Ledger, Trezor, Keystone — <span class="hl-red">no reputation layer</span></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="card" style="border: 1px solid rgba(248,113,113,0.3);">
+                        <h3 style="color: var(--red);">Market Gap</h3>
+                        <p style="font-size: 1.4rem; color: var(--fg); font-weight: 600; margin-bottom: 0.8rem;">$1.2B+ hardware wallet market</p>
+                        <p>Zero products integrate on-chain reputation into the signing flow. Users are protected from key theft but fully exposed to social engineering, address poisoning, and scam recipients.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Solution -->
+        <div class="slide">
+            <div class="slide-label">The Solution</div>
+            <h2>FairScore at the<br><span class="hl-cyan">point of no return</span></h2>
+            <p class="subtitle">Every outbound transaction is checked against FairScale's reputation API <strong>before</strong> it crosses the air gap for offline signing.</p>
+
+            <table class="tier-table" style="max-width: 800px; margin-top: 2rem;">
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>FairScore</th>
+                        <th>Coldstar Action</th>
+                        <th>TX Limit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="t-bronze">Bronze</td>
+                        <td>0 – 19</td>
+                        <td class="t-bronze">HARD BLOCK</td>
+                        <td class="t-bronze">Blocked</td>
+                    </tr>
+                    <tr>
+                        <td class="t-silver">Silver</td>
+                        <td>20 – 39</td>
+                        <td class="t-silver">Soft Warning</td>
+                        <td class="t-silver">10 SOL</td>
+                    </tr>
+                    <tr>
+                        <td class="t-gold">Gold</td>
+                        <td>40 – 59</td>
+                        <td class="t-gold">Proceed</td>
+                        <td>100 SOL</td>
+                    </tr>
+                    <tr>
+                        <td class="t-plat">Platinum</td>
+                        <td>60 – 79</td>
+                        <td class="t-plat">Proceed</td>
+                        <td>500 SOL</td>
+                    </tr>
+                    <tr>
+                        <td class="t-diamond">Diamond</td>
+                        <td>80 – 100</td>
+                        <td class="t-diamond">Proceed</td>
+                        <td style="color: var(--green);">Unlimited</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 4: FairScore Integration Deep Dive -->
+        <div class="slide">
+            <div class="slide-label">Core Integration — 30% of Judging</div>
+            <h2>6 FairScore Integration Points</h2>
+            <p class="subtitle" style="margin-bottom: 1rem;">FairScore is not decorative. It is a core gating mechanism.</p>
+
+            <div class="card-grid cols-3">
+                <div class="card card-accent">
+                    <h3 style="color: var(--red);">1. Transaction Gating</h3>
+                    <p>Bronze = hard block. Silver = soft warning. Checked before every outbound transfer at the air-gap boundary.</p>
+                </div>
+                <div class="card card-accent">
+                    <h3 style="color: var(--yellow);">2. Dynamic Limits</h3>
+                    <p>Transfer caps scale with reputation tier. Bronze: 0 SOL. Silver: 10. Gold: 100. Platinum: 500. Diamond: unlimited.</p>
+                </div>
+                <div class="card card-accent">
+                    <h3 style="color: var(--green);">3. DAO Governance</h3>
+                    <p>Multi-sig vote weight influenced by voter's FairScore. Tier 5 = 2x multiplier. Tier 1 = cannot vote. Anti-Sybil.</p>
+                </div>
+                <div class="card card-accent">
+                    <h3 style="color: var(--cyan);">4. Jupiter Screening</h3>
+                    <p>Token deployer addresses checked before swap creation. Low-tier contracts trigger warnings against honeypots and rugs.</p>
+                </div>
+                <div class="card card-accent">
+                    <h3 style="color: var(--magenta);">5. Dashboard Badges</h3>
+                    <p>Color-coded reputation indicators in the portfolio panel. Every token issuer shows trust level inline.</p>
+                </div>
+                <div class="card card-accent">
+                    <h3 style="color: #818cf8;">6. MCP Agent Gates</h3>
+                    <p>AI agent autonomy scales with FairScore. Tier 3+ can execute. Tier 1-2 blocked. Prevents compromised agent drain.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Architecture -->
+        <div class="slide">
+            <div class="slide-label">Technical Architecture</div>
+            <h2>Air-Gapped with<br><span class="hl-cyan">Online Reputation</span></h2>
+
+            <div class="split-wide" style="margin-top: 1.5rem;">
+                <div class="arch"><span class="online">ONLINE DEVICE</span>                <span class="offline">AIR-GAPPED USB</span>
+<span class="online">┌──────────────────┐</span>  <span class="flow">QR</span>   <span class="offline">┌──────────────────┐</span>
+<span class="online">│</span> FairScore API    <span class="online">│</span> ───→ <span class="offline">│</span> Alpine Linux     <span class="offline">│</span>
+<span class="online">│</span> Jupiter DEX      <span class="online">│</span>      <span class="offline">│</span> Ed25519 Signing  <span class="offline">│</span>
+<span class="online">│</span> Pyth Oracles     <span class="online">│</span> ←─── <span class="offline">│</span> Key Storage      <span class="offline">│</span>
+<span class="online">│</span> Rich Terminal UI <span class="online">│</span>  <span class="flow">QR</span>   <span class="offline">│</span> Offline Only     <span class="offline">│</span>
+<span class="online">└────────┬─────────┘</span>      <span class="offline">└──────────────────┘</span>
+         <span class="online">│</span>
+    <span class="label">Solana Mainnet</span></div>
+                <div>
+                    <div class="card" style="margin-bottom: 1rem;">
+                        <h3>FairScore Flow</h3>
+                        <ul>
+                            <li>User enters recipient address</li>
+                            <li>Online device queries FairScale API</li>
+                            <li>Score embedded in QR payload</li>
+                            <li>Offline device shows score for verification</li>
+                            <li>User confirms → signs → returns via QR</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>Key Design Decisions</h3>
+                        <ul>
+                            <li>Air-gap device NEVER contacts API</li>
+                            <li>5-minute TTL response cache</li>
+                            <li>Graceful degradation on API failure</li>
+                            <li>Real FairScale API (api2.fairscale.xyz)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Market -->
+        <div class="slide">
+            <div class="slide-label">Market Opportunity</div>
+            <h2>Only cold wallet with<br><span class="gradient">on-chain reputation</span></h2>
+
+            <div class="split" style="margin-top: 2rem;">
+                <div>
+                    <div class="stats" style="flex-direction: column; gap: 2rem; margin-top: 0;">
+                        <div class="stat-block">
+                            <div class="stat-value">$1.2B+</div>
+                            <div class="stat-label">Hardware wallet market (Ledger, Trezor, Keystone)</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-value">$0</div>
+                            <div class="stat-label">Reputation-gated cold wallet competitors</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-value">50M+</div>
+                            <div class="stat-label">Active Solana wallets (potential addressable market)</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="card">
+                        <h3>Target Segments</h3>
+                        <ul>
+                            <li><strong style="color: var(--fg);">Solana power users</strong> — self-custody, high-value holdings</li>
+                            <li><strong style="color: var(--fg);">DAO treasuries</strong> — multi-sig with reputation-gated signing</li>
+                            <li><strong style="color: var(--fg);">AI agent operators</strong> — autonomous wallets need trust boundaries</li>
+                            <li><strong style="color: var(--fg);">Institutions</strong> — compliance + on-chain risk scoring</li>
+                        </ul>
+                    </div>
+                    <div class="card" style="margin-top: 1rem;">
+                        <h3>Why Now</h3>
+                        <p>FairScale makes reputation a primitive on Solana. Coldstar is the first product to integrate it at the most critical point — the moment before an irreversible signature.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Business Model -->
+        <div class="slide">
+            <div class="slide-label">Revenue</div>
+            <h2>Business Model</h2>
+
+            <div style="max-width: 800px; margin-top: 1rem;">
+                <div class="rev-row">
+                    <div class="rev-tier">Free</div>
+                    <div class="rev-price" style="color: var(--green);">$0</div>
+                    <div class="rev-desc">Open-source CLI. Basic FairScore gating, wallet operations, Jupiter swaps. Community growth engine.</div>
+                </div>
+                <div class="rev-row">
+                    <div class="rev-tier">Pro</div>
+                    <div class="rev-price" style="color: var(--cyan);">$9.99<span style="font-size: 1rem; font-weight: 400;">/mo</span></div>
+                    <div class="rev-desc">Advanced analytics, custom tier thresholds, priority API cache, historical reputation tracking, export reports.</div>
+                </div>
+                <div class="rev-row">
+                    <div class="rev-tier">Enterprise</div>
+                    <div class="rev-price" style="color: var(--magenta);">$99<span style="font-size: 1rem; font-weight: 400;">/mo</span></div>
+                    <div class="rev-desc">Multi-wallet management, DAO treasury integration, compliance reporting, webhook alerts, custom gating rules.</div>
+                </div>
+                <div class="rev-row">
+                    <div class="rev-tier">Hardware</div>
+                    <div class="rev-price" style="color: var(--yellow);">$29.99</div>
+                    <div class="rev-desc">Pre-configured USB kit — Alpine Linux, Coldstar pre-installed, air-gap ready. Plug-and-play cold storage.</div>
+                </div>
+            </div>
+
+            <div class="stats" style="margin-top: 2rem;">
+                <div class="stat-block">
+                    <div class="stat-value">$10K</div>
+                    <div class="stat-label">MRR target — 12 months</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-value">1,000</div>
+                    <div class="stat-label">Pro subscribers needed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Go-to-Market -->
+        <div class="slide">
+            <div class="slide-label">Growth</div>
+            <h2>User Acquisition</h2>
+
+            <div class="funnel">
+                <div class="funnel-step">
+                    <div class="funnel-num">100</div>
+                    <div class="funnel-body">
+                        <h4>Hackathon Community</h4>
+                        <p>FairScale Fairathon participants, Colosseum hackathon alumni, Solana developer Discord seeding. Direct outreach to builders who already use FairScale.</p>
+                    </div>
+                </div>
+                <div class="funnel-step" style="padding-left: 20px;">
+                    <div class="funnel-num" style="color: var(--magenta);">1K</div>
+                    <div class="funnel-body">
+                        <h4>Content + Partnerships</h4>
+                        <p>Launch thread on X, YouTube demo content, partnership integrations with Jupiter and FairScale. Cold wallet security content targeting crypto security communities.</p>
+                    </div>
+                </div>
+                <div class="funnel-step" style="padding-left: 40px;">
+                    <div class="funnel-num" style="color: var(--green);">10K</div>
+                    <div class="funnel-body">
+                        <h4>Agent Economy + Institutional</h4>
+                        <p>MCP agent operators need trust boundaries for autonomous wallets. DAO treasuries need compliance-grade signing. Coldstar becomes the standard for reputation-gated cold storage.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Competitive Landscape -->
+        <div class="slide">
+            <div class="slide-label">Competition</div>
+            <h2>Competitive Landscape</h2>
+
+            <div class="comp-grid" style="max-width: 900px; margin-top: 2rem;">
+                <div class="comp-header"></div>
+                <div class="comp-header">Ledger</div>
+                <div class="comp-header">Trezor</div>
+                <div class="comp-header">Keystone</div>
+                <div class="comp-header comp-highlight">Coldstar</div>
+
+                <div class="comp-cell comp-label">Air-gapped signing</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-yes">Yes</div>
+                <div class="comp-cell comp-highlight comp-yes">Yes</div>
+
+                <div class="comp-cell comp-label">Reputation scoring</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-highlight comp-yes">FairScore</div>
+
+                <div class="comp-cell comp-label">TX gating by trust</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-highlight comp-yes">5 tiers</div>
+
+                <div class="comp-cell comp-label">Dynamic limits</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-highlight comp-yes">Per-tier</div>
+
+                <div class="comp-cell comp-label">Solana native</div>
+                <div class="comp-cell comp-yes">Yes</div>
+                <div class="comp-cell comp-yes">Yes</div>
+                <div class="comp-cell comp-yes">Yes</div>
+                <div class="comp-cell comp-highlight comp-yes">Yes</div>
+
+                <div class="comp-cell comp-label">Open source</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-yes">Yes</div>
+                <div class="comp-cell comp-no">Partial</div>
+                <div class="comp-cell comp-highlight comp-yes">MIT</div>
+
+                <div class="comp-cell comp-label">AI agent support</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-no">No</div>
+                <div class="comp-cell comp-highlight comp-yes">MCP gates</div>
+
+                <div class="comp-cell comp-label">Price</div>
+                <div class="comp-cell">$79+</div>
+                <div class="comp-cell">$69+</div>
+                <div class="comp-cell">$119+</div>
+                <div class="comp-cell comp-highlight">Free / $9.99</div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Traction -->
+        <div class="slide">
+            <div class="slide-label">Traction</div>
+            <h2>What We've Shipped</h2>
+
+            <div class="split" style="margin-top: 2rem;">
+                <div>
+                    <div class="stats" style="flex-direction: column; gap: 1.5rem; margin-top: 0;">
+                        <div class="stat-block">
+                            <div class="stat-value">2,500+</div>
+                            <div class="stat-label">Lines of production Python</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-value">13</div>
+                            <div class="stat-label">Source modules</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-value">5</div>
+                            <div class="stat-label">Protocol integrations</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="margin-bottom: 1rem;">
+                        <h3>Live & Deployed</h3>
+                        <ul>
+                            <li>coldstar.dev — live website</li>
+                            <li>Public GitHub repository (MIT)</li>
+                            <li>Full air-gap signing flow with QR codes</li>
+                            <li>Rich TUI dashboard with real-time data</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>Protocol Stack</h3>
+                        <ul>
+                            <li>FairScale — reputation scoring (6 points)</li>
+                            <li>Jupiter — DEX swap integration</li>
+                            <li>Pyth — real-time price oracles</li>
+                            <li>Squads — multi-sig governance</li>
+                            <li>Meteora — liquidity management</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Team -->
+        <div class="slide">
+            <div class="slide-label">Team</div>
+            <h2>Solo Founder.<br><span class="hl-cyan">Full Stack.</span></h2>
+
+            <div class="split" style="margin-top: 2rem;">
+                <div>
+                    <ul class="bullet-list">
+                        <li><span class="bold">STIE Member</span> — chainlabs.uno</li>
+                        <li>Polyglot: Python, TypeScript, Rust, Ruby, Go</li>
+                        <li>Deep Solana ecosystem experience — Jupiter, Pyth, Anchor, SPL</li>
+                        <li>Built Coldstar from zero to live in <span class="hl-cyan bold">10 days</span></li>
+                        <li>Shipped 1,800+ commits across production projects</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="card">
+                        <h3>Execution Speed</h3>
+                        <p style="font-size: 1.2rem; color: var(--fg); line-height: 1.6;">
+                            Coldstar went from zero to live deployment with FairScore integration, Jupiter swaps, Pyth price feeds, QR-code air-gap signing, and a Rich TUI dashboard — all in a single 10-day sprint.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Roadmap -->
+        <div class="slide">
+            <div class="slide-label">Roadmap</div>
+            <h2>What's Next</h2>
+
+            <div class="timeline">
+                <div class="timeline-item active">
+                    <div class="tl-date">Now</div>
+                    <h4>Core Platform</h4>
+                    <p>FairScore gating, air-gap signing, Jupiter swaps, TUI dashboard, devnet deployment</p>
+                </div>
+                <div class="timeline-item future">
+                    <div class="tl-date">Q2 2026</div>
+                    <h4>Mainnet + Pro Tier</h4>
+                    <p>Mainnet deployment, Pro subscriptions, advanced analytics, historical reputation tracking</p>
+                </div>
+                <div class="timeline-item future">
+                    <div class="tl-date">Q3 2026</div>
+                    <h4>Hardware Kit</h4>
+                    <p>Pre-configured USB devices, plug-and-play air-gapped cold storage with FairScore built in</p>
+                </div>
+                <div class="timeline-item future">
+                    <div class="tl-date">Q4 2026</div>
+                    <h4>Enterprise + Agents</h4>
+                    <p>Multi-wallet management, DAO treasury integration, MCP agent autonomy framework, compliance reporting</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: CTA -->
+        <div class="slide">
+            <div class="slide-label">Try Coldstar</div>
+            <h1><span class="gradient">The future of cold storage<br>is intelligent.</span></h1>
+
+            <div class="cta-links">
+                <a href="https://coldstar.dev/colosseum" class="cta-link" target="_blank">
+                    <div class="cta-label">Live</div>
+                    <div class="cta-value">coldstar.dev</div>
+                </a>
+                <a href="https://github.com/ExpertVagabond/coldstar-colosseum" class="cta-link" target="_blank">
+                    <div class="cta-label">GitHub</div>
+                    <div class="cta-value">ExpertVagabond/coldstar-colosseum</div>
+                </a>
+                <a href="https://x.com/buildcoldstar" class="cta-link" target="_blank">
+                    <div class="cta-label">X</div>
+                    <div class="cta-value">@buildcoldstar</div>
+                </a>
+            </div>
+
+            <div style="margin-top: 2.5rem; display: flex; gap: 2rem; align-items: center;">
+                <span style="font-size: 1rem; color: var(--dim);">STIE Member</span>
+                <span style="color: var(--bg3);">|</span>
+                <span style="font-size: 1rem; color: var(--dim);">chainlabs.uno</span>
+                <span style="color: var(--bg3);">|</span>
+                <span style="font-size: 1rem; color: var(--dim);">FairScale Fairathon 2026</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Navigation -->
+    <div class="progress-bar" id="progress"></div>
+    <div class="nav-bar">
+        <div class="brand">coldstar.dev &nbsp;·&nbsp; @buildcoldstar &nbsp;·&nbsp; chainlabs.uno</div>
+        <div class="counter"><span id="current">1</span> / <span id="total">13</span></div>
+    </div>
+
+    <script>
+        let cur = 0;
+        const slides = document.querySelectorAll('.slide');
+        const total = slides.length;
+        document.getElementById('total').textContent = total;
+
+        function show(n) {
+            slides[cur].classList.remove('active');
+            cur = ((n % total) + total) % total;
+            slides[cur].classList.add('active');
+            document.getElementById('current').textContent = cur + 1;
+            document.getElementById('progress').style.width = ((cur + 1) / total * 100) + '%';
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' || e.key === ' ') show(cur + 1);
+            else if (e.key === 'ArrowLeft') show(cur - 1);
+        });
+
+        let tx = 0;
+        document.addEventListener('touchstart', e => tx = e.changedTouches[0].screenX);
+        document.addEventListener('touchend', e => {
+            const dx = tx - e.changedTouches[0].screenX;
+            if (dx > 50) show(cur + 1);
+            else if (dx < -50) show(cur - 1);
+        });
+
+        show(0);
+    </script>
+</body>
+</html>
