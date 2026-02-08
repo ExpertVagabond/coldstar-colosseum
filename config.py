@@ -27,5 +27,10 @@ NETWORK_BLACKLIST_MODULES = [
     "bcm43xx"
 ]
 
-APP_VERSION = "1.0.0"
+# FairScale FairScore Configuration
+FAIRSCORE_API_URL = "https://api.webacy.com"
+FAIRSCORE_ENABLED = True
+FAIRSCORE_MIN_TIER = 2  # Minimum tier to allow transactions without warning
+
+APP_VERSION = "1.1.0"
 APP_NAME = "Solana Cold Wallet USB Tool"

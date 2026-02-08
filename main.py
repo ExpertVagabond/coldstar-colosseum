@@ -30,6 +30,7 @@ from src.iso_builder import ISOBuilder
 from src.backup import WalletBackup
 from src.jupiter_integration import JupiterSwapManager, sol_to_lamports, lamports_to_sol
 from src.pyth_integration import PythPriceClient, format_usd
+from src.fairscore_integration import FairScoreClient, format_reputation_badge
 
 
 class SolanaColdWalletCLI:
@@ -42,6 +43,7 @@ class SolanaColdWalletCLI:
         self.backup_manager = WalletBackup()
         self.jupiter_manager = JupiterSwapManager(slippage_bps=50)  # 0.5% slippage
         self.pyth_client = PythPriceClient()
+        self.fairscore_client = FairScoreClient()
 
         self.current_usb_device = None
         self.current_public_key = None
@@ -72,6 +74,16 @@ class SolanaColdWalletCLI:
                     print_info(f"≈ {format_usd(usd_value)} USD (SOL @ ${sol_price['price']:.2f})")
             except:
                 pass  # Silently fail if price fetch fails
+
+        # Show wallet reputation
+        if self.network.is_connected() and self.current_public_key:
+            try:
+                assessment = self.fairscore_client.get_risk_assessment(self.current_public_key)
+                if assessment["available"]:
+                    badge = format_reputation_badge(assessment["tier"])
+                    print_info(f"Wallet Reputation: {badge}")
+            except:
+                pass
 
         console.print()
     
@@ -272,6 +284,7 @@ class SolanaColdWalletCLI:
             "8. Request Devnet Airdrop",
             "9. Network Status",
             "J. Jupiter Swap (Create Unsigned Swap)",
+            "F. Check FairScore Reputation",
             "A. Unmount USB / Switch Device",
             "0. Exit"
         ]
@@ -322,6 +335,10 @@ class SolanaColdWalletCLI:
         elif choice_num.upper() == "J":
             self._draw_header()
             self.jupiter_swap()
+            self._wait_for_key()
+        elif choice_num.upper() == "F":
+            self._draw_header()
+            self.check_fairscore_reputation()
             self._wait_for_key()
         elif choice_num.upper() == "A":
             self._unmount_usb()
@@ -578,25 +595,58 @@ class SolanaColdWalletCLI:
     
     def create_unsigned_transaction(self):
         print_section_header("CREATE UNSIGNED TRANSACTION")
-        
+
         if not self.current_public_key:
             print_error("No wallet connected. Mount a USB with a cold wallet first.")
             return
-        
+
         from_address = self.current_public_key
         print_info(f"From: {from_address}")
-        
+
         balance = self.network.get_balance(from_address)
         if balance is not None:
             print_info(f"Current balance: {balance:.9f} SOL")
-        
+
         console.print()
-        
+
         to_address = get_text_input("Enter recipient's public key: ")
         if not self.wallet_manager.validate_address(to_address):
             print_error("Invalid recipient address")
             return
-        
+
+        # FairScore reputation check before proceeding
+        if self.network.is_connected():
+            console.print()
+            print_section_header("FAIRSCORE REPUTATION CHECK")
+            print_info(f"Checking reputation for {to_address[:12]}...{to_address[-8:]}")
+            console.print()
+
+            self.fairscore_client.display_reputation_badge(to_address, verbose=True)
+            console.print()
+
+            should_block, block_reason = self.fairscore_client.should_block_transaction(to_address)
+
+            if should_block:
+                print_error("TRANSACTION BLOCKED")
+                print_error(block_reason)
+                print_warning("Coldstar will not create transactions to untrusted wallets.")
+                print_info("If you believe this is an error, verify the address and try again.")
+                return
+
+            assessment = self.fairscore_client.get_risk_assessment(to_address)
+            if assessment["tier"] == 2:
+                print_warning("PROCEED WITH CAUTION")
+                print_warning("This wallet has a low trust score. Only proceed if you know the recipient.")
+                console.print()
+                if not confirm_dangerous_action("Send to low-trust wallet?", "PROCEED"):
+                    print_info("Transaction cancelled for safety")
+                    return
+
+            console.print()
+        else:
+            print_warning("Offline mode - skipping FairScore reputation check")
+            console.print()
+
         amount = get_float_input("Enter amount to send (SOL): ")
         if amount <= 0:
             print_error("Amount must be greater than 0")
@@ -1333,6 +1383,43 @@ class SolanaColdWalletCLI:
             print_warning("⚠️  IMPORTANT: Review transaction details on offline device before signing!")
             print_warning("Jupiter swaps interact with multiple programs and accounts.")
 
+    def check_fairscore_reputation(self):
+        """Check FairScore reputation for any wallet address"""
+        print_section_header("FAIRSCORE REPUTATION LOOKUP")
+
+        if not self.network.is_connected():
+            print_error("No network connection. FairScore requires online access.")
+            return
+
+        console.print()
+        print_info("Enter a Solana wallet address to check its reputation.")
+        console.print()
+
+        address = get_text_input("Wallet address: ").strip()
+
+        if not address:
+            print_info("Cancelled")
+            return
+
+        if not self.wallet_manager.validate_address(address):
+            print_error("Invalid Solana address")
+            return
+
+        console.print()
+        print_info(f"Checking reputation for {address[:12]}...{address[-8:]}")
+        console.print()
+
+        self.fairscore_client.display_reputation_badge(address, verbose=True)
+        console.print()
+
+        show_legend = select_menu_option(
+            ["Yes, show tier explanations", "No, return to menu"],
+            "Show FairScore tier legend?",
+        )
+
+        if show_legend and "Yes" in show_legend:
+            self.fairscore_client.display_tier_legend()
+
     def exit_app(self):
         print_info("Cleaning up...")
         self.cleanup()
@@ -1342,6 +1429,7 @@ class SolanaColdWalletCLI:
     def cleanup(self):
         try:
             self.network.close()
+            self.fairscore_client.close()
             if self.usb_manager.mount_point:
                 self.usb_manager.unmount_device()
         except Exception:
