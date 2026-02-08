@@ -17,7 +17,7 @@ from src.ui import print_success, print_error, print_info, print_warning, consol
 
 
 # FairScale API Configuration
-FAIRSCORE_API_BASE = os.environ.get("FAIRSCORE_API_URL", "https://api.webacy.com")
+FAIRSCORE_API_BASE = os.environ.get("FAIRSCORE_API_URL", "https://api2.fairscale.xyz")
 FAIRSCORE_API_KEY = os.environ.get("FAIRSCORE_API_KEY", "")
 
 # Tier definitions (1-5 reputation scale)
@@ -99,11 +99,11 @@ class FairScoreClient:
             # Build request
             headers = {}
             if self.api_key:
-                headers["x-api-key"] = self.api_key
+                headers["fairkey"] = self.api_key
 
             response = self.client.get(
-                f"{FAIRSCORE_API_BASE}/v1/fairscore",
-                params={"address": wallet_address, "chain": "solana"},
+                f"{FAIRSCORE_API_BASE}/score",
+                params={"address": wallet_address},
                 headers=headers,
             )
 

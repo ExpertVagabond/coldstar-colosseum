@@ -28,7 +28,8 @@ NETWORK_BLACKLIST_MODULES = [
 ]
 
 # FairScale FairScore Configuration
-FAIRSCORE_API_URL = "https://api.webacy.com"
+FAIRSCORE_API_URL = "https://api2.fairscale.xyz"
+FAIRSCORE_API_KEY = ""  # Set via env FAIRSCORE_API_KEY or here
 FAIRSCORE_ENABLED = True
 FAIRSCORE_MIN_TIER = 2  # Minimum tier to allow transactions without warning
 
