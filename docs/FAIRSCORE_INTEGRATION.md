@@ -11,7 +11,9 @@
 
 ## Overview
 
-**FairScore** is a reputation scoring system for Solana addresses that provides trust ratings on a 1-5 tier scale. Coldstar integrates FairScore to add an intelligent reputation layer to cold wallet operations without compromising air-gap security.
+**FairScore** is a reputation scoring system for Solana wallets by FairScale. It provides a 0-100 score with tier classifications (bronze/silver/gold/platinum), behavioral badges, and feature breakdowns. Coldstar maps these to a 1-5 internal tier system for transaction gating without compromising air-gap security.
+
+**Live API:** `GET https://api2.fairscale.xyz/score?wallet=<address>` (auth via `fairkey` header)
 
 ### Why FairScore?
 
@@ -50,7 +52,7 @@ This preserves complete air-gap isolation while adding reputation awareness.
 │             YES                                                   │
 │              │                                                    │
 │  3. FairScore API Query                                          │
-│     └─> GET /api/v1/reputation/{address}                        │
+│     └─> GET /score?wallet={address}                             │
 │              │                                                    │
 │              ├─> Tier 1 (UNTRUSTED) ──> HARD BLOCK              │
 │              │   └─> Error message, transaction cancelled        │
@@ -104,15 +106,29 @@ This preserves complete air-gap isolation while adding reputation awareness.
 
 ## Tier Definitions
 
-FairScore uses a 5-tier reputation system:
+FairScale returns a 0-100 score and string tier (bronze/silver/gold/platinum). Coldstar maps these to an internal 1-5 system for transaction gating:
 
-| Tier | Label | Color | Action | Default Limit | Description |
-|------|-------|-------|--------|---------------|-------------|
-| **1** | UNTRUSTED | 🔴 Red | **BLOCK** | 0 SOL | Known scammers, compromised addresses, flagged by community. Transaction is immediately rejected. |
-| **2** | LOW TRUST | 🟡 Yellow | **WARN** | 10 SOL | New addresses, minimal on-chain history, or minor risk flags. User must explicitly confirm to proceed. |
-| **3** | TRUSTED | 🟢 Green | **ALLOW** | 100 SOL | Established addresses with positive history. Standard operations permitted. |
-| **4** | HIGH TRUST | 🔵 Cyan | **ALLOW** | 500 SOL | Verified protocols, known DAOs, high-reputation users. Elevated transfer limits. |
-| **5** | EXCELLENT | 🟣 Magenta | **ALLOW** | Unlimited | Top-tier reputation: major protocols, verified teams, extensive positive history. No limits. |
+| Internal | API Tier | Score Range | Label | Action | Default Limit | Description |
+|----------|----------|-------------|-------|--------|---------------|-------------|
+| **1** | bronze | 0-19 | UNTRUSTED | **BLOCK** | 0 SOL | Low-reputation wallet. Transaction is immediately rejected. |
+| **2** | silver | 20-39 | LOW TRUST | **WARN** | 10 SOL | New or unverified wallet. User must explicitly confirm to proceed. |
+| **3** | gold | 40-59 | TRUSTED | **ALLOW** | 100 SOL | Established wallet with positive history. Standard operations permitted. |
+| **4** | platinum | 60-79 | HIGH TRUST | **ALLOW** | 500 SOL | Verified protocol or high-reputation user. Elevated transfer limits. |
+| **5** | (80+) | 80-100 | EXCELLENT | **ALLOW** | Unlimited | Top-tier reputation. No limits. |
+
+**Live API Example (Jupiter wallet):**
+```json
+{
+  "wallet": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+  "fairscore": 34.2,
+  "tier": "silver",
+  "badges": [
+    {"id": "lst_staker", "label": "LST Staker", "tier": "gold"},
+    {"id": "sol_maxi", "label": "SOL Maxi", "tier": "gold"},
+    {"id": "no_dumper", "label": "No Instant Dumps", "tier": "silver"}
+  ]
+}
+```
 
 ### Tier Color Coding in CLI
 
@@ -134,7 +150,7 @@ FairScore is integrated across **6 major touch points** in Coldstar:
 
 ### 1. Transaction Gating (Primary)
 
-**Location:** `coldstar/core/fairscore_client.py` → `should_block_transaction()`
+**Location:** `src/fairscore_integration.py` → `should_block_transaction()`
 
 - Called before every outgoing transfer
 - Tier 1 addresses are hard-blocked
@@ -153,7 +169,7 @@ elif tier == 2 and amount > 10_000_000:  # 10 SOL in lamports
 
 ### 2. Dynamic Transfer Limits
 
-**Location:** `coldstar/core/fairscore_client.py` → `get_transfer_limit()`
+**Location:** `src/fairscore_integration.py` → `get_transfer_limit()`
 
 - Returns SOL limits based on tier
 - Enforced at transaction preparation
@@ -244,30 +260,31 @@ if fairscore.get_tier(destination) < 3:
 
 ### API Key Configuration
 
-FairScore requires an API key for production use. Configure via:
+FairScore requires an API key from FairScale. Get one at https://sales.fairscale.xyz/
 
 **Option 1: Environment Variable (Recommended)**
 ```bash
-export FAIRSCORE_API_KEY="your_api_key_here"
+export FAIRSCORE_API_KEY="zpka_your_key_here"
 ```
 
 **Option 2: Configuration File**
 
-Edit `coldstar/config/config.py`:
+Edit `config.py`:
 ```python
-FAIRSCORE_CONFIG = {
-    "api_key": "your_api_key_here",
-    "enabled": True,
-    "strict_mode": False,  # If True, Tier 2 also blocks
-    "custom_limits": {
-        1: 0,
-        2: 10,
-        3: 100,
-        4: 500,
-        5: None  # Unlimited
-    }
-}
+FAIRSCORE_API_URL = "https://api2.fairscale.xyz"
+FAIRSCORE_API_KEY = ""  # Set via env FAIRSCORE_API_KEY or here
+FAIRSCORE_ENABLED = True
+FAIRSCORE_MIN_TIER = 2  # Minimum tier to allow transactions without warning
 ```
+
+**API Endpoints Available:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/score?wallet=` | GET | Full response: tier, badges, features, score |
+| `/fairScore?wallet=` | GET | Lightweight: just the combined score |
+| `/walletScore?wallet=` | GET | Wallet-only score (excludes social) |
+
+All endpoints require the `fairkey` header for authentication.
 
 ### Enable/Disable
 

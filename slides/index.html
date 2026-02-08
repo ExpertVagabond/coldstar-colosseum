@@ -275,10 +275,10 @@
         <div class="slide">
             <h2>The Solution</h2>
             <ul>
-                <li><span class="solution-highlight">FairScore reputation tier (1-5)</span> checked before EVERY transaction</li>
-                <li><span class="tier-1">Tier 1: HARD BLOCK</span> - transaction cannot be created</li>
-                <li><span class="tier-2">Tier 2: SOFT WARNING</span> - must confirm explicitly</li>
-                <li><span class="tier-3-5">Tier 3-5: GREEN LIGHT</span> - proceed with confidence</li>
+                <li><span class="solution-highlight">FairScore (0-100)</span> checked before EVERY transaction</li>
+                <li><span class="tier-1">Bronze (&lt;20): HARD BLOCK</span> - transaction cannot be created</li>
+                <li><span class="tier-2">Silver (20-39): SOFT WARNING</span> - must confirm explicitly</li>
+                <li><span class="tier-3-5">Gold/Platinum (40+): GREEN LIGHT</span> - proceed with confidence</li>
                 <li>All checks happen <span class="solution-highlight">BEFORE the point of no return</span> (air-gap crossing)</li>
             </ul>
         </div>
@@ -310,36 +310,39 @@
             </ul>
         </div>
 
-        <!-- Slide 6: Demo - Tier 1 BLOCK -->
+        <!-- Slide 6: Demo - Bronze BLOCK -->
         <div class="slide">
-            <h2>Demo — Tier 1 BLOCK</h2>
+            <h2>Demo — Bronze BLOCK</h2>
             <div class="terminal">═══════════════ FAIRSCORE REPUTATION CHECK ═══════════════
 Checking reputation for 5xGh...Tf8Y
 
 ╭──────── FairScore Reputation ────────╮
 │  Address:     5xGh...Tf8Y            │
 │  Reputation:  <span class="terminal-error">!!! UNTRUSTED</span>          │
-│  Tier:        <span class="terminal-error">1/5</span>                    │
+│  Tier:        <span class="terminal-error">Bronze (1/5)</span>           │
+│  FairScore:   <span class="terminal-error">12.3/100</span>               │
 │  TX Limit:    <span class="terminal-error">BLOCKED</span>                │
-│  Status:      <span class="terminal-error">High-risk wallet</span>       │
+│  Badges:      <span class="terminal-error">(none)</span>                 │
 ╰──────────────────────────────────────╯
 
 <span class="terminal-error">✗ TRANSACTION BLOCKED</span>
-<span class="terminal-error">✗ Recipient has UNTRUSTED reputation (Tier 1)</span></div>
+<span class="terminal-error">✗ FairScore: 12.3, Tier: bronze — transaction blocked</span></div>
         </div>
 
-        <!-- Slide 7: Demo - Tier 5 ALLOW -->
+        <!-- Slide 7: Demo - Gold ALLOW (Real Data) -->
         <div class="slide">
-            <h2>Demo — Tier 5 ALLOW</h2>
+            <h2>Demo — Gold ALLOW</h2>
             <div class="terminal">╭──────── FairScore Reputation ────────╮
-│  Address:     JUPy...vCN            │
-│  Reputation:  <span class="terminal-success">[***] EXCELLENT</span>        │
-│  Tier:        <span class="terminal-success">5/5</span>                    │
-│  TX Limit:    <span class="terminal-success">Unlimited</span>              │
-│  Status:      <span class="terminal-success">Top-tier reputation</span>    │
+│  Address:     JUPy...vCN             │
+│  Reputation:  <span class="terminal-success">[+] TRUSTED</span>            │
+│  Tier:        <span class="terminal-success">Silver (2/5)</span>           │
+│  FairScore:   <span class="terminal-success">34.2/100</span>               │
+│  TX Limit:    <span class="terminal-warning">10 SOL max</span>             │
+│  Badges:      <span class="terminal-info">LST Staker</span> <span class="terminal-info">SOL Maxi</span>    │
 ╰──────────────────────────────────────╯
 
-<span class="terminal-success">✓ Reputation verified — proceed with transaction</span></div>
+<span class="terminal-warning">⚠ Low-trust wallet — confirm to proceed</span>
+<span class="terminal-success">✓ User confirmed — creating transaction</span></div>
         </div>
 
         <!-- Slide 8: Business Model -->
