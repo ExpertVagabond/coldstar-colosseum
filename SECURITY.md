@@ -402,7 +402,7 @@ Duration: ~100 microseconds
 If you discover a security vulnerability in Coldstar, please report it responsibly:
 
 1. **Do NOT** open a public GitHub issue
-2. Email security details to: [your-email@example.com]
+2. Email security details to: syrem.dev@gmail.com
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -412,8 +412,8 @@ If you discover a security vulnerability in Coldstar, please report it responsib
 ### Response Timeline
 
 - **24 hours** - Initial acknowledgment
-- **7 days** - Preliminary assessment
-- **30 days** - Fix developed and tested
+- **3 days** - Preliminary assessment
+- **7 days** - Fix developed and tested
 - **Coordinated disclosure** - Public announcement after patch released
 
 ### Security Audit Status
