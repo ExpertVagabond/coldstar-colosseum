@@ -10,9 +10,6 @@ This repository contains the core implementation, documentation, and tooling req
 ⚠️  EXPERIMENTAL SOFTWARE - BETA VERSION
 ────────────────────────────────────────────────────────────────
 This software is experimental and under active development.
-Not formally audited. Do not use with funds you cannot afford to lose.
-Subject to breaking changes. For testing and advanced users only.
-Use at your own risk.
 ```
 
 ---
