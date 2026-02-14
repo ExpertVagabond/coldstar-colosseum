@@ -34,6 +34,7 @@ from googleapiclient.http import MediaFileUpload
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 SCRIPT_DIR = Path(__file__).parent
+VIDEOS_DIR = SCRIPT_DIR.parent  # videos/ directory (one level up)
 CLIENT_SECRETS = SCRIPT_DIR / "client_secrets.json"
 TOKEN_FILE = SCRIPT_DIR / "youtube_token.json"
 
@@ -123,6 +124,28 @@ Private key never leaves the USB drive.
         "category": "28",
         "privacy": "public",
     },
+    {
+        "file": "coldstar-fairscore-demo-v2.mp4",
+        "title": "Coldstar x FairScore: Reputation-Gated Cold Wallet | Demo",
+        "description": """See how FairScore reputation screening works inside Coldstar's air-gapped cold wallet.
+
+Every transaction is checked against FairScale's reputation API before crossing the air gap:
+🔴 Bronze tier = HARD BLOCK (known scammers)
+🟡 Silver tier = WARNING (low reputation)
+🟢 Gold+ = PROCEED (trusted addresses)
+
+Your private key never touches the network. But now your wallet knows who you're sending to.
+
+🔗 https://coldstar.dev/colosseum
+📦 https://github.com/ExpertVagabond/coldstar-colosseum
+🏆 Colosseum Agent Hackathon 2026 — Project #62
+
+#Solana #FairScore #ColdWallet #AirGapped #Crypto #Security #Reputation""",
+        "tags": ["Solana", "FairScore", "cold wallet", "air-gapped", "Coldstar",
+                 "reputation", "crypto security", "hackathon", "Colosseum", "FairScale"],
+        "category": "28",
+        "privacy": "public",
+    },
 ]
 
 
@@ -157,7 +180,7 @@ def authenticate():
 
 def upload_video(youtube, video_meta: dict, dry_run: bool = False):
     """Upload a single video to YouTube."""
-    filepath = SCRIPT_DIR / video_meta["file"]
+    filepath = VIDEOS_DIR / video_meta["file"]
 
     if not filepath.exists():
         print(f"❌ File not found: {filepath}")
