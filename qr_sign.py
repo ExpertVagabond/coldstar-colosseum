@@ -101,16 +101,30 @@ def find_wallet():
     return None
 
 
-def load_keypair(path: Path) -> Keypair:
-    """Load keypair from file"""
-    with open(path, 'r') as f:
-        secret_list = json.load(f)
-    return Keypair.from_bytes(bytes(secret_list))
+def load_wallet(path: Path):
+    """Load encrypted wallet container for secure signing.
+    Returns (container, pubkey_str) tuple, or exits on failure."""
+    from src.wallet import WalletManager
+    wallet = WalletManager()
+    container = wallet.load_encrypted_container(str(path))
+    if not container:
+        print(f"{Colors.RED}Failed to load wallet. Legacy unencrypted wallets must be upgraded first.{Colors.RESET}")
+        sys.exit(1)
+
+    pubkey = wallet.get_public_key()
+    if not pubkey:
+        pubkey_path = path.parent / "pubkey.txt"
+        if pubkey_path.exists():
+            pubkey = pubkey_path.read_text().strip()
+    if not pubkey:
+        print(f"{Colors.RED}Could not determine wallet public key{Colors.RESET}")
+        sys.exit(1)
+
+    return wallet, container, pubkey
 
 
-def show_wallet_qr(keypair: Keypair):
+def show_wallet_qr_from_pubkey(pubkey: str):
     """Display wallet public key as QR code"""
-    pubkey = str(keypair.pubkey())
 
     print(f"\n{Colors.CYAN}{'═' * 60}{Colors.RESET}")
     print(f"{Colors.BOLD}  WALLET PUBLIC KEY - Scan to receive SOL{Colors.RESET}")
@@ -123,8 +137,11 @@ def show_wallet_qr(keypair: Keypair):
     print(f"{Colors.CYAN}{'═' * 60}{Colors.RESET}\n")
 
 
-def sign_transaction(keypair: Keypair, tx_data: dict) -> bytes:
-    """Sign a transaction with the keypair"""
+def sign_transaction_qr(wallet, container: dict, password: str, tx_data: dict) -> bytes:
+    """Sign a transaction securely via Rust signer"""
+    from src.transaction import TransactionManager
+    tx_mgr = TransactionManager()
+
     from_pk = Pubkey.from_string(tx_data['from'])
     to_pk = Pubkey.from_string(tx_data['to'])
     blockhash = Hash.from_string(tx_data['blockhash'])
@@ -138,9 +155,12 @@ def sign_transaction(keypair: Keypair, tx_data: dict) -> bytes:
 
     message = Message.new_with_blockhash([transfer_ix], from_pk, blockhash)
     tx = Transaction.new_unsigned(message)
-    tx.sign([keypair], blockhash)
+    unsigned_bytes = bytes(tx)
 
-    return bytes(tx)
+    signed_bytes = tx_mgr.sign_transaction_secure(unsigned_bytes, container, password)
+    if not signed_bytes:
+        raise RuntimeError("Signing failed — wrong password or corrupted wallet")
+    return signed_bytes
 
 
 def interactive_sign():
@@ -163,10 +183,9 @@ def interactive_sign():
         print("  - ./local_wallet/keypair.json")
         sys.exit(1)
 
-    # Load keypair
+    # Load encrypted wallet
     try:
-        keypair = load_keypair(wallet_path)
-        pubkey = str(keypair.pubkey())
+        wallet, container, pubkey = load_wallet(wallet_path)
         print(f"{Colors.GREEN}✓ Wallet loaded:{Colors.RESET} {pubkey[:16]}...{pubkey[-8:]}")
     except Exception as e:
         print(f"{Colors.RED}Error loading wallet: {e}{Colors.RESET}")
@@ -226,10 +245,17 @@ def interactive_sign():
         print(f"\n{Colors.YELLOW}Signing cancelled{Colors.RESET}")
         sys.exit(0)
 
-    # Sign transaction
+    # Get password for signing
+    from getpass import getpass
+    password = getpass(f"{Colors.YELLOW}Enter wallet password to sign: {Colors.RESET}")
+    if not password:
+        print(f"{Colors.RED}Password required for encrypted wallet{Colors.RESET}")
+        sys.exit(1)
+
+    # Sign transaction securely via Rust signer
     try:
-        signed_bytes = sign_transaction(keypair, tx_data)
-        print(f"\n{Colors.GREEN}✓ Transaction SIGNED successfully!{Colors.RESET}")
+        signed_bytes = sign_transaction_qr(wallet, container, password, tx_data)
+        print(f"\n{Colors.GREEN}✓ Transaction SIGNED securely via Rust signer!{Colors.RESET}")
     except Exception as e:
         print(f"{Colors.RED}Error signing transaction: {e}{Colors.RESET}")
         sys.exit(1)
@@ -275,8 +301,8 @@ def main():
 
             wallet_path = find_wallet()
             if wallet_path:
-                keypair = load_keypair(wallet_path)
-                show_wallet_qr(keypair)
+                _, _, pubkey = load_wallet(wallet_path)
+                show_wallet_qr_from_pubkey(pubkey)
             else:
                 print("No wallet found")
             sys.exit(0)
