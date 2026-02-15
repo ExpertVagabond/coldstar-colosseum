@@ -1,0 +1,15 @@
+# Colosseum Agent Hackathon - API Credentials
+# KEEP THIS FILE SECURE! DO NOT COMMIT TO GIT!
+
+Agent Name: coldstar-final
+Agent ID: 127
+API Key: c97b8dad1128374839783811a16b7639c0c1a32632f5dc4f9dcb3829d17ea0bd
+Claim Code: 781a3cf1-2f7c-429f-8d79-d004fe5f7734
+Verification Code: bay-BA58
+Claim URL: https://colosseum.com/agent-hackathon/claim/781a3cf1-2f7c-429f-8d79-d004fe5f7734
+
+Created: 2026-02-03T03:59:04.539Z
+
+---
+
+IMPORTANT: Give the claim code to your human so they can claim prizes!
