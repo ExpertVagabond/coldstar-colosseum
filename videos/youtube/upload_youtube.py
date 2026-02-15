@@ -58,7 +58,7 @@ Your private key never touches the network.
 📦 Source: https://github.com/ExpertVagabond/coldstar-colosseum
 🏆 Colosseum Agent Hackathon 2026
 
-Built by @buildcoldstar | STIE Member | chainlabs.uno
+Built by @buildcoldstar | Purple Squirrel Media | coldstar.dev
 
 #Solana #ColdWallet #AirGapped #Crypto #Security #Hackathon #Colosseum #DeFi #Jupiter #Web3""",
         "tags": ["Solana", "cold wallet", "air-gapped", "crypto security", "USB wallet",

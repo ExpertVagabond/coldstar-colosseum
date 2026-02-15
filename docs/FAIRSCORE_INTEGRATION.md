@@ -678,6 +678,6 @@ AgentSecurityError: Agent transactions require Tier 3+ destination addresses
 ║  "The most secure cold wallet is one that knows who it's     ║
 ║   talking to before the signature happens."                   ║
 ║                                                                ║
-║  — Coldstar Team × chainlabs.uno                              ║
+║  — Coldstar Team × Purple Squirrel Media                      ║
 ╚═══════════════════════════════════════════════════════════════╝
 ```

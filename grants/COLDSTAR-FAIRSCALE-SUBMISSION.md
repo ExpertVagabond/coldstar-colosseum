@@ -1,7 +1,7 @@
 # Coldstar x FairScale — Hackathon Submission
 
 > Project: Coldstar — Reputation-Gated Air-Gapped Cold Wallet for Solana
-> Team: @buildcoldstar | STIE Member | chainlabs.uno
+> Team: @buildcoldstar | Purple Squirrel Media
 > Contact: MatthewKarstenConnects@gmail.com | @buildcoldstar
 
 ---
@@ -352,7 +352,7 @@ class FairScoreClient:
 - **GitHub:** [@ExpertVagabond](https://github.com/ExpertVagabond)
 - **X/Twitter:** [@buildcoldstar](https://x.com/buildcoldstar)
 - **Email:** MatthewKarstenConnects@gmail.com
-- **Affiliation:** STIE Member | chainlabs.uno
+- **Affiliation:** Purple Squirrel Media
 
 **Experience:**
 - 1,800+ commits across TypeScript, Python, Rust, Ruby, Go
@@ -460,7 +460,7 @@ FairScore x Solana | @buildcoldstar
 
 ### Slide 10: Team
 - @buildcoldstar — 1,800+ commits, solo shipped in 10-day sprint
-- STIE Member | chainlabs.uno
+- Purple Squirrel Media
 - Long-term commitment: Coldstar is a core product
 
 ### Slide 11: Ask
@@ -507,5 +507,5 @@ FairScore x Solana | @buildcoldstar
 
 *Prepared February 2026*
 *Project: Coldstar — https://coldstar.dev/colosseum*
-*Applicant: @buildcoldstar | STIE Member | chainlabs.uno*
+*Applicant: @buildcoldstar | Purple Squirrel Media*
 *FairScale Hackathon Submission*
