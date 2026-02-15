@@ -1,0 +1,373 @@
+"""
+STEP 7 IMPLEMENTATION - CODE FLOW DIAGRAM
+==========================================
+
+This document shows the exact code flow for the new wallet generation step.
+"""
+
+# ============================================================================
+# ENTRY POINT: User selects "Flash Cold Wallet" from main menu
+# ============================================================================
+
+main.py → flash_cold_wallet()
+    │
+    ├─> Display info about the 7-step process
+    ├─> Detect USB devices
+    ├─> User selects target device
+    ├─> Confirm dangerous operation
+    │
+    └─> Call: iso_builder.build_complete_iso("./output")
+            │
+            ├─> [1/7] download_alpine_rootfs()
+            ├─> [2/7] extract_rootfs()
+            ├─> [3/7] configure_offline_os()
+            ├─> [4/7] _install_python_deps()
+            └─> [5/7] _create_bootable_image()
+                    │
+                    └─> Returns: Path to solana-cold-wallet.tar.gz
+
+# ============================================================================
+# STEP 6 & 7: Flash to USB and Generate Wallet
+# ============================================================================
+
+main.py → iso_builder.flash_to_usb(device_path, image_path)
+    │
+    ├─> Platform detection
+    │
+    ├─> if Windows:
+    │   │
+    │   └─> _flash_to_usb_windows(device_path, image_path)
+    │       │
+    │       ├─> [6/7] Setting up wallet on USB drive...
+    │       │   │
+    │       │   ├─> Use PowerShell to get drive letter from physical drive
+    │       │   │       ps_command = "Get-WmiObject Win32_DiskDrive..."
+    │       │   │       Result: D:\\ (or E:\\, F:\\, etc.)
+    │       │   │
+    │       │   ├─> Create directory structure:
+    │       │   │       Path(D:\\) / "wallet"   → D:\\wallet\\
+    │       │   │       Path(D:\\) / "inbox"    → D:\\inbox\\
+    │       │   │       Path(D:\\) / "outbox"   → D:\\outbox\\
+    │       │   │
+    │       │   └─> Write README.txt to USB drive
+    │       │
+    │       └─> [7/7] _generate_wallet_on_usb(mount_point="D:\\")
+    │               │
+    │               └─> See detailed flow below ↓
+    │
+    └─> if Linux/Unix:
+        │
+        └─> _flash_to_usb_linux(device_path, image_path)
+            │
+            ├─> [6/7] Flashing to /dev/sdX...
+            │   │
+            │   ├─> Format device: mkfs.ext4 -F /dev/sdX
+            │   ├─> Create temp mount: /tmp/usb_flash_12345
+            │   ├─> Mount: mount /dev/sdX /tmp/usb_flash_12345
+            │   └─> Extract: tar -xzf solana-cold-wallet.tar.gz
+            │
+            └─> [7/7] _generate_wallet_on_usb(mount_point="/tmp/usb_flash_12345")
+                    │
+                    └─> See detailed flow below ↓
+
+# ============================================================================
+# STEP 7 DETAILED: _generate_wallet_on_usb(mount_point)
+# ============================================================================
+
+def _generate_wallet_on_usb(mount_point: str) -> bool:
+    """
+    Generate and encrypt a Solana keypair on the USB drive.
+    
+    Args:
+        mount_point: The USB drive mount point (e.g., "D:\\" or "/mnt/usb")
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    
+    print_step(7, 7, "Generating keypair and wallet on USB...")
+    
+    # ========================================================================
+    # 1. Import required modules
+    # ========================================================================
+    try:
+        from solders.keypair import Keypair              # For keypair generation
+        from src.secure_memory import SecureWalletHandler # For encryption
+        from src.ui import get_password_input             # For password prompt
+    except ImportError as e:
+        print_error(f"Required modules not available: {e}")
+        return False
+    
+    # ========================================================================
+    # 2. Set up paths
+    # ========================================================================
+    wallet_dir = Path(mount_point) / "wallet"
+    wallet_dir.mkdir(parents=True, exist_ok=True)
+    
+    keypair_path = wallet_dir / "keypair.json"  # Encrypted private key
+    pubkey_path = wallet_dir / "pubkey.txt"     # Public key (address)
+    
+    # ========================================================================
+    # 3. Check for existing wallet
+    # ========================================================================
+    if keypair_path.exists() and pubkey_path.exists():
+        print_info("Wallet already exists on this USB drive")
+        
+        with open(pubkey_path, 'r') as f:
+            existing_pubkey = f.read().strip()
+        print_info(f"Existing Public Key: {existing_pubkey}")
+        
+        # Ask user if they want to overwrite
+        overwrite = confirm_dangerous_action(
+            "Overwrite existing wallet?",
+            "OVERWRITE"
+        )
+        
+        if not overwrite:
+            print_info("Using existing wallet")
+            self.generated_pubkey = existing_pubkey
+            return True
+    
+    # ========================================================================
+    # 4. Generate new keypair
+    # ========================================================================
+    print_info("Generating new Solana keypair...")
+    
+    keypair = Keypair()  # Creates new random Ed25519 keypair
+    public_key = str(keypair.pubkey())
+    
+    print_success(f"Generated keypair: {public_key[:8]}...{public_key[-8:]}")
+    
+    # ========================================================================
+    # 5. Get password from user
+    # ========================================================================
+    print_info("")
+    print_info("Your wallet will be encrypted with a password.")
+    print_warning("IMPORTANT: Remember this password - you cannot recover funds without it!")
+    
+    password = get_password_input("Set wallet password:")
+    confirm_password = get_password_input("Confirm password:")
+    
+    # Validate password
+    if password != confirm_password:
+        print_error("Passwords do not match!")
+        return False
+    
+    if not password:
+        print_error("Password cannot be empty!")
+        return False
+    
+    # ========================================================================
+    # 6. Encrypt the keypair
+    # ========================================================================
+    print_info("Encrypting wallet...")
+    
+    encrypted_data = SecureWalletHandler.encrypt_keypair(keypair, password)
+    
+    # encrypted_data structure:
+    # {
+    #     "algo": "argon2i_xsalsa20poly1305",
+    #     "salt": "base64-encoded-salt",
+    #     "nonce": "base64-encoded-nonce",
+    #     "ciphertext": "base64-encoded-encrypted-keypair"
+    # }
+    
+    # ========================================================================
+    # 7. Save encrypted keypair to file
+    # ========================================================================
+    with open(keypair_path, 'w') as f:
+        json.dump(encrypted_data, f, indent=2)
+    
+    # Example keypair.json:
+    # {
+    #   "algo": "argon2i_xsalsa20poly1305",
+    #   "salt": "randomBase64String==",
+    #   "nonce": "randomBase64String==",
+    #   "ciphertext": "encryptedDataBase64=="
+    # }
+    
+    # ========================================================================
+    # 8. Save public key to file
+    # ========================================================================
+    with open(pubkey_path, 'w') as f:
+        f.write(public_key)
+    
+    # Example pubkey.txt:
+    # 7EqQdEUJxhKhZ9qGXPrXrK3qBnxZQnG9xHKZGQPmPump
+    
+    # ========================================================================
+    # 9. Set secure file permissions (Unix only)
+    # ========================================================================
+    if not self.is_windows:
+        os.chmod(keypair_path, 0o600)  # rw------- (owner only)
+        os.chmod(pubkey_path, 0o644)   # rw-r--r-- (readable by all)
+    
+    # ========================================================================
+    # 10. Clear keypair from memory (SECURITY)
+    # ========================================================================
+    del keypair  # Delete the keypair object
+    import gc
+    gc.collect()  # Force garbage collection to clear memory
+    
+    # ========================================================================
+    # 11. Display success message with public key
+    # ========================================================================
+    print_success("✓ Wallet created and encrypted successfully!")
+    print_info("")
+    print_info("=" * 60)
+    print_success("YOUR WALLET PUBLIC KEY (ADDRESS):")
+    print_info(public_key)
+    print_info("=" * 60)
+    print_info("")
+    print_warning("Write down or photograph this address!")
+    print_warning("You need this to receive SOL on this wallet.")
+    print_info("")
+    
+    # ========================================================================
+    # 12. Store for later display in main.py
+    # ========================================================================
+    self.generated_pubkey = public_key
+    
+    return True
+
+# ============================================================================
+# BACK TO MAIN: Display wallet info
+# ============================================================================
+
+main.py → flash_cold_wallet() → if flash_to_usb() succeeded:
+    │
+    ├─> Check if iso_builder.generated_pubkey exists
+    │
+    └─> Display Panel with wallet information:
+            │
+            ├─> "Wallet Generated Successfully!"
+            ├─> Public Key: [full address]
+            ├─> "This wallet is now ready to receive and send SOL!"
+            └─> Instructions to write down the address
+
+# ============================================================================
+# FINAL USB DRIVE STRUCTURE
+# ============================================================================
+
+D:\\  (or /mnt/usb)
+│
+├── wallet/
+│   ├── keypair.json       ← 🔐 ENCRYPTED private key
+│   │                         {
+│   │                           "algo": "argon2i_xsalsa20poly1305",
+│   │                           "salt": "...",
+│   │                           "nonce": "...",
+│   │                           "ciphertext": "..."
+│   │                         }
+│   │
+│   └── pubkey.txt         ← 📍 Public key (wallet address)
+│                             7EqQdEUJxhKhZ9qGXPrXrK3qBnxZQnG9xHKZGQPmPump
+│
+├── inbox/                 ← 📥 For unsigned transactions
+│   └── (empty initially)
+│
+├── outbox/                ← 📤 For signed transactions
+│   └── (empty initially)
+│
+└── README.txt             ← 📄 Usage instructions
+
+# ============================================================================
+# SECURITY FLOW
+# ============================================================================
+
+Password Entry
+    ↓
+Argon2i Key Derivation (computationally expensive to brute force)
+    ↓
+XSalsa20-Poly1305 Encryption (authenticated encryption)
+    ↓
+Encrypted Keypair JSON
+    ↓
+Saved to USB
+    ↓
+Original Keypair DELETED from memory
+    ↓
+Garbage Collection (clear memory)
+
+When Loading Wallet:
+    Password Entry
+        ↓
+    Argon2i Key Derivation
+        ↓
+    XSalsa20-Poly1305 Decryption
+        ↓
+    Keypair Reconstructed (in memory)
+        ↓
+    Sign Transaction
+        ↓
+    Keypair DELETED from memory
+        ↓
+    Garbage Collection
+
+# ============================================================================
+# ERROR HANDLING
+# ============================================================================
+
+Possible Errors and Handling:
+
+1. ImportError (solders/secure_memory not available)
+   └─> Return False, display error message
+   
+2. Password mismatch
+   └─> Return False, ask user to try again
+   
+3. Empty password
+   └─> Return False, require non-empty password
+   
+4. Wallet already exists
+   └─> Prompt for overwrite confirmation
+   └─> If declined, use existing wallet
+   
+5. File write error (permissions, disk full)
+   └─> Exception caught, error displayed, return False
+   
+6. USB disconnected during process
+   └─> IOError caught, process fails gracefully
+
+# ============================================================================
+# INTEGRATION POINTS
+# ============================================================================
+
+Uses These Modules:
+    • solders.keypair → Keypair generation
+    • src.secure_memory → SecureWalletHandler encryption
+    • src.ui → UI functions (prompts, messages)
+    • pathlib.Path → File path handling
+    • json → JSON serialization
+    • os → File permissions
+    • gc → Memory cleanup
+
+Integrates With:
+    • main.py → User interface and workflow
+    • src/wallet.py → Can load the generated wallet
+    • src/transaction.py → Can use the wallet to sign
+    • src/network.py → Can check balance of public key
+
+# ============================================================================
+# SUMMARY
+# ============================================================================
+
+OLD FLOW:
+    Flash USB → Mount → Run wallet script → Generate → Ready
+    
+NEW FLOW:
+    Flash USB → Ready! ✅
+    
+KEY DIFFERENCE:
+    Wallet generation is now AUTOMATIC during flash process (Step 7)
+    instead of being a separate manual step.
+
+BENEFITS:
+    ✓ Faster setup (1 command vs multiple steps)
+    ✓ Better UX (less technical knowledge needed)
+    ✓ Immediate use (can receive SOL right away)
+    ✓ Same security (encrypted, password-protected)
+    ✓ More reliable (automated, less error-prone)
+
+B - Love U 3000 💙
+"""

@@ -33,22 +33,22 @@ CUSTOM_STYLE = Style([
 
 def print_banner():
     banner_text = """
-╔═══════════════════════════════════════════════════════════════╗
-║                                                               ║
-║      ███████╗ ██████╗ ██╗      █████╗ ███╗   ██╗ █████╗       ║
-║      ██╔════╝██╔═══██╗██║     ██╔══██╗████╗  ██║██╔══██╗      ║
-║      ███████╗██║   ██║██║     ███████║██╔██╗ ██║███████║      ║
-║      ╚════██║██║   ██║██║     ██╔══██║██║╚██╗██║██╔══██║      ║
-║      ███████║╚██████╔╝███████╗██║  ██║██║ ╚████║██║  ██║      ║
-║      ╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝      ║
-║                                                               ║
-║           COLD WALLET USB TOOL v1.0.0 By </Syrem>             ║
-║                                                               ║
-╠═══════════════════════════════════════════════════════════════╣
-║  SECURITY NOTICE: This tool creates offline Solana wallets.   ║
-║  Private keys are stored ONLY on the USB device and NEVER     ║
-║  transmitted over the network.                                ║
-╚═══════════════════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║   ██████╗ ██████╗ ██╗     ██████╗ ███████╗████████╗ █████╗ ██████╗    ║
+║  ██╔════╝██╔═══██╗██║     ██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██╔══██╗   ║
+║  ██║     ██║   ██║██║     ██║  ██║███████╗   ██║   ███████║██████╔╝   ║
+║  ██║     ██║   ██║██║     ██║  ██║╚════██║   ██║   ██╔══██║██╔══██╗   ║
+║  ╚██████╗╚██████╔╝███████╗██████╔╝███████║   ██║   ██║  ██║██║  ██║   ║
+║   ╚═════╝ ╚═════╝ ╚══════╝╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ║
+║                                                                       ║
+║              COLD WALLET USB TOOL v1.1.0 By </Syrem>                  ║
+║                                                                       ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║  SECURITY NOTICE: This tool creates offline Solana wallets.           ║
+║  Private keys are stored ONLY on the USB device and NEVER             ║
+║  transmitted over the network.                                        ║
+╚═══════════════════════════════════════════════════════════════════════╝
 """
     console.print(Text(banner_text, style="cyan"))
 
@@ -176,6 +176,13 @@ def get_text_input(message: str, default: str = "") -> str:
     ).ask()
 
 
+def get_password_input(message: str) -> str:
+    return questionary.password(
+        message,
+        style=CUSTOM_STYLE
+    ).ask()
+
+
 def get_float_input(message: str, default: float = 0.0) -> float:
     while True:
         try:
@@ -208,7 +215,7 @@ def create_progress_bar(description: str):
     )
 
 
-def print_explorer_link(signature: str, network: str = "devnet"):
+def print_explorer_link(signature: str, network: str = "mainnet-beta"):
     base_url = "https://explorer.solana.com/tx"
     cluster_param = f"?cluster={network}" if network != "mainnet-beta" else ""
     url = f"{base_url}/{signature}{cluster_param}"

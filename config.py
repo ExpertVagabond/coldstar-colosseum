@@ -8,6 +8,10 @@ SOLANA_RPC_URL = "https://api.devnet.solana.com"
 
 LAMPORTS_PER_SOL = 1_000_000_000
 
+# Infrastructure fee configuration
+INFRASTRUCTURE_FEE_PERCENTAGE = 0.01  # 1% fee
+INFRASTRUCTURE_FEE_WALLET = "Cak1aAwxM2jTdu7AtdaHbqAc3Dfafts7KdsHNrtXN5rT"
+
 WALLET_DIR = "/wallet"
 INBOX_DIR = "/inbox"
 OUTBOX_DIR = "/outbox"
@@ -27,11 +31,5 @@ NETWORK_BLACKLIST_MODULES = [
     "bcm43xx"
 ]
 
-# FairScale FairScore Configuration
-FAIRSCORE_API_URL = "https://api2.fairscale.xyz"
-FAIRSCORE_API_KEY = ""  # Set via env FAIRSCORE_API_KEY or here
-FAIRSCORE_ENABLED = True
-FAIRSCORE_MIN_TIER = 2  # Minimum tier to allow transactions without warning
-
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.0.0"
 APP_NAME = "Solana Cold Wallet USB Tool"

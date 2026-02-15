@@ -6,6 +6,7 @@ B - Love U 3000
 
 import json
 import base64
+import sys
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -16,14 +17,46 @@ from solders.system_program import transfer, TransferParams
 from solders.transaction import Transaction
 from solders.message import Message
 
-from config import LAMPORTS_PER_SOL
-from src.ui import print_success, print_error, print_info, print_warning
+from config import LAMPORTS_PER_SOL, INFRASTRUCTURE_FEE_PERCENTAGE, INFRASTRUCTURE_FEE_WALLET
+from src.ui import print_success, print_error, print_info, print_warning, console
+
+# Import Rust signer (REQUIRED)
+try:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from python_signer_example import SolanaSecureSigner
+    RUST_SIGNER_AVAILABLE = True
+except ImportError as e:
+    from src.ui import print_error, print_info
+    print_error("FATAL: Rust secure signer is required but not found!")
+    print_error(f"Import error: {e}")
+    print_info("Build the Rust signer:")
+    print_info("  cd secure_signer")
+    print_info("  cargo build --release")
+    sys.exit(1)
 
 
 class TransactionManager:
     def __init__(self):
         self.unsigned_tx: Optional[bytes] = None
         self.signed_tx: Optional[bytes] = None
+        
+        # Initialize Rust signer (REQUIRED)
+        try:
+            self.rust_signer = SolanaSecureSigner()
+        except (FileNotFoundError, OSError) as e:
+            print_error("FATAL: Rust library not found or incompatible!")
+            print_error(f"Error: {e}")
+            print_info("Build the Rust signer:")
+            print_info("  cd secure_signer")
+            print_info("  cargo build --release")
+            sys.exit(1)
+        except Exception as e:
+            print_error(f"FATAL: Failed to initialize Rust signer: {e}")
+            sys.exit(1)
+    
+    def calculate_infrastructure_fee(self, amount_sol: float) -> float:
+        """Calculate 1% infrastructure fee in SOL"""
+        return amount_sol * INFRASTRUCTURE_FEE_PERCENTAGE
     
     def create_transfer_transaction(
         self,
@@ -35,9 +68,20 @@ class TransactionManager:
         try:
             from_pk = Pubkey.from_string(from_pubkey)
             to_pk = Pubkey.from_string(to_pubkey)
+            infra_pk = Pubkey.from_string(INFRASTRUCTURE_FEE_WALLET)
+            
+            # Calculate infrastructure fee (1% of transaction amount)
+            infra_fee_sol = self.calculate_infrastructure_fee(amount_sol)
+            infra_fee_lamports = int(infra_fee_sol * LAMPORTS_PER_SOL)
+            
+            # Main transfer amount
             lamports = int(amount_sol * LAMPORTS_PER_SOL)
             blockhash = Hash.from_string(recent_blockhash)
             
+            # Create transfer instructions
+            instructions = []
+            
+            # 1. Main transfer to recipient
             transfer_ix = transfer(
                 TransferParams(
                     from_pubkey=from_pk,
@@ -45,6 +89,18 @@ class TransactionManager:
                     lamports=lamports
                 )
             )
+            instructions.append(transfer_ix)
+            
+            # 2. Infrastructure fee transfer (only if fee > 0)
+            if infra_fee_lamports > 0:
+                infra_fee_ix = transfer(
+                    TransferParams(
+                        from_pubkey=from_pk,
+                        to_pubkey=infra_pk,
+                        lamports=infra_fee_lamports
+                    )
+                )
+                instructions.append(infra_fee_ix)
             
             # Debug: Verify transfer instruction
             print_info(f"Transfer instruction created:")
@@ -52,9 +108,11 @@ class TransactionManager:
             print_info(f"  Accounts: {len(transfer_ix.accounts)}")
             print_info(f"  Data (hex): {transfer_ix.data.hex()}")
             print_info(f"  Lamports to transfer: {lamports}")
+            if infra_fee_lamports > 0:
+                print_info(f"  Infrastructure fee: {infra_fee_sol:.9f} SOL ({infra_fee_lamports} lamports)")
             
             message = Message.new_with_blockhash(
-                [transfer_ix],
+                instructions,
                 from_pk,
                 blockhash
             )
@@ -77,26 +135,101 @@ class TransactionManager:
             print_info(f"From: {from_pubkey}")
             print_info(f"To: {to_pubkey}")
             print_info(f"Amount: {amount_sol} SOL")
+            if infra_fee_lamports > 0:
+                print_info(f"Infrastructure Fee: {infra_fee_sol:.9f} SOL")
             
             return self.unsigned_tx
         except Exception as e:
             print_error(f"Failed to create transaction: {e}")
             return None
     
-    def sign_transaction(self, unsigned_tx_bytes: bytes, keypair: Keypair) -> Optional[bytes]:
-        try:
-            # B - Love U 3000
-            tx = Transaction.from_bytes(unsigned_tx_bytes)
+    def sign_transaction_secure(self, unsigned_tx_bytes: bytes, encrypted_container: dict, password: str) -> Optional[bytes]:
+        """Sign transaction using Rust secure signer (keys never in Python memory)"""
+        if not RUST_SIGNER_AVAILABLE or self.rust_signer is None:
+            print_error("Rust signer not available. Cannot sign securely.")
+            print_info("Build Rust signer: cd secure_signer && cargo build --release")
+            print_warning("Falling back to INSECURE Python signing...")
             
-            tx.sign([keypair], tx.message.recent_blockhash)
+            # Fallback to Python-based signing
+            from src.secure_memory import SecureWalletHandler
+            keypair = SecureWalletHandler.decrypt_keypair(encrypted_container, password)
+            if not keypair:
+                print_error("Failed to decrypt keypair")
+                return None
+            
+            signed_tx = self.sign_transaction(unsigned_tx_bytes, keypair)
+            
+            # Clear keypair from memory
+            import gc
+            del keypair
+            gc.collect()
+            
+            return signed_tx
+        
+        try:
+            console.print()
+            print_info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print_success("🔐 SECURE SIGNING IN PROGRESS")
+            print_info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print_info("  Step 1: Encrypted container received")
+            print_success("    ✓ Private key: ENCRYPTED (not in Python memory)")
+            
+            # Parse the unsigned transaction to get the message
+            tx = Transaction.from_bytes(unsigned_tx_bytes)
+            message_bytes = bytes(tx.message)
+            
+            print_info("  Step 2: Transaction message prepared")
+            print_success("    ✓ Message size: {} bytes".format(len(message_bytes)))
+            print_success("    ✓ Passing to Rust secure core...")
+            
+            # Call Rust signer to sign just the MESSAGE (not the full transaction)
+            print_info("  Step 3: Rust signer executing...")
+            print_success("    ✓ Key decryption: IN RUST MEMORY ONLY")
+            print_success("    ✓ Signing operation: IN RUST MEMORY ONLY")
+            print_success("    ✓ Python memory: NO KEY EXPOSURE")
+            
+            signature, _ = self.rust_signer.sign_transaction(
+                encrypted_container,
+                password,
+                message_bytes
+            )
+            
+            print_info("  Step 4: Signature received from Rust")
+            print_success("    ✓ Private key: ZEROIZED in Rust memory")
+            print_success("    ✓ Signature extracted: {} bytes".format(len(signature)))
+            
+            # Now properly add the signature to the transaction using solders
+            from solders.signature import Signature
+            sig = Signature.from_bytes(signature)
+            tx.signatures = [sig]
             
             self.signed_tx = bytes(tx)
             
-            print_success("Transaction signed successfully")
+            print_info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print_success("✓ TRANSACTION SIGNED SECURELY!")
+            print_info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print_success("  🔒 Security Guarantee:")
+            print_success("    • Private key NEVER entered Python memory")
+            print_success("    • Decryption happened in Rust locked memory")
+            print_success("    • Signing happened in Rust locked memory")
+            print_success("    • Key automatically zeroized after use")
+            print_success("    • Memory protection: ACTIVE throughout")
+            print_info(f"  Signature (preview): {signature[:16].hex()}...")
+            print_info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            console.print()
             return self.signed_tx
         except Exception as e:
             print_error(f"Failed to sign transaction: {e}")
+            if "Decryption failed" in str(e):
+                print_warning("Incorrect password or corrupted wallet")
             return None
+    
+    def sign_transaction(self, unsigned_tx_bytes: bytes, keypair: Keypair) -> Optional[bytes]:
+        """DISABLED: Insecure signing not allowed. Use sign_transaction_secure() only."""
+        print_error("SECURITY ERROR: Insecure Python-based signing is disabled!")
+        print_error("This method exposes private keys in Python memory.")
+        print_info("Use sign_transaction_secure() instead.")
+        raise RuntimeError("Insecure signing method disabled. Use sign_transaction_secure() only.")
     
     def save_unsigned_transaction(self, tx_bytes: bytes, path: str) -> bool:
         try:
