@@ -430,11 +430,22 @@ def interactive_backup():
         print_error("No wallet found to backup")
         return
 
-    keypair = wallet.load_keypair(str(wallet_path))
-    if not keypair:
+    import gc
+
+    # Load encrypted wallet container
+    container = wallet.load_encrypted_container(str(wallet_path))
+    if not container:
+        print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
         return
 
-    print(f"Wallet: {str(keypair.pubkey())[:16]}...")
+    # Get pubkey for display (without decrypting)
+    pubkey = wallet.get_public_key()
+    if not pubkey:
+        pubkey_path = wallet_path.parent / "pubkey.txt"
+        if pubkey_path.exists():
+            pubkey = pubkey_path.read_text().strip()
+    print(f"Wallet: {(pubkey or 'unknown')[:16]}...")
+
     print("\nBackup Options:")
     print("  1. Create paper wallet (printable HTML)")
     print("  2. Export encrypted backup")
@@ -443,30 +454,59 @@ def interactive_backup():
 
     choice = input("\nSelect option: ").strip()
 
-    if choice == "1":
-        path = backup.create_paper_wallet(keypair, "./backups")
-        if path:
-            print_info(f"Open {path} in your browser to print")
-
-    elif choice == "2":
-        password = input("Enter encryption password: ").strip()
-        if len(password) < 8:
-            print_error("Password must be at least 8 characters")
-            return
-        confirm = input("Confirm password: ").strip()
-        if password != confirm:
-            print_error("Passwords don't match")
-            return
-
-        backup.backup_to_file(keypair, "./backups/wallet_backup.json", password)
-
-    elif choice == "3":
-        confirm = input("WARNING: Plaintext backup is NOT SECURE. Type 'INSECURE' to confirm: ")
-        if confirm == "INSECURE":
-            backup.backup_to_file(keypair, "./backups/wallet_plaintext.json")
-
-    else:
+    if choice not in ("1", "2", "3"):
         print("Cancelled")
+        return
+
+    # Decrypt keypair via Rust signer (needed for all backup operations)
+    from getpass import getpass
+    wallet_password = getpass("Enter wallet password: ")
+    if not wallet_password:
+        print_error("Password required")
+        return
+
+    keypair = None
+    try:
+        if wallet.rust_signer:
+            normalized = wallet._normalize_container_format(container)
+            private_key = wallet.rust_signer.decrypt_private_key(
+                normalized, wallet_password
+            )
+            if not private_key or len(private_key) != 32:
+                print_error("Invalid password or corrupted wallet")
+                return
+            from solders.keypair import Keypair
+            keypair = Keypair.from_bytes(bytes(private_key))
+            del private_key
+        else:
+            print_error("Rust signer required for wallet decryption")
+            return
+
+        if choice == "1":
+            path = backup.create_paper_wallet(keypair, "./backups")
+            if path:
+                print_info(f"Open {path} in your browser to print")
+
+        elif choice == "2":
+            password = input("Enter encryption password for backup: ").strip()
+            if len(password) < 8:
+                print_error("Password must be at least 8 characters")
+                return
+            confirm = input("Confirm password: ").strip()
+            if password != confirm:
+                print_error("Passwords don't match")
+                return
+
+            backup.backup_to_file(keypair, "./backups/wallet_backup.json", password)
+
+        elif choice == "3":
+            confirm = input("WARNING: Plaintext backup is NOT SECURE. Type 'INSECURE' to confirm: ")
+            if confirm == "INSECURE":
+                backup.backup_to_file(keypair, "./backups/wallet_plaintext.json")
+    finally:
+        if keypair is not None:
+            del keypair
+        gc.collect()
 
 
 if __name__ == "__main__":
