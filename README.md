@@ -291,13 +291,13 @@ python main.py
 
 ## 📚 Documentation
 
-- **[Demo Walkthrough](DEMO_WALKTHROUGH.md)** - Complete product demonstration
 - **[TUI Guide](TUI_GUIDE.md)** - Terminal UI documentation
 - **[Deployed Programs](DEPLOYED_PROGRAMS.md)** - DAO contracts on devnet
 - **[MCP Integration](MCP_INTEGRATION.md)** - Hot+cold wallet architecture
-- **[Hackathon Strategy](HACKATHON_STRATEGY.md)** - Competition analysis
-- **[Submission Checklist](SUBMISSION_CHECKLIST.md)** - Final preparation
+- **[FairScore Integration](docs/FAIRSCORE_INTEGRATION.md)** - Reputation gating documentation
 - **[Technical Whitepaper](whitepaper.md)** - Deep dive
+- **[Privacy Policy](PRIVACY.md)** - Data practices
+- **[Terms of Service](TERMS.md)** - Usage terms
 
 ---
 
@@ -485,7 +485,7 @@ We welcome contributions! Here's how:
 | **Demo Page** | [Live Demo Site](https://expertvagabond.github.io/coldstar-colosseum/) |
 | **Screenshots** | [TUI Gallery](./screenshots/index.html) |
 | **FairScore Docs** | [Integration Guide](docs/FAIRSCORE_INTEGRATION.md) |
-| **Documentation** | [/docs](./DEMO_WALKTHROUGH.md) |
+| **Whitepaper** | [Technical Deep Dive](whitepaper.md) |
 | **Forum Posts** | [Coldstar Introduction](https://colosseum.com/agent-hackathon/) |
 | **DAO Programs** | [Devnet Explorer](https://explorer.solana.com/?cluster=devnet) |
 | **Privacy Policy** | [PRIVACY.md](PRIVACY.md) |
