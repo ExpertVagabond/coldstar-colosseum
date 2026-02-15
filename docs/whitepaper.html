@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Coldstar Technical Whitepaper — Air-Gapped Solana Cold Wallet. Architecture, security model, cryptographic operations, and threat analysis.">
+    <meta property="og:title" content="Coldstar Whitepaper — Air-Gapped Solana Cold Wallet">
+    <meta property="og:description" content="Technical whitepaper covering architecture, security model, and cryptographic operations for the Coldstar air-gapped Solana wallet.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://coldstar.dev/colosseum/whitepaper.html">
+    <title>Whitepaper — Coldstar | Air-Gapped Solana Cold Wallet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: #000;
+            color: #ccc;
+            line-height: 1.8;
+        }
+
+        /* Nav bar */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #2a2a2a;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        nav a { color: #58d1eb; text-decoration: none; font-weight: 600; }
+        nav a:hover { color: #98e024; }
+        .nav-brand {
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #58d1eb, #98e024);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a { font-size: 0.95em; }
+
+        /* Whitepaper content */
+        .wp-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 60px 24px 100px;
+        }
+
+        .wp-wrap h1 {
+            font-size: 2.4em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #58d1eb, #98e024);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .wp-wrap h2 {
+            font-size: 1.8em;
+            color: #fff;
+            margin: 48px 0 16px;
+            padding-top: 16px;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        .wp-wrap h3 {
+            font-size: 1.3em;
+            color: #58d1eb;
+            margin: 32px 0 12px;
+        }
+
+        .wp-wrap h4 {
+            font-size: 1.1em;
+            color: #98e024;
+            margin: 24px 0 8px;
+        }
+
+        .wp-wrap p {
+            margin-bottom: 12px;
+            color: #bbb;
+        }
+
+        .wp-wrap a {
+            color: #58d1eb;
+            text-decoration: none;
+        }
+        .wp-wrap a:hover { color: #98e024; text-decoration: underline; }
+
+        .wp-wrap strong { color: #eee; }
+
+        .wp-wrap hr {
+            border: none;
+            border-top: 1px solid #2a2a2a;
+            margin: 32px 0;
+        }
+
+        .wp-wrap ul, .wp-wrap ol {
+            margin: 12px 0 12px 24px;
+            color: #bbb;
+        }
+        .wp-wrap li {
+            margin-bottom: 6px;
+        }
+        .wp-wrap li::marker { color: #58d1eb; }
+
+        .wp-wrap pre {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 16px 0;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+        .wp-wrap pre code {
+            color: #98e024;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            background: none;
+            padding: 0;
+            border: none;
+        }
+
+        .wp-wrap code {
+            background: #1a1a1a;
+            color: #58d1eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        .wp-wrap .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        .wp-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .wp-wrap th {
+            padding: 14px 16px;
+            text-align: left;
+            color: #58d1eb;
+            font-weight: 600;
+            border-bottom: 2px solid #2a2a2a;
+            background: #111;
+        }
+        .wp-wrap td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #2a2a2a;
+            color: #ccc;
+        }
+        .wp-wrap tr:hover { background: #0a0a0a; }
+        .wp-wrap .yes { color: #98e024; }
+        .wp-wrap .no { color: #fd971f; }
+
+        /* PDF download banner */
+        .pdf-banner {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin: 24px 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .pdf-banner p { margin: 0; color: #9e9e9e; }
+        .pdf-banner .btn {
+            padding: 10px 24px;
+            font-size: 0.95em;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none;
+            background: #58d1eb;
+            color: #000;
+            transition: all 0.3s;
+            border: none;
+        }
+        .pdf-banner .btn:hover {
+            background: #98e024;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: #0a0a0a;
+            border-top: 1px solid #2a2a2a;
+        }
+        .footer a { color: #58d1eb; text-decoration: none; }
+        .footer a:hover { color: #98e024; }
+        .footer p { color: #666; margin-top: 10px; }
+
+        @media (max-width: 768px) {
+            .wp-wrap { padding: 40px 16px 80px; }
+            .wp-wrap h1 { font-size: 1.6em; }
+            .wp-wrap h2 { font-size: 1.4em; }
+            .nav-links { gap: 16px; }
+            .pdf-banner { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="index.html" class="nav-brand">Coldstar</a>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="whitepaper.html" style="color:#98e024;">Whitepaper</a>
+        <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a>
+    </div>
+</nav>
+
+<div class="wp-wrap">
+    <div class="pdf-banner">
+        <p>Technical Whitepaper &mdash; v1.0.0 &bull; 1,079 lines &bull; 9 sections</p>
+        <a href="https://github.com/ExpertVagabond/coldstar-colosseum/blob/main/whitepaper.md" class="btn" target="_blank">View on GitHub</a>
+    </div>
+
+<h1>COLDSTAR: A Python-Based Air-Gapped Cold Wallet Tool for Solana</h1>
+
+<p><strong>Technical Whitepaper - Current Implementation</strong></p>
+
+<hr>
+
+<p><strong>Version:</strong> 1.0.0</p>
+<p><strong>Author:</strong> </Syrem></p>
+<p><strong>Organization:</strong> ChainLabs Technologies</p>
+<p><strong>Date:</strong> December 2025</p>
+<p><strong>License:</strong> MIT License (Open Source)</p>
+
+<hr>
+
+<h2 id="abstract">Abstract</h2>
+
+<p>Coldstar is an open-source, command-line cold wallet management tool for the Solana blockchain that prioritizes security through air-gapped transaction signing. This whitepaper describes the current implementation—a Python-based CLI application that enables users to create bootable USB cold wallets, generate Ed25519 keypairs offline, and sign transactions without network exposure. By leveraging Alpine Linux as a minimal operating system and industry-standard cryptographic libraries, Coldstar provides enterprise-grade security with full code transparency and reproducibility.</p>
+
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>Complete air-gap isolation during private key generation and transaction signing</li>
+<li>Minimal Alpine Linux (~50MB) bootable USB creation</li>
+<li>Python-based terminal interface with rich UI components</li>
+<li>Ed25519 cryptographic operations using audited libraries</li>
+<li>Offline transaction signing with online broadcasting separation</li>
+<li>Cross-platform support (Windows, Linux, macOS)</li>
+</ul>
+
+<hr>
+
+<h2 id="table-of-contents">Table of Contents</h2>
+
+<p style='margin-left:20px'><a href="#1-introduction">Introduction</a></p>
+<p style='margin-left:20px'><a href="#2-system-architecture">System Architecture</a></p>
+<p style='margin-left:20px'><a href="#3-implementation-details">Implementation Details</a></p>
+<p style='margin-left:20px'><a href="#4-security-model">Security Model</a></p>
+<p style='margin-left:20px'><a href="#5-user-guide">User Guide</a></p>
+<p style='margin-left:20px'><a href="#6-cryptographic-operations">Cryptographic Operations</a></p>
+<p style='margin-left:20px'><a href="#7-threat-analysis">Threat Analysis</a></p>
+<p style='margin-left:20px'><a href="#8-performance--scalability">Performance & Scalability</a></p>
+<p style='margin-left:20px'><a href="#9-conclusion">Conclusion</a></p>
+
+<hr>
+
+<h2 id="1-introduction">1. Introduction</h2>
+
+<h3>1.1 Motivation</h3>
+
+<p>The security of cryptocurrency holdings fundamentally depends on private key protection. Despite advances in wallet technology, users face a critical dilemma: hot wallets (online) offer convenience but expose keys to network attacks, while cold storage (offline) provides security at the cost of usability. Hardware wallets attempt to bridge this gap but introduce vendor dependencies, closed-source firmware risks, and cost barriers.</p>
+
+<h3>1.2 Coldstar's Solution</h3>
+
+<p>Coldstar addresses these challenges through a software-defined cold wallet approach:</p>
+
+<ul>
+<li><strong>No Proprietary Hardware:</strong> Works with commodity USB drives ($5-10)</li>
+<li><strong>Full Transparency:</strong> 100% open-source Python codebase</li>
+<li><strong>Air-Gap Architecture:</strong> Private keys never touch internet-connected systems</li>
+<li><strong>Minimal OS:</strong> Alpine Linux reduces attack surface to ~50MB</li>
+<li><strong>Developer-Friendly:</strong> Command-line interface for power users and automation</li>
+</ul>
+
+<h3>1.3 Scope of This Document</h3>
+
+<p>This whitepaper documents the <strong>current implementation</strong> (v1.0) of Coldstar—a Python CLI tool. It covers:</p>
+<ul>
+<li>Architecture and component design</li>
+<li>Cryptographic implementation details</li>
+<li>Security model and threat mitigation</li>
+<li>Operational procedures and workflows</li>
+<li>Performance characteristics</li>
+</ul>
+
+<p>This document does NOT cover future enhancements or planned features. It represents a snapshot of the production-ready system as deployed.</p>
+
+<hr>
+
+<h2 id="2-system-architecture">2. System Architecture</h2>
+
+<h3>2.1 High-Level Overview</h3>
+
+<p>Coldstar employs a three-component architecture:</p>
+
+<pre><code class="lang-">
+┌────────────────────────────────────────────────────────────────┐
+│                     HOST SYSTEM (Online)                       │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              Coldstar CLI Application                     │  │
+│  │  • Python 3.11+                                           │  │
+│  │  • Rich terminal UI                                       │  │
+│  │  • USB device management                                  │  │
+│  │  • Solana RPC communication                               │  │
+│  │  • Transaction broadcasting                               │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+                              │
+                              │ USB Transfer (manual)
+                              ▼
+┌────────────────────────────────────────────────────────────────┐
+│                  AIR-GAPPED SYSTEM (Offline)                   │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              Bootable USB Cold Wallet                     │  │
+│  │  • Alpine Linux v3.19 (minimal rootfs)                    │  │
+│  │  • Keypair stored in /wallet/keypair.json                 │  │
+│  │  • Transaction signing scripts                            │  │
+│  │  • Network drivers blacklisted                            │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+                              │
+                              │ File-based transfer (manual)
+                              ▼
+┌────────────────────────────────────────────────────────────────┐
+│                    SOLANA NETWORK (Public)                     │
+│  • Mainnet / Devnet / Testnet                                 │
+│  • RPC endpoints for balance queries                          │
+│  • Transaction broadcasting                                    │
+└────────────────────────────────────────────────────────────────┘
+</code></pre>
+
+<h3>2.2 Component Breakdown</h3>
+
+<h4>2.2.1 CLI Application (Python)</h4>
+
+<p>The command-line interface provides the following functionality:</p>
+
+<p><strong>Core Modules:</strong></p>
+
+<div class="table-wrap"><table><thead><tr>
+<th>Module</th>
+<th>Responsibility</th>
+<th>Lines of Code</th>
+</tr></thead><tbody>
+<tr>
+<td>`main.py`</td>
+<td>Application entry point, menu orchestration</td>
+<td>~980</td>
+</tr>
+<tr>
+<td>`src/wallet.py`</td>
+<td>Keypair generation, storage, loading</td>
+<td>~140</td>
+</tr>
+<tr>
+<td>`src/transaction.py`</td>
+<td>Transaction creation, signing, serialization</td>
+<td>~210</td>
+</tr>
+<tr>
+<td>`src/network.py`</td>
+<td>Solana RPC client, balance queries</td>
+<td>~150</td>
+</tr>
+<tr>
+<td>`src/usb.py`</td>
+<td>USB device detection, mounting</td>
+<td>~200</td>
+</tr>
+<tr>
+<td>`src/iso_builder.py`</td>
+<td>Alpine Linux ISO creation</td>
+<td>~250</td>
+</tr>
+<tr>
+<td>`src/ui.py`</td>
+<td>Terminal UI components (Rich library)</td>
+<td>~240</td>
+</tr>
+<tr>
+<td>`config.py`</td>
+<td>Configuration constants</td>
+<td>~50</td>
+</tr>
+</tbody></table></div>
+
+<p><strong>Total: ~2,220 lines of Python code</strong></p>
+
+<p><strong>Dependencies:</strong></p>
+<ul>
+<li><code>rich</code> - Terminal UI rendering</li>
+<li><code>questionary</code> - Interactive prompts</li>
+<li><code>solana</code> - Solana Python SDK</li>
+<li><code>solders</code> - Rust-based Solana types (faster, safer)</li>
+<li><code>pynacl</code> - Ed25519 cryptographic operations</li>
+<li><code>httpx</code> - Async HTTP client for RPC</li>
+<li><code>base58</code> - Address encoding</li>
+</ul>
+
+<h4>2.2.2 USB Cold Wallet Device</h4>
+
+<p><strong>Operating System:</strong> Alpine Linux v3.19 x86_64</p>
+
+<p><strong>Filesystem Layout:</strong></p>
+<pre><code class="lang-">
+/
+├── wallet/                  # Keypair storage
+│   ├── keypair.json         # Ed25519 private key (64 bytes as JSON array)
+│   └── pubkey.txt           # Base58-encoded public key
+├── inbox/                   # Unsigned transactions (copied from host)
+├── outbox/                  # Signed transactions (copied to host)
+├── scripts/
+│   └── sign_tx.sh           # Transaction signing helper script
+├── boot/                    # GRUB bootloader
+├── etc/
+│   ├── network.blacklist    # Disabled kernel modules
+│   └── fstab                # Filesystem mounting rules
+└── [Alpine Linux minimal rootfs]
+</code></pre>
+
+<p><strong>Size:</strong> ~50MB (vs. ~4GB for Ubuntu Server)</p>
+
+<p><strong>Security Customizations:</strong></p>
+<ul>
+<li>Network kernel modules blacklisted (<code>e1000</code>, <code>iwlwifi</code>, <code>r8169</code>, etc.)</li>
+<li>Read-only root filesystem</li>
+<li>No package manager accessible</li>
+<li>Minimal process footprint</li>
+</ul>
+
+<h4>2.2.3 Data Flow</h4>
+
+<p><strong>Wallet Creation Flow:</strong></p>
+<p style='margin-left:20px'>CLI detects USB device → Confirms with user</p>
+<p style='margin-left:20px'>CLI downloads Alpine rootfs → Validates checksum</p>
+<p style='margin-left:20px'>CLI creates custom ISO with wallet structure</p>
+<p style='margin-left:20px'>User flashes ISO to USB using external tool (Rufus, dd, balenaEtcher)</p>
+<p style='margin-left:20px'>User boots air-gapped PC from USB</p>
+<p style='margin-left:20px'>Boot script generates Ed25519 keypair → Stores in <code>/wallet/</code></p>
+<p style='margin-left:20px'>Public key displayed on screen → User records it</p>
+
+<p><strong>Transaction Signing Flow:</strong></p>
+<p style='margin-left:20px'>User creates transaction on online host (CLI)</p>
+<p style='margin-left:20px'>CLI builds unsigned transaction → Saves to file</p>
+<p style='margin-left:20px'>User manually copies file to USB <code>/inbox/</code> (physical transfer)</p>
+<p style='margin-left:20px'>User boots USB on air-gapped system</p>
+<p style='margin-left:20px'>User runs <code>sign_tx.sh</code> script → Signs with private key</p>
+<p style='margin-left:20px'>Signed transaction written to <code>/outbox/</code></p>
+<p style='margin-left:20px'>User copies signed TX back to online host</p>
+<p style='margin-left:20px'>CLI broadcasts signed transaction → Solana network</p>
+
+<hr>
+
+<h2 id="3-implementation-details">3. Implementation Details</h2>
+
+<h3>3.1 Keypair Management (`src/wallet.py`)</h3>
+
+<p><strong>Generation:</strong></p>
+<pre><code class="lang-python">
+from solders.keypair import Keypair
+
+class WalletManager:
+    def generate_keypair(self) -&gt; Tuple[Keypair, str]:
+        """Generate Ed25519 keypair using OS entropy."""
+        self.keypair = Keypair()  # Uses /dev/urandom on Linux/macOS
+        public_key = str(self.keypair.pubkey())
+        return self.keypair, public_key
+</code></pre>
+
+<p><strong>Storage Format:</strong></p>
+<pre><code class="lang-json">
+[
+  123, 45, 67, 89, 12, 34, ...  // 64-byte array
+  // Bytes 0-31: Ed25519 seed (private key)
+  // Bytes 32-63: Public key (derived)
+]
+</code></pre>
+
+<p><strong>Security Measures:</strong></p>
+<ul>
+<li>File permissions: <code>chmod 600</code> (owner read/write only)</li>
+<li>Keypair never logged or transmitted over network</li>
+<li>Optional: User can encrypt keypair file with GPG</li>
+</ul>
+
+<h3>3.2 Transaction Operations (`src/transaction.py`)</h3>
+
+<p><strong>Creating Unsigned Transactions:</strong></p>
+<pre><code class="lang-python">
+def create_transfer_transaction(
+    self,
+    from_pubkey: str,
+    to_pubkey: str,
+    amount_sol: float,
+    recent_blockhash: str
+) -&gt; Optional[bytes]:
+    """Build unsigned SOL transfer transaction."""
+    from_pk = Pubkey.from_string(from_pubkey)
+    to_pk = Pubkey.from_string(to_pubkey)
+    lamports = int(amount_sol * LAMPORTS_PER_SOL)
+    blockhash = Hash.from_string(recent_blockhash)
+    
+    # Create transfer instruction
+    transfer_ix = transfer(TransferParams(
+        from_pubkey=from_pk,
+        to_pubkey=to_pk,
+        lamports=lamports
+    ))
+    
+    # Build message and transaction
+    message = Message.new_with_blockhash([transfer_ix], from_pk, blockhash)
+    tx = Transaction.new_unsigned(message)
+    
+    self.unsigned_tx = bytes(tx)
+    return self.unsigned_tx
+</code></pre>
+
+<p><strong>Signing Transactions:</strong></p>
+<pre><code class="lang-python">
+def sign_transaction(self, keypair: Keypair) -&gt; Optional[bytes]:
+    """Sign transaction with Ed25519 keypair."""
+    if not self.unsigned_tx:
+        return None
+    
+    # Deserialize unsigned transaction
+    tx = Transaction.from_bytes(self.unsigned_tx)
+    
+    # Sign message
+    tx.sign([keypair], tx.message.recent_blockhash)
+    
+    self.signed_tx = bytes(tx)
+    return self.signed_tx
+</code></pre>
+
+<h3>3.3 Network Communication (`src/network.py`)</h3>
+
+<p><strong>RPC Client:</strong></p>
+<pre><code class="lang-python">
+from solana.rpc.async_api import AsyncClient
+from solana.rpc.commitment import Confirmed
+
+class SolanaNetwork:
+    def __init__(self, rpc_url: str = SOLANA_RPC_URL):
+        self.rpc_url = rpc_url
+        self.client = AsyncClient(rpc_url, commitment=Confirmed)
+    
+    async def get_balance(self, public_key: str) -&gt; Optional[float]:
+        """Query wallet balance in SOL."""
+        pubkey = Pubkey.from_string(public_key)
+        response = await self.client.get_balance(pubkey)
+        
+        if response.value is not None:
+            return response.value / LAMPORTS_PER_SOL
+        return None
+    
+    async def broadcast_transaction(self, signed_tx: bytes) -&gt; Optional[str]:
+        """Submit signed transaction to network."""
+        response = await self.client.send_raw_transaction(signed_tx)
+        return str(response.value) if response.value else None
+</code></pre>
+
+<p><strong>Supported Networks:</strong></p>
+<ul>
+<li>Mainnet-Beta: <code>https://api.mainnet-beta.solana.com</code></li>
+<li>Devnet: <code>https://api.devnet.solana.com</code></li>
+<li>Testnet: <code>https://api.testnet.solana.com</code></li>
+<li>Custom RPC: Configurable in <code>config.py</code></li>
+</ul>
+
+<h3>3.4 USB Device Management (`src/usb.py`)</h3>
+
+<p><strong>Detection (Windows):</strong></p>
+<pre><code class="lang-python">
+def detect_usb_devices_windows(self) -&gt; List[Dict]:
+    """Use WMIC to detect USB drives."""
+    cmd = 'wmic diskdrive where "InterfaceType=\'USB\'" get Caption,DeviceID,Size'
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    
+    devices = []
+    for line in result.stdout.splitlines()[1:]:
+        if line.strip():
+            parts = line.split()
+            devices.append({
+                'device': parts[-2],
+                'model': ' '.join(parts[:-2]),
+                'size': self._format_size(int(parts[-1]))
+            })
+    return devices
+</code></pre>
+
+<p><strong>Detection (Linux):</strong></p>
+<pre><code class="lang-python">
+def detect_usb_devices_linux(self) -&gt; List[Dict]:
+    """Use lsblk to detect USB drives."""
+    cmd = ['lsblk', '-d', '-o', 'NAME,SIZE,TRAN,MODEL', '-J']
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    devices = []
+    data = json.loads(result.stdout)
+    for device in data.get('blockdevices', []):
+        if device.get('tran') == 'usb':
+            devices.append({
+                'device': f"/dev/{device['name']}",
+                'size': device['size'],
+                'model': device.get('model', 'Unknown')
+            })
+    return devices
+</code></pre>
+
+<h3>3.5 ISO Building (`src/iso_builder.py`)</h3>
+
+<p><strong>Alpine Linux Acquisition:</strong></p>
+<pre><code class="lang-python">
+def download_alpine_rootfs(self):
+    """Download and verify Alpine Linux minimal rootfs."""
+    url = ALPINE_MINIROOTFS_URL
+    output_file = self.work_dir / "alpine-minirootfs.tar.gz"
+    
+    # Download with progress bar
+    with httpx.stream("GET", url) as response:
+        total = int(response.headers.get("content-length", 0))
+        with open(output_file, "wb") as f:
+            for chunk in response.iter_bytes():
+                f.write(chunk)
+    
+    # Verify checksum (if available)
+    self._verify_checksum(output_file)
+    return output_file
+</code></pre>
+
+<p><strong>Customization Process:</strong></p>
+<pre><code class="lang-python">
+def create_cold_wallet_iso(self, output_path: str):
+    """Build bootable ISO with cold wallet structure."""
+    # 1. Extract Alpine rootfs
+    self._extract_rootfs()
+    
+    # 2. Create wallet directory structure
+    create_wallet_structure(self.rootfs_dir)
+    
+    # 3. Blacklist network modules
+    self._blacklist_network_drivers()
+    
+    # 4. Add signing scripts
+    self._install_signing_scripts()
+    
+    # 5. Install Solana CLI tools
+    self._install_solana_cli()
+    
+    # 6. Create bootloader
+    self._create_grub_bootloader()
+    
+    # 7. Generate ISO image
+    self._generate_iso(output_path)
+</code></pre>
+
+<h3>3.6 User Interface (`src/ui.py`)</h3>
+
+<p><strong>Terminal Rendering:</strong></p>
+<pre><code class="lang-python">
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+def print_wallet_info(public_key: str, balance: Optional[float] = None):
+    """Display wallet information in formatted panel."""
+    table = Table(box=DOUBLE, show_header=False, border_style="cyan")
+    table.add_column("Field", style="dim")
+    table.add_column("Value", style="green bold")
+    
+    table.add_row("Public Key", public_key)
+    if balance is not None:
+        table.add_row("Balance", f"{balance:.9f} SOL")
+    
+    panel = Panel(
+        table,
+        title="[bold cyan]WALLET INFORMATION[/bold cyan]",
+        border_style="cyan"
+    )
+    console.print(panel)
+</code></pre>
+
+<p><strong>Interactive Menus:</strong></p>
+<pre><code class="lang-python">
+import questionary
+
+def select_menu_option(options: List[str], message: str) -&gt; str:
+    """Display interactive selection menu."""
+    return questionary.select(
+        message,
+        choices=options,
+        style=CUSTOM_STYLE
+    ).ask()
+</code></pre>
+
+<hr>
+
+<h2 id="4-security-model">4. Security Model</h2>
+
+<h3>4.1 Threat Model</h3>
+
+<p><strong>Assumptions:</strong></p>
+<p style='margin-left:20px'><strong>Host PC is compromised:</strong> Assume malware, keyloggers, network sniffers</p>
+<p style='margin-left:20px'><strong>Network is adversarial:</strong> Assume MITM attacks, DNS hijacking</p>
+<p style='margin-left:20px'><strong>USB device is physically secure:</strong> User maintains custody</p>
+<p style='margin-left:20px'><strong>Air-gapped PC is clean:</strong> No network connectivity, trusted hardware</p>
+
+<p><strong>Trust Boundaries:</strong></p>
+<ul>
+<li><strong>Trusted Zone:</strong> Air-gapped USB device, private keys</li>
+<li><strong>Untrusted Zone:</strong> Online host PC, network infrastructure</li>
+<li><strong>Transfer Mechanism:</strong> Manual file copying (physical air-gap)</li>
+</ul>
+
+<h3>4.2 Security Principles</h3>
+
+<h4>Principle 1: Air-Gap Isolation</h4>
+
+<p><strong>Implementation:</strong></p>
+<ul>
+<li>Private keys generated ONLY on air-gapped device</li>
+<li>No network drivers loaded on Alpine Linux</li>
+<li>Physical separation between online and offline systems</li>
+<li>Manual file transfer prevents automated exfiltration</li>
+</ul>
+
+<p><strong>Threat Mitigation:</strong></p>
+<ul>
+<li>✅ Remote key theft impossible (no network)</li>
+<li>✅ Malware cannot auto-exfiltrate keys</li>
+<li>✅ Zero-day network exploits ineffective</li>
+</ul>
+
+<h4>Principle 2: Minimal Attack Surface</h4>
+
+<p><strong>Implementation:</strong></p>
+<ul>
+<li>Alpine Linux: ~50MB (vs. ~4GB Ubuntu)</li>
+<li>Only essential packages included</li>
+<li>No SSH daemon, no package manager, no unnecessary services</li>
+<li>Read-only filesystem prevents tampering</li>
+</ul>
+
+<p><strong>Threat Mitigation:</strong></p>
+<ul>
+<li>✅ Fewer vulnerabilities (smaller codebase)</li>
+<li>✅ Limited post-exploitation options</li>
+<li>✅ Reduced zero-day exposure</li>
+</ul>
+
+<h4>Principle 3: Code Transparency</h4>
+
+<p><strong>Implementation:</strong></p>
+<ul>
+<li>100% open-source Python code (MIT License)</li>
+<li>No obfuscated binaries or compiled executables</li>
+<li>Reproducible ISO builds (checksums published)</li>
+<li>Community audit capability</li>
+</ul>
+
+<p><strong>Threat Mitigation:</strong></p>
+<ul>
+<li>✅ Supply chain backdoors detectable</li>
+<li>✅ Hidden vulnerabilities discoverable</li>
+<li>✅ Independent verification possible</li>
+</ul>
+
+<h4>Principle 4: Cryptographic Best Practices</h4>
+
+<p><strong>Implementation:</strong></p>
+<ul>
+<li>Ed25519 signatures (industry standard)</li>
+<li>NaCl library (audited, constant-time)</li>
+<li>OS entropy source (<code>/dev/urandom</code>)</li>
+<li>Deterministic signing (RFC 8032)</li>
+</ul>
+
+<p><strong>Threat Mitigation:</strong></p>
+<ul>
+<li>✅ Timing attacks prevented</li>
+<li>✅ Weak RNG avoided</li>
+<li>✅ Signature forgery infeasible (2^128 security)</li>
+</ul>
+
+<h3>4.3 Attack Vectors & Mitigations</h3>
+
+<div class="table-wrap"><table><thead><tr>
+<th>Attack</th>
+<th>Likelihood</th>
+<th>Impact</th>
+<th>Mitigation</th>
+<th>Effectiveness</th>
+</tr></thead><tbody>
+<tr>
+<td>**Malware on Host PC**</td>
+<td>High</td>
+<td>Critical</td>
+<td>Keys never on host; only signed TXs transferred</td>
+<td class="yes">✅ Very High</td>
+</tr>
+<tr>
+<td>**Compromised Alpine ISO**</td>
+<td>Very Low</td>
+<td>Critical</td>
+<td>Checksum verification; reproducible builds</td>
+<td class="yes">✅ High</td>
+</tr>
+<tr>
+<td>**Evil Maid (USB tampering)**</td>
+<td>Low</td>
+<td>High</td>
+<td>Tamper-evident seals; boot verification</td>
+<td>⚠️ Medium</td>
+</tr>
+<tr>
+<td>**Side-Channel (timing)**</td>
+<td>Very Low</td>
+<td>Medium</td>
+<td>Constant-time crypto (NaCl)</td>
+<td class="yes">✅ High</td>
+</tr>
+<tr>
+<td>**Physical USB Theft**</td>
+<td>Low</td>
+<td>Critical</td>
+<td>Backup USB in separate location</td>
+<td>⚠️ Medium</td>
+</tr>
+<tr>
+<td>**Transaction Substitution**</td>
+<td>Medium</td>
+<td>High</td>
+<td>User verifies recipient on air-gapped screen</td>
+<td class="yes">✅ High</td>
+</tr>
+<tr>
+<td>**Dependency Supply Chain**</td>
+<td>Low</td>
+<td>High</td>
+<td>Pin package versions; verify hashes</td>
+<td class="yes">✅ Medium</td>
+</tr>
+</tbody></table></div>
+
+<h3>4.4 Operational Security Recommendations</h3>
+
+<p><strong>Best Practices:</strong></p>
+<p style='margin-left:20px'><strong>Generate keys on truly air-gapped PC</strong> - Never connected to internet</p>
+<p style='margin-left:20px'><strong>Verify Alpine ISO checksum</strong> - Compare against published SHA-256</p>
+<p style='margin-left:20px'><strong>Use dedicated USB drive</strong> - Don't reuse for other purposes</p>
+<p style='margin-left:20px'><strong>Create backup USB</strong> - Store in separate physical location</p>
+<p style='margin-left:20px'><strong>Verify transaction details</strong> - Check recipient address on air-gapped display</p>
+<p style='margin-left:20px'><strong>Keep Python environment isolated</strong> - Use virtual environment for CLI</p>
+<p style='margin-left:20px'><strong>Update dependencies carefully</strong> - Pin versions, audit changes</p>
+
+<hr>
+
+<h2 id="5-user-guide">5. User Guide</h2>
+
+<h3>5.1 Installation</h3>
+
+<p><strong>System Requirements:</strong></p>
+<ul>
+<li>Python 3.11 or higher</li>
+<li>Windows 10+, macOS 11+, or Linux (kernel 5.0+)</li>
+<li>4GB+ USB drive for cold wallet</li>
+<li>Administrator/root privileges (for USB operations)</li>
+</ul>
+
+<p><strong>Step 1: Install Python Dependencies</strong></p>
+<pre><code class="lang-bash">
+pip install rich questionary solana solders pynacl httpx aiofiles base58
+</code></pre>
+
+<p><strong>Step 2: Clone Repository</strong></p>
+<pre><code class="lang-bash">
+git clone https://github.com/ChainLabs-Technologies/coldstar.git
+cd coldstar
+</code></pre>
+
+<p><strong>Step 3: Verify Installation</strong></p>
+<pre><code class="lang-bash">
+python main.py
+</code></pre>
+
+<h3>5.2 Creating a Cold Wallet USB</h3>
+
+<p><strong>Workflow:</strong></p>
+
+<p style='margin-left:20px'><strong>Launch CLI:</strong></p>
+<pre><code class="lang-bash">
+   python main.py
+</code></pre>
+
+<p style='margin-left:20px'><strong>Select "Flash Cold Wallet OS to USB"</strong></p>
+<ul>
+<li>CLI will download Alpine Linux rootfs (~50MB)</li>
+<li>Customize filesystem with wallet structure</li>
+<li>Generate bootable ISO</li>
+</ul>
+
+<p style='margin-left:20px'><strong>Flash ISO to USB:</strong></p>
+<ul>
+<li><strong>Windows:</strong> Use Rufus or balenaEtcher</li>
+<li><strong>macOS:</strong> Use balenaEtcher or <code>dd</code></li>
+<li><strong>Linux:</strong> Use <code>dd</code> command:</li>
+<pre><code class="lang-bash">
+     sudo dd if=output/solana-cold-wallet.iso of=/dev/sdX bs=4M status=progress
+     sudo sync
+</code></pre>
+</ul>
+
+<p style='margin-left:20px'><strong>First Boot (Air-Gapped):</strong></p>
+<ul>
+<li>Boot dedicated PC from USB</li>
+<li>Alpine Linux loads automatically</li>
+<li>Keypair generated on first boot</li>
+<li>Public key displayed on screen → <strong>WRITE THIS DOWN</strong></li>
+</ul>
+
+<h3>5.3 Creating and Signing Transactions</h3>
+
+<p><strong>Transaction Flow:</strong></p>
+
+<p><strong>Step 1: Create Unsigned Transaction (Online)</strong></p>
+<pre><code class="lang-bash">
+python main.py
+# Select: "Create Unsigned Transaction"
+# Enter recipient address: 5hP8g7...
+# Enter amount: 1.5 SOL
+# → Unsigned TX saved to file
+</code></pre>
+
+<p><strong>Step 2: Transfer to USB (Manual)</strong></p>
+<pre><code class="lang-bash">
+# Copy unsigned transaction file to USB /inbox/
+cp unsigned_tx.bin /media/usb/inbox/
+</code></pre>
+
+<p><strong>Step 3: Sign Transaction (Air-Gapped)</strong></p>
+<pre><code class="lang-bash">
+# Boot USB on air-gapped PC
+# Run signing script
+cd /wallet
+./sign_tx.sh /inbox/unsigned_tx.bin
+
+# → Signed TX saved to /outbox/signed_tx.bin
+# → Verify recipient address on screen before confirming
+</code></pre>
+
+<p><strong>Step 4: Transfer Back to Host (Manual)</strong></p>
+<pre><code class="lang-bash">
+# Copy signed transaction from USB to host
+cp /media/usb/outbox/signed_tx.bin ~/signed_tx.bin
+</code></pre>
+
+<p><strong>Step 5: Broadcast Transaction (Online)</strong></p>
+<pre><code class="lang-bash">
+python main.py
+# Select: "Broadcast Signed Transaction"
+# → TX submitted to Solana network
+# → Transaction signature displayed
+</code></pre>
+
+<h3>5.4 Checking Wallet Balance</h3>
+
+<p><strong>Method 1: Via CLI (Online)</strong></p>
+<pre><code class="lang-bash">
+python main.py
+# Select: "View Wallet Information"
+# Enter public key: 7gX...
+# → Balance displayed
+</code></pre>
+
+<p><strong>Method 2: Solana Explorer</strong></p>
+<pre><code class="lang-">
+https://explorer.solana.com/address/YOUR_PUBLIC_KEY?cluster=devnet
+</code></pre>
+
+<hr>
+
+<h2 id="6-cryptographic-operations">6. Cryptographic Operations</h2>
+
+<h3>6.1 Ed25519 Key Generation</h3>
+
+<p><strong>Algorithm:</strong> Edwards-curve Digital Signature Algorithm (EdDSA)</p>
+
+<p><strong>Process:</strong></p>
+<p style='margin-left:20px'><strong>Entropy Collection:</strong> 256 bits from <code>/dev/urandom</code></p>
+<p style='margin-left:20px'><strong>Seed Derivation:</strong> SHA-512(entropy) → 512-bit hash</p>
+<p style='margin-left:20px'><strong>Scalar Clamping:</strong> Ensure scalar is in valid range</p>
+<p style='margin-left:20px'><strong>Public Key:</strong> Scalar multiplication on Curve25519 (Edwards form)</p>
+
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li><strong>Key Size:</strong> 256 bits (32 bytes)</li>
+<li><strong>Security Level:</strong> 128-bit classical, ~64-bit quantum</li>
+<li><strong>Signature Size:</strong> 512 bits (64 bytes)</li>
+<li><strong>Signature Time:</strong> ~0.1ms on modern CPU</li>
+<li><strong>Verification Time:</strong> ~0.3ms on modern CPU</li>
+</ul>
+
+<h3>6.2 Transaction Signing</h3>
+
+<p><strong>Signing Process:</strong></p>
+<p style='margin-left:20px'><strong>Message Hash:</strong> SHA-512(message)</p>
+<p style='margin-left:20px'><strong>Nonce Generation:</strong> Deterministic (RFC 8032)</p>
+<pre><code class="lang-">
+   nonce = SHA-512(hash(privkey_suffix) || message)
+</code></pre>
+<p style='margin-left:20px'><strong>R Calculation:</strong> R = nonce * G (base point)</p>
+<p style='margin-left:20px'><strong>Challenge:</strong> h = SHA-512(R || pubkey || message)</p>
+<p style='margin-left:20px'><strong>Signature:</strong> s = (nonce + h * privkey) mod L</p>
+
+<p><strong>Signature Format:</strong></p>
+<pre><code class="lang-">
+[R (32 bytes) || s (32 bytes)] = 64 bytes total
+</code></pre>
+
+<p><strong>Verification (by Solana validators):</strong></p>
+<pre><code class="lang-">
+s * G == R + h * pubkey
+</code></pre>
+
+<h3>6.3 Encoding Schemes</h3>
+
+<p><strong>Base58 (Public Keys):</strong></p>
+<ul>
+<li>Alphabet: <code>123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz</code></li>
+<li>Omits: <code>0</code>, <code>O</code>, <code>I</code>, <code>l</code> (visually ambiguous)</li>
+<li>Example: <code>7gX8jK...</code> (43-44 characters)</li>
+</ul>
+
+<p><strong>Base64 (Transaction Data):</strong></p>
+<ul>
+<li>Used for JSON-RPC transmission</li>
+<li>More compact than hex</li>
+<li>Standard Base64 alphabet</li>
+</ul>
+
+<p><strong>JSON Array (Keypair Storage):</strong></p>
+<pre><code class="lang-json">
+[123, 45, 67, ...]  // 64 bytes
+</code></pre>
+<ul>
+<li>Compatible with Solana CLI format</li>
+<li>Easy to parse in any language</li>
+</ul>
+
+<hr>
+
+<h2 id="7-threat-analysis">7. Threat Analysis</h2>
+
+<h3>7.1 Sophisticated Attack Scenarios</h3>
+
+<h4>Scenario 1: Compromised Host PC with Transaction Manipulation</h4>
+
+<p><strong>Attack:</strong></p>
+<p style='margin-left:20px'>Malware intercepts transaction creation</p>
+<p style='margin-left:20px'>Replaces recipient address with attacker's address</p>
+<p style='margin-left:20px'>User unknowingly copies malicious TX to USB</p>
+<p style='margin-left:20px'>User signs attacker's transaction</p>
+
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>✅ Air-gapped system displays full transaction details before signing</li>
+<li>✅ User MUST verify recipient address on offline screen</li>
+<li>✅ Signing script shows: From, To, Amount</li>
+<li>⚠️ <strong>User Responsibility:</strong> Visual verification is critical</li>
+</ul>
+
+<p><strong>Effectiveness:</strong> High (requires user vigilance)</p>
+
+<h4>Scenario 2: Backdoored Alpine Linux ISO</h4>
+
+<p><strong>Attack:</strong></p>
+<p style='margin-left:20px'>Attacker compromises download server or MITM attack</p>
+<p style='margin-left:20px'>Replaces legitimate ISO with backdoored version</p>
+<p style='margin-left:20px'>Backdoor exfiltrates private key during generation</p>
+<p style='margin-left:20px'>Key sent via covert channel (if user later connects USB online)</p>
+
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>✅ SHA-256 checksum verification built into CLI</li>
+<li>✅ Published checksums on multiple channels (GitHub, website)</li>
+<li>✅ Reproducible builds (community can rebuild and compare)</li>
+<li>✅ Offline key generation (no network = no exfiltration during creation)</li>
+</ul>
+
+<p><strong>Effectiveness:</strong> Very High</p>
+
+<h4>Scenario 3: Evil Maid Attack (Physical USB Tampering)</h4>
+
+<p><strong>Attack:</strong></p>
+<p style='margin-left:20px'>Attacker gains temporary physical access to USB</p>
+<p style='margin-left:20px'>Replaces signing script with key-logging version</p>
+<p style='margin-left:20px'>Next signing operation captures private key</p>
+<p style='margin-left:20px'>Attacker retrieves USB later to extract key</p>
+
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>⚠️ Read-only filesystem prevents script modification (partial)</li>
+<li>⚠️ Tamper-evident seals on USB (user must check)</li>
+<li>⚠️ Boot integrity verification (not implemented in v1.0)</li>
+<li>❌ No secure element (like hardware wallets have)</li>
+</ul>
+
+<p><strong>Effectiveness:</strong> Medium (depends on user vigilance)</p>
+
+<h3>7.2 Comparison to Alternatives</h3>
+
+<h4>vs. Hardware Wallets (Ledger/Trezor)</h4>
+
+<div class="table-wrap"><table><thead><tr>
+<th>Aspect</th>
+<th>Coldstar</th>
+<th>Hardware Wallets</th>
+</tr></thead><tbody>
+<tr>
+<td>**Cost**</td>
+<td>$5-10 (USB)</td>
+<td>$50-200</td>
+</tr>
+<tr>
+<td>**Transparency**</td>
+<td>100% open-source</td>
+<td class="no">Partial (Trezor) to None (Ledger)</td>
+</tr>
+<tr>
+<td>**Physical Security**</td>
+<td>Standard USB</td>
+<td>Secure element (Ledger only)</td>
+</tr>
+<tr>
+<td>**Supply Chain**</td>
+<td>Reproducible builds</td>
+<td>Manufacturer trust</td>
+</tr>
+<tr>
+<td>**Attack Surface**</td>
+<td>~50MB OS</td>
+<td>~1-2MB firmware</td>
+</tr>
+<tr>
+<td>**Portability**</td>
+<td>Requires PC</td>
+<td>Standalone device</td>
+</tr>
+<tr>
+<td>**Setup Complexity**</td>
+<td>High (bootable USB)</td>
+<td>Low (plug-and-play)</td>
+</tr>
+</tbody></table></div>
+
+<p><strong>Verdict:</strong> Coldstar trades convenience for transparency and cost. Hardware wallets are more portable but require manufacturer trust.</p>
+
+<h4>vs. Paper Wallets</h4>
+
+<div class="table-wrap"><table><thead><tr>
+<th>Aspect</th>
+<th>Coldstar</th>
+<th>Paper Wallets</th>
+</tr></thead><tbody>
+<tr>
+<td>**Security**</td>
+<td>Offline signing</td>
+<td>Keys printed on paper</td>
+</tr>
+<tr>
+<td>**Usability**</td>
+<td>CLI + scripts</td>
+<td>Manual key entry</td>
+</tr>
+<tr>
+<td>**Backup**</td>
+<td>Multiple USB copies</td>
+<td>Photocopy</td>
+</tr>
+<tr>
+<td>**Signing**</td>
+<td>Ed25519 (fast)</td>
+<td>Requires import to hot wallet</td>
+</tr>
+<tr>
+<td>**Attack Surface**</td>
+<td>Alpine Linux</td>
+<td class="no">None (paper)</td>
+</tr>
+</tbody></table></div>
+
+<p><strong>Verdict:</strong> Paper wallets are simpler but require importing keys to sign (defeats cold storage). Coldstar allows true offline signing.</p>
+
+<hr>
+
+<h2 id="8-performance-scalability">8. Performance & Scalability</h2>
+
+<h3>8.1 Performance Metrics</h3>
+
+<p><strong>Keypair Generation:</strong></p>
+<ul>
+<li><strong>Time:</strong> ~50-100ms</li>
+<li><strong>CPU Usage:</strong> Minimal (single-threaded)</li>
+<li><strong>Memory:</strong> <10MB</li>
+</ul>
+
+<p><strong>Transaction Signing:</strong></p>
+<ul>
+<li><strong>Time:</strong> ~5-10ms (Ed25519 signature)</li>
+<li><strong>CPU Usage:</strong> Minimal</li>
+<li><strong>Memory:</strong> <5MB</li>
+</ul>
+
+<p><strong>ISO Building:</strong></p>
+<ul>
+<li><strong>Time:</strong> ~2-5 minutes (depends on download speed)</li>
+<li><strong>Disk Space:</strong> ~150MB temporary, 50MB final ISO</li>
+<li><strong>Network:</strong> ~50MB download (Alpine rootfs)</li>
+</ul>
+
+<p><strong>Transaction Broadcasting:</strong></p>
+<ul>
+<li><strong>Time:</strong> ~1-2 seconds (RPC network latency)</li>
+<li><strong>Success Rate:</strong> >99% on Devnet/Mainnet</li>
+<li><strong>Retry Logic:</strong> Exponential backoff on failure</li>
+</ul>
+
+<h3>8.2 Scalability Considerations</h3>
+
+<p><strong>CLI Tool:</strong></p>
+<ul>
+<li>Single-user application (no concurrency needed)</li>
+<li>Stateless operations (no database)</li>
+<li>Minimal resource requirements</li>
+</ul>
+
+<p><strong>USB Device:</strong></p>
+<ul>
+<li>Supports standard PC hardware (x86_64)</li>
+<li>RAM requirement: 512MB minimum</li>
+<li>Boot time: ~30 seconds on modern hardware</li>
+</ul>
+
+<p><strong>Network:</strong></p>
+<ul>
+<li>Dependent on Solana RPC endpoint performance</li>
+<li>Public endpoints may rate-limit (60 req/min typical)</li>
+<li>Recommendation: Use private RPC for high volume</li>
+</ul>
+
+<hr>
+
+<h2 id="9-conclusion">9. Conclusion</h2>
+
+<h3>9.1 Summary</h3>
+
+<p>Coldstar v1.0 provides a production-ready, open-source cold wallet solution for Solana that prioritizes security through air-gap isolation. By leveraging industry-standard cryptography (Ed25519), minimal operating systems (Alpine Linux), and transparent Python code, it offers an accessible alternative to proprietary hardware wallets.</p>
+
+<p><strong>Key Achievements:</strong></p>
+<ul>
+<li>✅ Complete air-gap separation between key storage and network access</li>
+<li>✅ Minimal attack surface (~50MB Alpine Linux)</li>
+<li>✅ Full code transparency (100% open-source)</li>
+<li>✅ Cost-effective ($5-10 USB drive)</li>
+<li>✅ Cross-platform CLI (Windows, macOS, Linux)</li>
+</ul>
+
+<p><strong>Trade-offs:</strong></p>
+<ul>
+<li>⚠️ Higher setup complexity vs. hardware wallets</li>
+<li>⚠️ Requires user vigilance (transaction verification)</li>
+<li>⚠️ Less portable (needs PC for signing)</li>
+</ul>
+
+<h3>9.2 Use Cases</h3>
+
+<p><strong>Ideal For:</strong></p>
+<ul>
+<li>Long-term HODLers prioritizing security over convenience</li>
+<li>Developers and power users comfortable with CLI tools</li>
+<li>Organizations requiring auditable security solutions</li>
+<li>Users seeking vendor-independent cold storage</li>
+<li>Educational purposes (understanding cold wallet internals)</li>
+</ul>
+
+<p><strong>Not Ideal For:</strong></p>
+<ul>
+<li>Frequent traders (signing overhead too high)</li>
+<li>Non-technical users (complexity barrier)</li>
+<li>Mobile-only users (requires desktop PC)</li>
+</ul>
+
+<h3>9.3 Project Status</h3>
+
+<p><strong>Current Version:</strong> 1.0.0 (Production-Ready)</p>
+
+<p><strong>Supported Features:</strong></p>
+<ul>
+<li>✅ Ed25519 keypair generation</li>
+<li>✅ Offline transaction signing</li>
+<li>✅ Solana Devnet/Mainnet support</li>
+<li>✅ USB device detection (Windows/Linux)</li>
+<li>✅ Bootable ISO creation</li>
+<li>✅ Balance checking</li>
+<li>✅ SOL transfer transactions</li>
+<li>✅ Devnet airdrops</li>
+</ul>
+
+<p><strong>Known Limitations:</strong></p>
+<ul>
+<li>❌ No SPL token support</li>
+<li>❌ No multi-signature support</li>
+<li>❌ No passphrase encryption (manual GPG required)</li>
+<li>❌ No boot integrity verification</li>
+<li>❌ Manual file transfer between systems</li>
+</ul>
+
+<h3>9.4 Contributing</h3>
+
+<p><strong>How to Contribute:</strong></p>
+<ul>
+<li>Report bugs: GitHub Issues</li>
+<li>Submit patches: Pull Requests</li>
+<li>Security vulnerabilities: security@chainlabs.io (responsible disclosure)</li>
+<li>Documentation improvements: Edit <code>README.md</code> or this whitepaper</li>
+</ul>
+
+<p><strong>Development Setup:</strong></p>
+<pre><code class="lang-bash">
+git clone https://github.com/ChainLabs-Technologies/coldstar.git
+cd coldstar
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+pip install -r local_requirements.txt
+python main.py
+</code></pre>
+
+<h3>9.5 Final Remarks</h3>
+
+<p>Cold storage is not about convenience—it's about security. Coldstar embraces this philosophy by prioritizing air-gap isolation and code transparency over user-friendliness. For users willing to invest time in proper setup and operational procedures, it offers a robust, verifiable, and cost-effective solution for securing Solana assets.</p>
+
+<p><strong>Your keys, your responsibility. Open source, open trust.</strong></p>
+
+<hr>
+
+<h2 id="appendix-a-technical-specifications">Appendix A: Technical Specifications</h2>
+
+<h3>A.1 System Requirements</h3>
+
+<p><strong>Development/Host System:</strong></p>
+<ul>
+<li><strong>OS:</strong> Windows 10+, macOS 11+, Linux (Ubuntu 20.04+)</li>
+<li><strong>Python:</strong> 3.11 or higher</li>
+<li><strong>RAM:</strong> 4GB minimum</li>
+<li><strong>Disk Space:</strong> 500MB for CLI + temporary ISO build files</li>
+<li><strong>Network:</strong> Required for RPC communication and Alpine download</li>
+</ul>
+
+<p><strong>Air-Gapped System (USB Boot):</strong></p>
+<ul>
+<li><strong>Architecture:</strong> x86_64 (Intel/AMD)</li>
+<li><strong>RAM:</strong> 512MB minimum (1GB recommended)</li>
+<li><strong>USB Port:</strong> USB 2.0 or higher</li>
+<li><strong>BIOS:</strong> Legacy or UEFI boot support</li>
+<li><strong>Display:</strong> Required for transaction verification</li>
+</ul>
+
+<p><strong>USB Drive:</strong></p>
+<ul>
+<li><strong>Capacity:</strong> 4GB minimum (8GB recommended for overhead)</li>
+<li><strong>Speed:</strong> USB 2.0+ (faster for boot times)</li>
+<li><strong>Format:</strong> Will be overwritten during flashing</li>
+</ul>
+
+<h3>A.2 Cryptographic Parameters</h3>
+
+<div class="table-wrap"><table><thead><tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Standard</th>
+</tr></thead><tbody>
+<tr>
+<td>**Signature Algorithm**</td>
+<td>Ed25519</td>
+<td>RFC 8032</td>
+</tr>
+<tr>
+<td>**Curve**</td>
+<td>Curve25519 (Edwards form)</td>
+<td>-</td>
+</tr>
+<tr>
+<td>**Hash Function**</td>
+<td>SHA-512</td>
+<td>FIPS 180-4</td>
+</tr>
+<tr>
+<td>**Private Key Size**</td>
+<td>256 bits (32 bytes)</td>
+<td>-</td>
+</tr>
+<tr>
+<td>**Public Key Size**</td>
+<td>256 bits (32 bytes)</td>
+<td>-</td>
+</tr>
+<tr>
+<td>**Signature Size**</td>
+<td>512 bits (64 bytes)</td>
+<td>-</td>
+</tr>
+<tr>
+<td>**Security Level**</td>
+<td>128-bit classical</td>
+<td>-</td>
+</tr>
+<tr>
+<td>**Quantum Resistance**</td>
+<td>~64-bit</td>
+<td>NIST estimate</td>
+</tr>
+<tr>
+<td>**Library**</td>
+<td>PyNaCl (libsodium)</td>
+<td>Audited</td>
+</tr>
+</tbody></table></div>
+
+<h3>A.3 Network Configuration</h3>
+
+<p><strong>Solana Networks:</strong></p>
+
+<div class="table-wrap"><table><thead><tr>
+<th>Network</th>
+<th>RPC Endpoint</th>
+<th>Purpose</th>
+</tr></thead><tbody>
+<tr>
+<td>**Devnet**</td>
+<td>https://api.devnet.solana.com</td>
+<td>Testing, airdrops</td>
+</tr>
+<tr>
+<td>**Testnet**</td>
+<td>https://api.testnet.solana.com</td>
+<td>Validator testing</td>
+</tr>
+<tr>
+<td>**Mainnet-Beta**</td>
+<td>https://api.mainnet-beta.solana.com</td>
+<td>Production</td>
+</tr>
+</tbody></table></div>
+
+<p><strong>Transaction Costs:</strong></p>
+<ul>
+<li>Base fee: 5,000 lamports (0.000005 SOL)</li>
+<li>Signature fee: 5,000 lamports per signature</li>
+<li>Priority fees: Optional (user-configurable)</li>
+</ul>
+
+<p><strong>Blockhash Validity:</strong></p>
+<ul>
+<li>~150 seconds (150 blocks @ 1 block/sec)</li>
+<li>Transactions must be broadcast within this window</li>
+</ul>
+
+<h3>A.4 File Formats</h3>
+
+<p><strong>Keypair Storage (<code>keypair.json</code>):</strong></p>
+<pre><code class="lang-json">
+[
+  123, 45, 67, 89, ..., 234  // 64 bytes as decimal array
+]
+</code></pre>
+
+<p><strong>Public Key (<code>pubkey.txt</code>):</strong></p>
+<pre><code class="lang-">
+7gX8jK9pQvZjR3mN4sT6uV2wA1bC3dE4fG5hH6iJ7kK8
+</code></pre>
+<p>Base58-encoded, 43-44 characters</p>
+
+<p><strong>Unsigned Transaction:</strong></p>
+<p>Binary format (Solana <code>Transaction</code> serialized)</p>
+
+<p><strong>Signed Transaction:</strong></p>
+<p>Binary format (Solana <code>Transaction</code> with signatures)</p>
+
+<hr>
+
+<h2 id="appendix-b-glossary">Appendix B: Glossary</h2>
+
+<div class="table-wrap"><table><thead><tr>
+<th>Term</th>
+<th>Definition</th>
+</tr></thead><tbody>
+<tr>
+<td>**Air-Gap**</td>
+<td>Physical isolation of a computer from networks</td>
+</tr>
+<tr>
+<td>**Alpine Linux**</td>
+<td>Minimal, security-focused Linux distribution</td>
+</tr>
+<tr>
+<td>**Base58**</td>
+<td>Binary-to-text encoding (Bitcoin-style)</td>
+</tr>
+<tr>
+<td>**Blockhash**</td>
+<td>Cryptographic hash of recent block (anti-replay)</td>
+</tr>
+<tr>
+<td>**CLI**</td>
+<td>Command-Line Interface</td>
+</tr>
+<tr>
+<td>**Cold Wallet**</td>
+<td>Cryptocurrency wallet with keys stored offline</td>
+</tr>
+<tr>
+<td>**Ed25519**</td>
+<td>Elliptic curve signature scheme (faster than ECDSA)</td>
+</tr>
+<tr>
+<td>**Evil Maid**</td>
+<td>Physical tampering attack while device unattended</td>
+</tr>
+<tr>
+<td>**Lamports**</td>
+<td>Smallest unit of SOL (1 SOL = 10^9 lamports)</td>
+</tr>
+<tr>
+<td>**NaCl**</td>
+<td>"Networking and Cryptography Library" (libsodium)</td>
+</tr>
+<tr>
+<td>**RPC**</td>
+<td>Remote Procedure Call (API for blockchain)</td>
+</tr>
+<tr>
+<td>**Signing**</td>
+<td>Creating digital signature with private key</td>
+</tr>
+</tbody></table></div>
+
+<hr>
+
+<h2 id="appendix-c-security-audit-checklist">Appendix C: Security Audit Checklist</h2>
+
+<p><strong>For Independent Auditors:</strong></p>
+
+<ul>
+<li>[ ] Verify SHA-256 checksum of Alpine Linux download</li>
+<li>[ ] Review <code>src/wallet.py</code> for key generation logic</li>
+<li>[ ] Inspect <code>src/transaction.py</code> for signing implementation</li>
+<li>[ ] Check file permissions on <code>keypair.json</code> (should be 0600)</li>
+<li>[ ] Verify network blacklist in ISO build process</li>
+<li>[ ] Test air-gap isolation (no network drivers loaded)</li>
+<li>[ ] Review entropy source (<code>/dev/urandom</code>)</li>
+<li>[ ] Check for hardcoded secrets or backdoors</li>
+<li>[ ] Verify Ed25519 implementation (PyNaCl)</li>
+<li>[ ] Test transaction signing correctness</li>
+<li>[ ] Review RPC communication for leaks</li>
+<li>[ ] Check for timing attack vulnerabilities</li>
+<li>[ ] Verify reproducible ISO build process</li>
+</ul>
+
+<hr>
+
+<h2 id="appendix-d-references">Appendix D: References</h2>
+
+<p style='margin-left:20px'><strong>EdDSA Specification:</strong> Bernstein, D. J., et al. "High-speed high-security signatures." RFC 8032, 2017.</p>
+<p style='margin-left:20px'><strong>Solana Documentation:</strong> https://docs.solana.com</p>
+<p style='margin-left:20px'><strong>Alpine Linux Security:</strong> https://alpinelinux.org/about/</p>
+<p style='margin-left:20px'><strong>NaCl Cryptography:</strong> https://nacl.cr.yp.to/</p>
+<p style='margin-left:20px'><strong>Python Solana SDK:</strong> https://github.com/michaelhly/solana-py</p>
+<p style='margin-left:20px'><strong>Solders (Rust):</strong> https://github.com/kevinheavey/solders</p>
+
+<hr>
+
+<h2 id="appendix-e-license">Appendix E: License</h2>
+
+<p><strong>MIT License</strong></p>
+
+<pre><code class="lang-">
+Copyright (c) 2025 ChainLabs Technologies
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</code></pre>
+
+<hr>
+
+<p><strong>Contact & Support:</strong></p>
+<ul>
+<li><strong>GitHub:</strong> https://github.com/ChainLabs-Technologies/coldstar</li>
+<li><strong>Issues:</strong> https://github.com/ChainLabs-Technologies/coldstar/issues</li>
+<li><strong>Email:</strong> syrem@chainlabs.uno</li>
+</ul>
+
+<hr>
+
+<p><em>Document Version: 1.0.0</em></p>
+<p><em>Last Updated: December 24, 2025</em></p>
+<p><em>Coldstar Version: 1.0.0</em></p>
+
+
+
+</div>
+
+<footer class="footer">
+    <a href="index.html">Home</a> &nbsp;&middot;&nbsp;
+    <a href="whitepaper.html">Whitepaper</a> &nbsp;&middot;&nbsp;
+    <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a>
+    <p>Coldstar &bull; Air-Gapped Security &bull; Open Source (MIT License)</p>
+</footer>
+
+</body>
+</html>
