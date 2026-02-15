@@ -114,23 +114,24 @@
             border: 1px solid var(--border);
         }
 
-        /* Top Banner - Ledger style */
+        /* Top Banner */
         .top-banner {
-            background: var(--accent);
-            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, var(--accent), #0066cc);
+            padding: 1rem 2rem;
             text-align: center;
             margin-top: 73px;
         }
 
         .top-banner p {
-            font-size: 0.875rem;
+            font-size: 1rem;
             font-weight: 600;
-            color: #000;
+            color: #fff;
             margin: 0;
+            letter-spacing: 0.01em;
         }
 
         .top-banner a {
-            color: #000;
+            color: #fff;
             text-decoration: underline;
             font-weight: 700;
         }
@@ -141,20 +142,20 @@
             text-align: center;
             position: relative;
             overflow: hidden;
-            max-width: 900px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
         .hero-image-wrap {
-            margin-bottom: 2.5rem;
+            margin: -8rem -2rem 2.5rem;
+            width: calc(100% + 4rem);
+            max-width: none;
         }
 
         .hero-img {
             width: 100%;
-            max-width: 800px;
             height: auto;
-            border-radius: 16px;
-            border: 1px solid var(--border);
+            display: block;
         }
 
         .cta-button {
@@ -951,8 +952,9 @@
                 padding: 8rem 1rem 4rem;
             }
 
-            .hero-img {
-                border-radius: 12px;
+            .hero-image-wrap {
+                margin: -8rem -1rem 2rem;
+                width: calc(100% + 2rem);
             }
 
             .features, .comparison, .code-section, .assets, .partners, .dao, .cta-section, .architecture {
