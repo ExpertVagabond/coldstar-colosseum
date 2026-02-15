@@ -162,7 +162,7 @@ def create_qr_signing_workflow():
     wallet = WalletManager()
     tx_manager = TransactionManager()
 
-    # Load wallet
+    # Load wallet (encrypted container for secure signing)
     wallet_path = Path("/wallet/keypair.json")
     if not wallet_path.exists():
         wallet_path = Path("./local_wallet/keypair.json")
@@ -171,11 +171,20 @@ def create_qr_signing_workflow():
         print_error("No wallet found. Generate one first.")
         return
 
-    keypair = wallet.load_keypair(str(wallet_path))
-    if not keypair:
+    container = wallet.load_encrypted_container(str(wallet_path))
+    if not container:
+        print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
         return
 
     public_key = wallet.get_public_key()
+    if not public_key:
+        # Try reading from pubkey file
+        pubkey_path = wallet_path.parent / "pubkey.txt"
+        if pubkey_path.exists():
+            public_key = pubkey_path.read_text().strip()
+    if not public_key:
+        print_error("Could not determine wallet public key")
+        return
     print_info(f"Wallet loaded: {public_key[:8]}...{public_key[-8:]}")
 
     # Get transaction data from user
@@ -219,14 +228,19 @@ def create_qr_signing_workflow():
         print_warning("Signing cancelled")
         return
 
-    # Create and sign transaction
+    # Sign transaction securely via Rust signer
     try:
-        from solders.keypair import Keypair
+        from getpass import getpass
         from solders.pubkey import Pubkey
         from solders.hash import Hash
         from solders.system_program import transfer, TransferParams
         from solders.transaction import Transaction
         from solders.message import Message
+
+        password = getpass("Enter wallet password to sign: ")
+        if not password:
+            print_error("Password required for encrypted wallet")
+            return
 
         from_pk = Pubkey.from_string(tx_data['from'])
         to_pk = Pubkey.from_string(tx_data['to'])
@@ -240,14 +254,17 @@ def create_qr_signing_workflow():
             lamports=lamports
         ))
 
-        # Build and sign transaction
+        # Build unsigned transaction, sign via Rust secure signer
         message = Message.new_with_blockhash([transfer_ix], from_pk, blockhash)
         tx = Transaction.new_unsigned(message)
-        tx.sign([keypair], blockhash)
+        unsigned_bytes = bytes(tx)
 
-        signed_bytes = bytes(tx)
+        signed_bytes = tx_manager.sign_transaction_secure(unsigned_bytes, container, password)
+        if not signed_bytes:
+            print_error("Signing failed — wrong password or corrupted wallet")
+            return
 
-        print_success("Transaction SIGNED successfully!")
+        print_success("Transaction SIGNED securely via Rust signer!")
 
         # Display QR code
         qr.display_signed_tx_qr(signed_bytes)
