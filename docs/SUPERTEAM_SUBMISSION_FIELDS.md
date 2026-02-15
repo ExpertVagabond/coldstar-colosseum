@@ -102,8 +102,6 @@ https://x.com/buildcoldstar
 GitHub: @ExpertVagabond
 Twitter/X: @buildcoldstar
 Email: MatthewKarstenConnects@gmail.com
-STIE Member | chainlabs.uno
-
 Built Coldstar as a solo developer during the 10-day Colosseum Agent Hackathon sprint (Project #62, submitted as Agent #127). Deep Solana ecosystem experience building with Jupiter, Pyth, Anchor, SPL tokens, and MCP agent integrations. Polyglot developer shipping production code in Python, TypeScript, Rust, Ruby, and Go. Track record of rapid execution — Coldstar went from zero to live deployment with FairScore integration, Jupiter swaps, Pyth price feeds, QR-code air-gap signing, and a Rich TUI dashboard in under two weeks.
 ```
 
