@@ -20,7 +20,8 @@ from src.ui import (
     print_banner, print_success, print_error, print_info, print_warning,
     print_section_header, print_wallet_info, print_transaction_summary,
     print_device_list, select_menu_option, get_text_input, get_float_input,
-    confirm_dangerous_action, print_explorer_link, clear_screen, console
+    get_password_input, confirm_dangerous_action, print_explorer_link,
+    clear_screen, console
 )
 from src.wallet import WalletManager, create_wallet_structure
 from src.usb import USBManager
@@ -495,18 +496,24 @@ class SolanaColdWalletCLI:
             print_error("No wallet connected. Mount a USB with a cold wallet first.")
             return
         
-        # Load keypair
+        # Load encrypted wallet container for secure signing
         wallet_dir = Path(self.usb_manager.mount_point) / "wallet"
         keypair_path = wallet_dir / "keypair.json"
-        
+
         if not keypair_path.exists():
             print_error("Keypair not found on USB")
             return
-        
-        keypair = self.wallet_manager.load_keypair(str(keypair_path))
-        if not keypair:
+
+        container = self.wallet_manager.load_encrypted_container(str(keypair_path))
+        if not container:
+            print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
             return
-        
+
+        password = get_password_input("Enter wallet password to sign transaction:")
+        if not password:
+            print_error("Password required for encrypted wallet")
+            return
+
         from_address = self.current_public_key
         print_info(f"From: {from_address}")
         
@@ -555,13 +562,13 @@ class SolanaColdWalletCLI:
         if not tx_bytes:
             return
         
-        # Sign transaction
+        # Sign transaction securely via Rust signer
         print_info("Signing transaction...")
-        signed_tx = self.transaction_manager.sign_transaction(tx_bytes, keypair)
-        
+        signed_tx = self.transaction_manager.sign_transaction_secure(tx_bytes, container, password)
+
         if not signed_tx:
             return
-        
+
         # Broadcast transaction
         print_info("Broadcasting transaction...")
         
@@ -736,18 +743,24 @@ class SolanaColdWalletCLI:
             print_info("Copy unsigned transactions to an air-gapped device for secure signing.")
             return
         
-        # Load the wallet keypair
+        # Load encrypted wallet container for secure signing
         wallet_dir = Path(self.usb_manager.mount_point) / "wallet"
         keypair_path = wallet_dir / "keypair.json"
-        
+
         if not keypair_path.exists():
             print_error("Keypair not found on USB")
             return
-        
-        keypair = self.wallet_manager.load_keypair(str(keypair_path))
-        if not keypair:
+
+        container = self.wallet_manager.load_encrypted_container(str(keypair_path))
+        if not container:
+            print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
             return
-        
+
+        password = get_password_input("Enter wallet password to sign transaction:")
+        if not password:
+            print_error("Password required for encrypted wallet")
+            return
+
         # Let user select which transaction to sign
         file_options = [f.name for f in unsigned_files]
         file_options.append("Cancel")
@@ -763,9 +776,9 @@ class SolanaColdWalletCLI:
         unsigned_tx = self.transaction_manager.load_unsigned_transaction(str(tx_path))
         if not unsigned_tx:
             return
-        
-        print_info("Signing transaction...")
-        signed_tx = self.transaction_manager.sign_transaction(unsigned_tx, keypair)
+
+        print_info("Signing transaction securely via Rust signer...")
+        signed_tx = self.transaction_manager.sign_transaction_secure(unsigned_tx, container, password)
         
         if signed_tx:
             # Save to outbox with signed_ prefix
@@ -999,13 +1012,20 @@ class SolanaColdWalletCLI:
                 self._restore_wallet(wallet_dir)
             return
 
-        # Load the keypair for backup
-        keypair = self.wallet_manager.load_keypair(str(keypair_path))
-        if not keypair:
-            print_error("Failed to load wallet keypair")
+        # Load encrypted container and decrypt for backup operations
+        container = self.wallet_manager.load_encrypted_container(str(keypair_path))
+        if not container:
+            print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
             return
 
-        print_info(f"Wallet: {str(keypair.pubkey())[:16]}...")
+        # Show public key from file (no decryption needed)
+        pubkey = self.wallet_manager.get_public_key_from_file(
+            str(wallet_dir / "pubkey.txt")
+        )
+        if pubkey:
+            print_info(f"Wallet: {pubkey[:16]}...")
+        else:
+            print_info("Wallet: [encrypted — pubkey.txt not found]")
         console.print()
 
         options = [
@@ -1028,50 +1048,88 @@ class SolanaColdWalletCLI:
         backup_dir = Path(self.usb_manager.mount_point) / "backups"
         backup_dir.mkdir(exist_ok=True)
 
-        if choice_num == "1":
-            # Paper wallet
-            print_info("Creating paper wallet...")
-            path = self.backup_manager.create_paper_wallet(keypair, str(backup_dir))
-            if path:
-                print_success(f"Paper wallet created: {path}")
-                print_info("Open this HTML file in a browser to print.")
-                print_warning("IMPORTANT: Print on a secure, offline printer!")
-
-        elif choice_num == "2":
-            # Encrypted backup
-            print_warning("Enter a strong password (minimum 8 characters)")
-            password = get_text_input("Password: ")
-            if len(password) < 8:
-                print_error("Password must be at least 8 characters")
+        if choice_num in ("1", "2", "3"):
+            # Options 1-3 require decrypting the wallet to access the keypair
+            wallet_password = get_password_input("Enter wallet password to decrypt for backup:")
+            if not wallet_password:
+                print_error("Password required to decrypt wallet")
                 return
 
-            confirm = get_text_input("Confirm password: ")
-            if password != confirm:
-                print_error("Passwords don't match")
+            # Decrypt via Rust signer to get temporary keypair
+            import gc
+            try:
+                from src.secure_memory import SecureWalletHandler
+                # Try Rust signer first
+                if self.wallet_manager.rust_signer:
+                    normalized = self.wallet_manager._normalize_container_format(container)
+                    private_key = self.wallet_manager.rust_signer.decrypt_private_key(
+                        normalized, wallet_password
+                    )
+                    if not private_key or len(private_key) != 32:
+                        print_error("Invalid password or corrupted wallet")
+                        return
+                    from solders.keypair import Keypair
+                    keypair = Keypair.from_bytes(bytes(private_key))
+                    del private_key
+                else:
+                    # Fallback to PyNaCl
+                    keypair = SecureWalletHandler.decrypt_keypair(container, wallet_password)
+                    if not keypair:
+                        print_error("Invalid password or corrupted wallet")
+                        return
+            except Exception as e:
+                print_error(f"Failed to decrypt wallet: {e}")
                 return
 
-            import time
-            backup_path = backup_dir / f"encrypted_backup_{int(time.time())}.json"
+            try:
+                if choice_num == "1":
+                    # Paper wallet
+                    print_info("Creating paper wallet...")
+                    path = self.backup_manager.create_paper_wallet(keypair, str(backup_dir))
+                    if path:
+                        print_success(f"Paper wallet created: {path}")
+                        print_info("Open this HTML file in a browser to print.")
+                        print_warning("IMPORTANT: Print on a secure, offline printer!")
 
-            if self.backup_manager.backup_to_file(keypair, str(backup_path), password):
-                print_success(f"Encrypted backup saved to: {backup_path}")
-                print_info("Store this file securely. You'll need the password to restore.")
+                elif choice_num == "2":
+                    # Encrypted backup
+                    print_warning("Enter a strong password for the backup (minimum 8 characters)")
+                    backup_password = get_text_input("Backup password: ")
+                    if len(backup_password) < 8:
+                        print_error("Password must be at least 8 characters")
+                        return
 
-        elif choice_num == "3":
-            # Plaintext backup
-            print_warning("⚠️  WARNING: Plaintext backups are NOT secure!")
-            print_warning("Anyone with access to this file can steal your funds.")
+                    confirm_pw = get_text_input("Confirm backup password: ")
+                    if backup_password != confirm_pw:
+                        print_error("Passwords don't match")
+                        return
 
-            confirm = confirm_dangerous_action(
-                "Create unencrypted backup?",
-                "INSECURE"
-            )
+                    import time
+                    backup_path = backup_dir / f"encrypted_backup_{int(time.time())}.json"
 
-            if confirm:
-                import time
-                backup_path = backup_dir / f"plaintext_backup_{int(time.time())}.json"
-                if self.backup_manager.backup_to_file(keypair, str(backup_path)):
-                    print_success(f"Plaintext backup saved to: {backup_path}")
+                    if self.backup_manager.backup_to_file(keypair, str(backup_path), backup_password):
+                        print_success(f"Encrypted backup saved to: {backup_path}")
+                        print_info("Store this file securely. You'll need the password to restore.")
+
+                elif choice_num == "3":
+                    # Plaintext backup
+                    print_warning("⚠️  WARNING: Plaintext backups are NOT secure!")
+                    print_warning("Anyone with access to this file can steal your funds.")
+
+                    confirm_action = confirm_dangerous_action(
+                        "Create unencrypted backup?",
+                        "INSECURE"
+                    )
+
+                    if confirm_action:
+                        import time
+                        backup_path = backup_dir / f"plaintext_backup_{int(time.time())}.json"
+                        if self.backup_manager.backup_to_file(keypair, str(backup_path)):
+                            print_success(f"Plaintext backup saved to: {backup_path}")
+            finally:
+                # Always clear decrypted keypair from memory
+                del keypair
+                gc.collect()
 
         elif choice_num == "4":
             # Generate mnemonic
