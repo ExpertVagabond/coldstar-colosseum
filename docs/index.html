@@ -345,11 +345,49 @@
             color: #000;
             font-weight: 600;
         }
+
+        /* Site Navigation */
+        .site-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #222;
+            padding: 0 24px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .site-nav a { color: #a0a0a0; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; }
+        .site-nav a:hover { color: #58d1eb; }
+        .site-nav a.active { color: #58d1eb; }
+        .site-nav .nav-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 600; font-size: 0.95rem; }
+        .site-nav .nav-brand img { height: 18px; opacity: 0.8; }
+        .site-nav .nav-links { display: flex; gap: 1.5rem; align-items: center; }
     </style>
 </head>
 <body>
+    <!-- Site Navigation -->
+    <nav class="site-nav">
+        <a href="../index.html" class="nav-brand">
+            <img src="../assets/coldstar-icon.png" alt="">
+            Coldstar
+        </a>
+        <div class="nav-links">
+            <a href="../index.html">Home</a>
+            <a href="index.html" class="active">Docs</a>
+            <a href="../demo.html">Demo</a>
+            <a href="whitepaper.html">Whitepaper</a>
+            <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a>
+        </div>
+    </nav>
+
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" style="padding-top: 48px;">
         <div class="hero-content">
             <h1>💎 Coldstar</h1>
             <p class="tagline">Air-Gapped Solana Cold Wallet for the Agent Economy</p>
@@ -607,11 +645,11 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-links">
+            <a href="../index.html">Home</a>
             <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a>
             <a href="whitepaper.html">Whitepaper</a>
-            <a href="https://colosseum.com/agent-hackathon/" target="_blank">Colosseum Hackathon</a>
+            <a href="../demo.html">Demo</a>
             <a href="../screenshots/index.html">Screenshots</a>
-            <a href="https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet" target="_blank">DAO Explorer</a>
         </div>
         <div class="footer-note">
             <p>Made with ✦ for the Solana Agent Economy</p>
