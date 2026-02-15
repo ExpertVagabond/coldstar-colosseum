@@ -448,9 +448,11 @@ We welcome contributions! Here's how:
 
 ---
 
-## 📄 License
+## 📄 Legal
 
-MIT License - See [LICENSE](LICENSE) for details.
+- **License**: MIT — See [LICENSE](LICENSE)
+- **Privacy Policy**: [PRIVACY.md](PRIVACY.md)
+- **Terms of Service**: [TERMS.md](TERMS.md)
 
 ---
 
@@ -486,6 +488,8 @@ MIT License - See [LICENSE](LICENSE) for details.
 | **Documentation** | [/docs](./DEMO_WALKTHROUGH.md) |
 | **Forum Posts** | [Coldstar Introduction](https://colosseum.com/agent-hackathon/) |
 | **DAO Programs** | [Devnet Explorer](https://explorer.solana.com/?cluster=devnet) |
+| **Privacy Policy** | [PRIVACY.md](PRIVACY.md) |
+| **Terms of Service** | [TERMS.md](TERMS.md) |
 
 ---
 
