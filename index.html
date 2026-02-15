@@ -145,88 +145,16 @@
             margin: 0 auto;
         }
 
-        .usb-visualization {
-            position: relative;
-            margin-bottom: 3rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1.5rem;
+        .hero-image-wrap {
+            margin-bottom: 2.5rem;
         }
 
-        .usb-drive {
-            width: 100px;
-            height: 160px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            position: relative;
+        .hero-img {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border-radius: 16px;
             border: 1px solid var(--border);
-        }
-
-        .usb-drive::before {
-            content: '';
-            position: absolute;
-            top: -24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 32px;
-            height: 24px;
-            background: #2a2a2a;
-            border-radius: 3px 3px 0 0;
-            border: 1px solid var(--border);
-        }
-
-        .usb-drive::after {
-            content: '❄️';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2rem;
-        }
-
-        .usb-label {
-            position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.6rem;
-            color: var(--text-secondary);
-            font-family: 'JetBrains Mono', monospace;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .arrow-icon {
-            font-size: 1.5rem;
-            color: var(--accent);
-        }
-
-        .ram-box {
-            width: 140px;
-            height: 90px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ram-label {
-            font-size: 0.65rem;
-            color: var(--accent);
-            font-family: 'JetBrains Mono', monospace;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .ram-status {
-            font-size: 0.55rem;
-            color: var(--green);
-            font-family: 'JetBrains Mono', monospace;
-            margin-top: 0.5rem;
         }
 
         .cta-button {
@@ -386,8 +314,15 @@
         }
 
         .feature-icon {
-            font-size: 2rem;
+            width: 40px;
+            height: 40px;
             margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .feature-icon svg {
+            width: 40px;
+            height: 40px;
         }
 
         .feature-card h3 {
@@ -1016,16 +951,11 @@
                 padding: 8rem 1rem 4rem;
             }
 
-            .usb-visualization {
-                flex-direction: column;
-                gap: 1rem;
+            .hero-img {
+                border-radius: 12px;
             }
 
-            .arrow-icon {
-                transform: rotate(90deg);
-            }
-
-            .features, .comparison, .code-section, .assets, .partners, .dao, .cta-section {
+            .features, .comparison, .code-section, .assets, .partners, .dao, .cta-section, .architecture {
                 padding: 4rem 1rem;
             }
 
@@ -1064,13 +994,13 @@
     <header>
         <div class="header-content">
             <a href="/" class="logo">
-                <img src="images/coldstar-logo.png" alt="Coldstar" class="logo-img">
+                <img src="assets/coldstar-logo.png" alt="Coldstar" class="logo-img">
             </a>
             <div class="header-right">
                 <nav class="header-nav" style="display: flex; gap: 1.5rem; margin-right: 1.5rem;">
                     <a href="docs/index.html" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Docs</a>
                     <a href="https://github.com/ExpertVagabond/coldstar-colosseum" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">GitHub</a>
-                    <a href="docs/pitch-deck.html" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Pitch Deck</a>
+                    <a href="site/dist/downloads/coldstar-pitch-deck.pdf" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;" download>Pitch Deck</a>
                     <a href="docs/whitepaper.html" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Whitepaper</a>
                 </nav>
                 <div class="social-links">
@@ -1103,15 +1033,8 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="usb-visualization">
-            <div class="usb-drive">
-                <span class="usb-label">AES-256</span>
-            </div>
-            <span class="arrow-icon">→</span>
-            <div class="ram-box">
-                <span class="ram-label">System RAM</span>
-                <span class="ram-status">● Keys decrypted briefly</span>
-            </div>
+        <div class="hero-image-wrap">
+            <img src="promo/hero-image.png" alt="Coldstar — Air-Gapped Cold Wallet for Solana" class="hero-img">
         </div>
 
         <h1>Take control of your <span>crypto</span> today</h1>
@@ -1157,35 +1080,57 @@
 
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon">🧠</div>
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg></div>
                 <h3>RAM-Only Signing</h3>
                 <p>Private keys are decrypted only in volatile memory for the brief moment required to sign. Once complete, keys are immediately erased. No persistent exposure.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">💾</div>
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 2v4"/><path d="M15 2v4"/><rect x="8" y="10" width="8" height="6" rx="1"/></svg></div>
                 <h3>Disposable Hardware</h3>
                 <p>Use any standard USB drive. No serial numbers, no proprietary chips, no manufacturing fingerprints. Rotate, destroy, or replace drives at minimal cost.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">⌨️</div>
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
                 <h3>CLI-First Design</h3>
                 <p>Built for developers and operators. Scriptable, automation-friendly, and CI/CD ready. Sign transactions headlessly in air-gapped environments.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🔓</div>
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12l3 3 5-5"/></svg></div>
                 <h3>Open Source</h3>
                 <p>Fully inspectable and verifiable codebase. Deterministic builds. Audit the code, reproduce builds, and adapt to your requirements.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🔐</div>
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
                 <h3>AES-256 Encryption</h3>
                 <p>Industry-standard encryption for all stored key material. Keys never exist in plaintext on any storage medium.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🚫</div>
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M18 6L6 18"/><path d="M8 2h8"/><path d="M12 2v4"/></svg></div>
                 <h3>No Vendor Lock-in</h3>
                 <p>No proprietary secure elements, no firmware approval processes, no components that must be trusted indefinitely.</p>
             </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section class="architecture" style="padding: 6rem 2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="font-size: clamp(1.5rem, 3vw, 2.5rem); margin-bottom: 0.5rem;">How It Works</h2>
+            <p style="color: var(--text-secondary);">Air-gapped signing with FairScore reputation checks at every step</p>
+        </div>
+        <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+            <img src="promo/architecture-flow.png" alt="Coldstar Architecture — Online Device, Air Gap, Offline USB, Solana Mainnet" style="width: 100%; border-radius: 12px; border: 1px solid var(--border);">
+        </div>
+    </section>
+
+    <!-- FairScore Section -->
+    <section style="padding: 6rem 2rem; background: var(--bg-secondary);">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="font-size: clamp(1.5rem, 3vw, 2.5rem); margin-bottom: 0.5rem;">FairScore Reputation Tiers</h2>
+            <p style="color: var(--text-secondary);">Every transaction is checked against FairScale's reputation engine before signing</p>
+        </div>
+        <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+            <img src="promo/tier-chart.png" alt="FairScore Reputation Tiers — Bronze through Diamond" style="width: 100%; border-radius: 12px; border: 1px solid var(--border);">
         </div>
     </section>
 
@@ -1290,102 +1235,61 @@
 
         <div class="assets-grid">
             <div class="asset-card">
-                <div class="asset-icon">◎</div>
+                <div class="asset-icon" style="font-size: 2rem; color: var(--accent);">◎</div>
                 <h3>Native SOL</h3>
                 <p>Transfers and staking operations</p>
             </div>
             <div class="asset-card">
-                <div class="asset-icon">💵</div>
+                <div class="asset-icon" style="color: var(--green);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8"/></svg></div>
                 <h3>Stablecoins</h3>
                 <p>USDC, USDT, and other stables</p>
             </div>
             <div class="asset-card">
-                <div class="asset-icon">🥇</div>
+                <div class="asset-icon" style="color: var(--yellow);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
                 <h3>Tokenized Gold</h3>
                 <p>PAXG and commodity-backed tokens</p>
             </div>
             <div class="asset-card">
-                <div class="asset-icon">📈</div>
+                <div class="asset-icon" style="color: var(--green);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
                 <h3>Tokenized Equities</h3>
                 <p>xStocks and equity instruments</p>
             </div>
             <div class="asset-card">
-                <div class="asset-icon">🔒</div>
+                <div class="asset-icon" style="color: var(--accent);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
                 <h3>Staking</h3>
                 <p>Delegate and manage stake positions</p>
             </div>
             <div class="asset-card">
-                <div class="asset-icon">🎨</div>
+                <div class="asset-icon" style="color: #9945ff;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
                 <h3>NFTs & SPL Tokens</h3>
                 <p>Any Solana program instruction</p>
             </div>
         </div>
     </section>
 
-    <!-- Partners Section -->
+    <!-- Ecosystem Section -->
     <section class="partners">
         <div class="partners-header">
             <h2>Ecosystem Compatibility</h2>
-            <p>Works with leading Solana protocols and infrastructure</p>
+            <p>Built on and integrating with leading Solana protocols</p>
         </div>
 
         <div class="partner-section">
-            <h3>Supported Protocols</h3>
             <div class="partner-grid">
                 <div class="partner-logo">
-                    <img src="images/logo-squads-1.svg" alt="Squads" class="partner-img">
+                    <img src="assets/partners/solana.svg" alt="Solana" class="partner-img">
                 </div>
                 <div class="partner-logo">
-                    <img src="images/logo-backpack-1.svg" alt="Backpack" class="partner-img">
+                    <img src="assets/partners/squads.svg" alt="Squads" class="partner-img">
                 </div>
                 <div class="partner-logo">
-                    <img src="images/yellow-solflare-logo.svg" alt="Solflare" class="partner-img">
+                    <img src="assets/partners/meteora.svg" alt="Meteora" class="partner-img">
                 </div>
                 <div class="partner-logo">
-                    <img src="images/logo-meteora.svg" alt="Meteora" class="partner-img">
+                    <img src="assets/partners/pyth.svg" alt="Pyth" class="partner-img">
                 </div>
                 <div class="partner-logo">
-                    <img src="images/logo-pyth.svg" alt="Pyth" class="partner-img">
-                </div>
-                <div class="partner-logo">
-                    <img src="images/dexscreener-logo.svg" alt="DexScreener" class="partner-img">
-                </div>
-                <div class="partner-logo">
-                    <img src="images/logo-photon.svg" alt="Photon" class="partner-img">
-                </div>
-                <div class="partner-logo">
-                    <img src="images/logo-drip.svg" alt="Drip" class="partner-img">
-                </div>
-            </div>
-        </div>
-
-        <div class="partner-section">
-            <h3>Infrastructure Partners</h3>
-            <div class="partner-grid">
-                <div class="partner-logo">
-                    <img src="images/logo-solana-foundation-1.svg" alt="Solana Foundation" class="partner-img">
-                </div>
-                <div class="partner-logo">
-                    <img src="images/logo-coinbase-1.svg" alt="Coinbase" class="partner-img">
-                </div>
-                <div class="partner-logo">
-                    <img src="images/logo-crossmint-1.svg" alt="Crossmint" class="partner-img">
-                </div>
-                <div class="partner-logo">
-                    <img src="images/logo-helium.svg" alt="Helium" class="partner-img">
-                </div>
-                <div class="partner-logo">
-                    <img src="images/logo-shopify-1.svg" alt="Shopify" class="partner-img">
-                </div>
-            </div>
-        </div>
-
-        <div class="partner-section">
-            <h3>Backed By</h3>
-            <div class="partner-grid">
-                <div class="partner-logo superteam-logo">
-                    <span style="font-size: 1.5rem;">⚡</span>
-                    <span>Superteam</span>
+                    <img src="assets/partners/fairscale.svg" alt="FairScale" class="partner-img">
                 </div>
             </div>
         </div>
@@ -1400,22 +1304,22 @@
 
         <div class="dao-grid">
             <div class="dao-card">
-                <div class="dao-icon">🗳️</div>
+                <div class="dao-icon" style="color: var(--accent);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h6"/><polyline points="9 11 12 14 22 4"/></svg></div>
                 <h3>Voting Rights</h3>
                 <p>Token holders participate in critical decisions affecting protocol evolution. Vote weight scales with lockup duration using the veToken model.</p>
             </div>
             <div class="dao-card">
-                <div class="dao-icon">💰</div>
+                <div class="dao-icon" style="color: var(--accent);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><path d="M6 16h4"/></svg></div>
                 <h3>Treasury Management</h3>
                 <p>Decentralized control of community funds with multi-sig approvals. All treasury actions require on-chain governance approval.</p>
             </div>
             <div class="dao-card">
-                <div class="dao-icon">📋</div>
+                <div class="dao-icon" style="color: var(--accent);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
                 <h3>Proposal System</h3>
                 <p>Anyone can submit proposals for protocol upgrades, parameter changes, or fund allocation. Community debate and votes determine outcomes.</p>
             </div>
             <div class="dao-card">
-                <div class="dao-icon">🤝</div>
+                <div class="dao-icon" style="color: var(--accent);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
                 <h3>Delegation</h3>
                 <p>Delegate your voting power to trusted community members or participate directly. Earn rewards for active governance participation.</p>
             </div>
@@ -1451,7 +1355,7 @@
         <div class="preorder-container">
             <div class="preorder-badge">LIMITED RUN</div>
             <h2>1,000 Pre-Built USB Wallets</h2>
-            <p class="preorder-subtitle">First batch shipping March 2025</p>
+            <p class="preorder-subtitle">First batch shipping Q2 2026</p>
 
             <div class="preorder-features">
                 <div class="preorder-feature">
@@ -1497,7 +1401,7 @@
             <div class="roadmap-item">
                 <div class="roadmap-marker"></div>
                 <div class="roadmap-content">
-                    <span class="roadmap-date">MAR 2025</span>
+                    <span class="roadmap-date">Q2 2026</span>
                     <h3>1,000 Pre-Built USB Wallets</h3>
                     <p>First batch of ready-to-use Coldstar USB drives ship to waitlist.</p>
                 </div>
@@ -1505,7 +1409,7 @@
             <div class="roadmap-item">
                 <div class="roadmap-marker"></div>
                 <div class="roadmap-content">
-                    <span class="roadmap-date">Q2 2025</span>
+                    <span class="roadmap-date">Q3 2026</span>
                     <h3>DIY Hardware Kits</h3>
                     <p>Build-your-own kits for users who trust products they assemble themselves.</p>
                 </div>
@@ -1538,7 +1442,7 @@
         <div class="footer-content">
             <div class="footer-left">
                 <div class="footer-logo">
-                    <img src="images/coldstar-logo.png" alt="Coldstar" class="logo-img">
+                    <img src="assets/coldstar-logo.png" alt="Coldstar" class="logo-img">
                 </div>
                 <span class="copyright">© 2026 Purple Squirrel Media LLC</span>
             </div>
@@ -1550,8 +1454,6 @@
                 <a href="https://github.com/ExpertVagabond/coldstar-colosseum/blob/main/PRIVACY.md">Privacy</a>
             </div>
         </div>
-    
-  <div style="font-size:0.65rem;opacity:0.6;margin-top:0.5rem;"><a href="https://github.com/ExpertVagabond/coldstar-colosseum/blob/main/PRIVACY.md" style="color:inherit;">Privacy</a> · <a href="https://github.com/ExpertVagabond/coldstar-colosseum/blob/main/TERMS.md" style="color:inherit;">Terms</a></div>
 </footer>
 </body>
 </html>
