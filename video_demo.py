@@ -27,7 +27,7 @@ def main():
     # Load existing wallet
     wallet_mgr = WalletManager()
     wallet_mgr.set_wallet_directory(f"{WALLET_PATH}/wallet")
-    wallet_mgr.load_keypair(f"{WALLET_PATH}/wallet/keypair.json")
+    wallet_mgr.load_encrypted_container(f"{WALLET_PATH}/wallet/keypair.json")
 
     network = SolanaNetwork()
     tx_mgr = TransactionManager()
@@ -81,7 +81,14 @@ def main():
                 print_warning(">>> PRIVATE KEY NEVER LEAVES EXTERNAL DRIVE <<<")
                 time.sleep(0.5)
 
-                signed_tx = tx_mgr.sign_transaction(unsigned_tx, wallet_mgr.keypair)
+                container = wallet_mgr.encrypted_container
+                if container:
+                    from src.ui import get_password_input
+                    password = get_password_input("Enter wallet password to sign:")
+                    signed_tx = tx_mgr.sign_transaction_secure(unsigned_tx, container, password)
+                else:
+                    print_warning("No encrypted container loaded — wallet may be legacy format")
+                    signed_tx = None
 
                 if signed_tx:
                     outbox = f"{WALLET_PATH}/outbox/demo_tx_signed.json"

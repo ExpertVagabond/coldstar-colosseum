@@ -82,7 +82,7 @@ ONLINE DEVICE                    AIR-GAPPED USB
 - **Oracles:** Pyth Network Hermes API
 - **Reputation:** FairScale FairScore API
 - **Programs:** Anchor (DAO governance)
-- **Crypto:** Ed25519 (PyNaCl/libsodium)
+- **Crypto:** Rust secure signer (Ed25519, zeroize, secure memory)
 - **OS (cold):** Alpine Linux (network blacklisted)
 
 **2,500+ lines of production Python**, fully open source (MIT).
@@ -131,7 +131,5 @@ Real FairScale API data for the Jupiter Aggregator wallet:
 - **X/Twitter:** [@buildcoldstar](https://x.com/buildcoldstar)
 
 ---
-
-**STIE Member | chainlabs.uno**
 
 *The future of cold storage is intelligent.*

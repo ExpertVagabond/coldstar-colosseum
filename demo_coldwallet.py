@@ -115,9 +115,16 @@ def main():
                 inbox_path = Path(dirs['inbox']) / "unsigned_tx.json"
                 tx_mgr.save_unsigned_transaction(unsigned_tx, str(inbox_path))
 
-                # Sign transaction (this is the offline part)
-                print_info("\nSigning transaction with private key (OFFLINE OPERATION)...")
-                signed_tx = tx_mgr.sign_transaction(unsigned_tx, wallet_mgr.keypair)
+                # Sign transaction securely via Rust signer (OFFLINE OPERATION)
+                print_info("\nSigning transaction with Rust secure signer (OFFLINE OPERATION)...")
+                container = wallet_mgr.encrypted_container
+                if container:
+                    from src.ui import get_password_input
+                    password = get_password_input("Enter wallet password to sign:")
+                    signed_tx = tx_mgr.sign_transaction_secure(unsigned_tx, container, password)
+                else:
+                    print_warning("No encrypted container loaded — wallet may be legacy format")
+                    signed_tx = None
 
                 if signed_tx:
                     outbox_path = Path(dirs['outbox']) / "signed_tx.json"

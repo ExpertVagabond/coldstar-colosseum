@@ -34,13 +34,16 @@ def upgrade_wallet(wallet_path: str):
     wallet_manager = WalletManager()
     wallet_manager.set_wallet_directory(str(wallet_path.parent))
     
-    # Load the keypair from unencrypted format
+    # Load the keypair from unencrypted format (temporary — cleared after encryption)
+    import gc
     from solders.keypair import Keypair
     secret_bytes = bytes(data)
     keypair = Keypair.from_bytes(secret_bytes)
     wallet_manager.keypair = keypair
-    
+
     print_success(f"✓ Loaded keypair: {keypair.pubkey()}")
+    del secret_bytes
+    gc.collect()
     
     # Create backup
     backup_path = wallet_path.with_suffix('.unencrypted.backup')
