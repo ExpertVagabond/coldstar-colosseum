@@ -58,7 +58,10 @@ def main():
 
     if keypair_path.exists():
         print_info("Loading existing wallet...")
-        wallet_mgr.load_keypair(str(keypair_path))
+        container = wallet_mgr.load_encrypted_container(str(keypair_path))
+        if not container:
+            print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
+            return
     else:
         print_info("Generating new Solana keypair...")
         wallet_mgr.generate_keypair()
