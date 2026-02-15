@@ -3,793 +3,1556 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Coldstar - Air-Gapped Solana Cold Wallet with FairScore Reputation Gating. Turn any $10 USB into hardware-grade security. The only cold wallet that checks counterparty reputation before every transaction.">
-    <title>Coldstar - FairScore-Gated Air-Gapped Solana Vault</title>
-
-    <!-- Favicons -->
-    <link rel="icon" type="image/x-icon" href="./assets/favicons/favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicons/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicons/favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="./assets/favicons/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="./assets/favicons/android-chrome-512x512.png">
-
-    <!-- Fonts from coldstar.dev -->
+    <title>Coldstar - Cold Signing for Solana</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            /* coldstar.dev color palette */
-            --bg-primary: #000000;
-            --bg-secondary: #0a0a0a;
-            --bg-card: #141414;
-            --accent-blue: #00A3FF;
-            --accent-green: #00D26A;
-            --accent-yellow: #FFB800;
-            --accent-red: #FF4D4D;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --bg-card: #141414;
+            --text-primary: #ffffff;
+            --text-secondary: #949494;
+            --accent: #00A3FF;
+            --accent-secondary: #33B5FF;
+            --accent-glow: rgba(0, 163, 255, 0.15);
+            --border: rgba(255, 255, 255, 0.08);
+            --green: #00D26A;
+            --yellow: #FFB800;
+            --red: #FF4D4D;
+        }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
-            color: #fff;
+            color: var(--text-primary);
             line-height: 1.6;
             overflow-x: hidden;
         }
 
-        code, pre, .mono {
+        .mono {
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
+        /* Header */
+        header {
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(88, 209, 235, 0.1) 0%, transparent 70%);
-            animation: pulse 15s ease-in-out infinite;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.6; }
-        }
-
-        .hero-content {
-            text-align: center;
-            z-index: 1;
-            max-width: 1200px;
-            padding: 20px;
-        }
-
-        .hero h1 {
-            font-size: clamp(3em, 8vw, 6em);
-            font-weight: 800;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #58d1eb, #98e024);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero .tagline {
-            font-size: clamp(1.2em, 3vw, 2em);
-            color: #9e9e9e;
-            margin-bottom: 40px;
-        }
-
-        .hero .cta-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 40px;
-        }
-
-        .btn {
-            padding: 18px 40px;
-            font-size: 1.1em;
-            font-weight: 600;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: all 0.3s;
-            cursor: pointer;
-            border: none;
-        }
-
-        .btn-primary {
-            background: #58d1eb;
-            color: #000;
-        }
-
-        .btn-primary:hover {
-            background: #98e024;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 40px rgba(88, 209, 235, 0.4);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: #fff;
-            border: 2px solid #58d1eb;
-        }
-
-        .btn-secondary:hover {
-            background: #58d1eb;
-            color: #000;
-        }
-
-        /* Stats Bar */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 40px;
-            margin-top: 80px;
-            padding: 40px;
-            background: rgba(26, 26, 26, 0.8);
-            border-radius: 12px;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 3em;
-            font-weight: 800;
-            background: linear-gradient(135deg, #58d1eb, #98e024);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stat-label {
-            color: #9e9e9e;
-            margin-top: 10px;
-        }
-
-        /* Features Section */
-        .section {
-            padding: 100px 20px;
+        .header-content {
             max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-icon {
+            font-size: 1.75rem;
+            line-height: 1;
+        }
+
+        .logo-img {
+            height: 40px;
+            width: auto;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+
+        .social-links a:hover {
+            color: var(--accent);
+        }
+
+        .powered-by {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            padding: 0.4rem 0.875rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 100px;
+            border: 1px solid var(--border);
+        }
+
+        /* Top Banner - Ledger style */
+        .top-banner {
+            background: var(--accent);
+            padding: 0.75rem 2rem;
+            text-align: center;
+            margin-top: 73px;
+        }
+
+        .top-banner p {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #000;
+            margin: 0;
+        }
+
+        .top-banner a {
+            color: #000;
+            text-decoration: underline;
+            font-weight: 700;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 8rem 2rem 6rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            max-width: 900px;
             margin: 0 auto;
         }
 
-        .section-title {
-            font-size: 3em;
+        .usb-visualization {
+            position: relative;
+            margin-bottom: 3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .usb-drive {
+            width: 100px;
+            height: 160px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .usb-drive::before {
+            content: '';
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 24px;
+            background: #2a2a2a;
+            border-radius: 3px 3px 0 0;
+            border: 1px solid var(--border);
+        }
+
+        .usb-drive::after {
+            content: '❄️';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+        }
+
+        .usb-label {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .arrow-icon {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .ram-box {
+            width: 140px;
+            height: 90px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ram-label {
+            font-size: 0.65rem;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .ram-status {
+            font-size: 0.55rem;
+            color: var(--green);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 0.5rem;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 0.875rem 1.75rem;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .cta-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .cta-button.secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .cta-button.secondary:hover {
+            border-color: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .cta-button.accent {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .cta-button.accent:hover {
+            background: var(--accent-secondary);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .pre-order-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+        }
+
+        .hero .tagline {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+
+        .follow-section {
+            margin-top: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .follow-section p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .follow-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .follow-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .follow-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+        }
+
+        .features-header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 4rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-header h2 {
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .features-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
         .feature-card {
-            background: #1a1a1a;
-            padding: 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            border: 2px solid #2a2a2a;
-            transition: all 0.3s;
+            padding: 1.75rem;
+            transition: border-color 0.2s ease;
         }
 
         .feature-card:hover {
-            border-color: #58d1eb;
-            transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255,255,255,0.2);
         }
 
         .feature-icon {
-            font-size: 3em;
-            margin-bottom: 20px;
+            font-size: 2rem;
+            margin-bottom: 1rem;
         }
 
         .feature-card h3 {
-            color: #58d1eb;
-            font-size: 1.8em;
-            margin-bottom: 15px;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
         }
 
         .feature-card p {
-            color: #9e9e9e;
-            line-height: 1.8;
-        }
-
-        .feature-card ul {
-            list-style: none;
-            margin-top: 20px;
-        }
-
-        .feature-card ul li {
-            padding: 8px 0;
-            color: #ccc;
-        }
-
-        .feature-card ul li::before {
-            content: "✓ ";
-            color: #98e024;
-            font-weight: bold;
-            margin-right: 10px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.6;
         }
 
         /* Comparison Table */
         .comparison {
-            background: #1a1a1a;
-            padding: 40px;
-            border-radius: 12px;
+            padding: 6rem 2rem;
+        }
+
+        .comparison-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .comparison-header h2 {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .comparison-header p {
+            color: var(--text-secondary);
+        }
+
+        .comparison-table {
+            max-width: 1100px;
+            margin: 0 auto;
             overflow-x: auto;
         }
 
-        table {
+        .comparison-table table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px;
+            font-size: 0.9rem;
         }
 
-        th, td {
-            padding: 20px;
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1.25rem 1rem;
             text-align: left;
-            border-bottom: 1px solid #2a2a2a;
+            border-bottom: 1px solid var(--border);
         }
 
-        th {
-            color: #58d1eb;
-            font-size: 1.2em;
+        .comparison-table th {
+            background: var(--bg-card);
             font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        td {
-            color: #ccc;
+        .comparison-table th:first-child {
+            border-radius: 12px 0 0 0;
         }
 
-        tr:hover {
-            background: #0a0a0a;
+        .comparison-table th:last-child {
+            border-radius: 0 12px 0 0;
         }
 
-        .yes { color: #98e024; }
-        .no { color: #fd971f; }
-        .maybe { color: #ffff00; }
+        .comparison-table th.highlight {
+            background: var(--accent);
+            color: #000;
+        }
 
-        /* Demo Section */
-        .demo-preview {
-            background: #1a1a1a;
-            padding: 40px;
+        .comparison-table td {
+            background: var(--bg-secondary);
+        }
+
+        .comparison-table td:first-child {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .comparison-table td.highlight {
+            background: rgba(0, 163, 255, 0.08);
+        }
+
+        .check {
+            color: var(--green);
+        }
+
+        .cross {
+            color: var(--red);
+        }
+
+        /* Code Block */
+        .code-section {
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+        }
+
+        .code-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .code-header h2 {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .code-header p {
+            color: var(--text-secondary);
+        }
+
+        .code-block {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #0d0d0d;
             border-radius: 12px;
-            border: 2px solid #2a2a2a;
+            border: 1px solid var(--border);
+            overflow: hidden;
         }
 
-        .demo-preview iframe {
-            width: 100%;
-            height: 600px;
-            border: none;
-            border-radius: 8px;
-            background: #000;
+        .code-block-header {
+            background: var(--bg-card);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+
+        .code-block pre {
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .code-block .comment { color: #6a737d; }
+        .code-block .command { color: var(--accent); }
+        .code-block .flag { color: var(--yellow); }
+        .code-block .string { color: var(--green); }
+
+        /* Assets Section */
+        .assets {
+            padding: 6rem 2rem;
+        }
+
+        .assets-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .assets-header h2 {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .assets-header p {
+            color: var(--text-secondary);
+        }
+
+        .assets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .asset-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .asset-card:hover {
+            border-color: var(--accent);
+        }
+
+        .asset-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .asset-card h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .asset-card p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Partners Section */
+        .partners {
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+        }
+
+        .partners-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .partners-header h2 {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .partners-header p {
+            color: var(--text-secondary);
+        }
+
+        .partner-section {
+            max-width: 1200px;
+            margin: 0 auto 4rem;
+        }
+
+        .partner-section h3 {
+            text-align: center;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .partner-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .partner-logo {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .partner-logo:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .partner-img {
+            height: 28px;
+            width: auto;
+            max-width: 120px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            opacity: 0.9;
+            transition: opacity 0.3s;
+        }
+
+        .partner-logo:hover .partner-img {
+            opacity: 1;
+        }
+
+        /* Pre-Order Section */
+        .preorder-section {
+            padding: 6rem 2rem;
+            background: var(--bg-primary);
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .preorder-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .preorder-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.4rem 0.875rem;
+            border-radius: 100px;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.08em;
+        }
+
+        .preorder-section h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .preorder-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .preorder-features {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .preorder-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .preorder-icon {
+            font-size: 1.25rem;
+        }
+
+        .preorder-btn {
+            margin-bottom: 1rem;
+        }
+
+        .preorder-note {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Roadmap Section */
+        .roadmap {
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+        }
+
+        .roadmap-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .roadmap-header h2 {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .roadmap-header p {
+            color: var(--text-secondary);
+        }
+
+        .roadmap-timeline {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .roadmap-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .roadmap-item {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .roadmap-marker {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .roadmap-item.active .roadmap-marker {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .roadmap-item.active .roadmap-marker::after {
+            content: '✓';
+            color: #000;
+            font-weight: bold;
+        }
+
+        .roadmap-content {
+            flex: 1;
+            padding-top: 0.5rem;
+        }
+
+        .roadmap-date {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent);
+            background: rgba(0, 163, 255, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .roadmap-content h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .roadmap-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
         }
 
         /* CTA Section */
         .cta-section {
+            padding: 6rem 2rem;
             text-align: center;
-            padding: 100px 20px;
-            background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+            background: var(--bg-secondary);
         }
 
         .cta-section h2 {
-            font-size: 3em;
-            margin-bottom: 30px;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            margin-bottom: 1rem;
+            font-weight: 600;
         }
 
         .cta-section p {
-            font-size: 1.3em;
-            color: #9e9e9e;
-            margin-bottom: 40px;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 1rem;
+            line-height: 1.6;
         }
 
         /* Footer */
-        .footer {
-            text-align: center;
-            padding: 40px 20px;
-            background: #0a0a0a;
-            border-top: 1px solid #2a2a2a;
+        footer {
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-logo .logo-icon {
+            font-size: 1.5rem;
+        }
+
+        .footer-logo .logo-img {
+            height: 28px;
+            width: auto;
+        }
+
+        .copyright {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
 
         .footer-links {
             display: flex;
-            gap: 30px;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            gap: 2rem;
         }
 
         .footer-links a {
-            color: #58d1eb;
+            color: var(--text-secondary);
             text-decoration: none;
-            transition: color 0.3s;
+            font-size: 0.85rem;
+            transition: color 0.2s ease;
         }
 
         .footer-links a:hover {
-            color: #98e024;
+            color: var(--text-primary);
         }
 
-        .footer-note {
-            color: #666;
-            margin-top: 20px;
+        /* DAO Governance Section */
+        .dao {
+            padding: 6rem 2rem;
+            background: var(--bg-primary);
+        }
+
+        .dao-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .dao-header h2 {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .dao-header p {
+            color: var(--text-secondary);
+        }
+
+        .dao-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .dao-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.75rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .dao-card:hover {
+            border-color: var(--accent);
+        }
+
+        .dao-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .dao-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .dao-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .dao-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            max-width: 900px;
+            margin: 3rem auto 0;
+        }
+
+        .dao-stat {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(0, 163, 255, 0.05);
+            border: 1px solid rgba(0, 163, 255, 0.2);
+            border-radius: 12px;
+        }
+
+        .dao-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.25rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .dao-stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5em;
+            .header-content {
+                padding: 1rem;
             }
 
-            .stats {
-                grid-template-columns: 1fr;
+            .powered-by {
+                display: none;
             }
 
-            .features-grid {
-                grid-template-columns: 1fr;
+            .hero {
+                padding: 8rem 1rem 4rem;
             }
-        }
 
-        /* Badges */
-        .badges {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 30px 0;
-        }
+            .usb-visualization {
+                flex-direction: column;
+                gap: 1rem;
+            }
 
-        .badge {
-            padding: 8px 16px;
-            background: #2a2a2a;
-            border-radius: 20px;
-            font-size: 0.9em;
-            color: #9e9e9e;
-        }
+            .arrow-icon {
+                transform: rotate(90deg);
+            }
 
-        .badge.highlight {
-            background: #58d1eb;
-            color: #000;
-            font-weight: 600;
+            .features, .comparison, .code-section, .assets, .partners, .dao, .cta-section {
+                padding: 4rem 1rem;
+            }
+
+            .follow-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                gap: 1.5rem;
+            }
+
+            .comparison-table {
+                font-size: 0.8rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 0.75rem 0.5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="images/coldstar-logo.png" alt="Coldstar" class="logo-img">
+            </a>
+            <div class="header-right">
+                <nav class="header-nav" style="display: flex; gap: 1.5rem; margin-right: 1.5rem;">
+                    <a href="docs.html" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Docs</a>
+                    <a href="build.html" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Build</a>
+                    <a href="dao.html" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">DAO</a>
+                    <a href="colosseum.html" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Colosseum</a>
+                    <a href="docs/whitepaper.html" style="color: #a0a0a0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Whitepaper</a>
+                </nav>
+                <div class="social-links">
+                    <a href="https://github.com/devsyrem/coldstar" target="_blank" aria-label="GitHub">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                        </svg>
+                    </a>
+                    <a href="https://twitter.com/coldstar_prog" target="_blank" aria-label="Twitter">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="powered-by">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Built for Solana
+                </div>
+            </div>
+        </div>
+    </header>
+
     <!-- Top Banner -->
-    <div style="background: linear-gradient(90deg, #ff00ff, #7B2FBE, var(--accent-blue)); padding: 12px 20px; text-align: center; font-size: 0.95em; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-        <span style="color: #fff;">
-            🛡️ <strong>NEW: FairScore Reputation Gating</strong> — Every transaction checked before signing •
-            <a href="https://superteam.fun/earn/listing/fairathon/" target="_blank" style="color: #fff; text-decoration: underline; font-weight: 600;">FairScale Fairathon Entry</a>
-        </span>
+    <div class="top-banner">
+        <p>Take control of your crypto today. <a href="https://github.com/devsyrem/coldstar">Get started on GitHub →</a></p>
     </div>
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-content">
-            <img src="./assets/coldstar-logo-main.png" alt="Coldstar Logo" style="max-width: 400px; margin-bottom: 40px; filter: drop-shadow(0 10px 40px rgba(0, 163, 255, 0.4));">
-            <p class="tagline">Reputation-Gated Air-Gapped Cold Wallet for Solana</p>
-            <p style="font-size: 1.2em; color: #ccc; max-width: 800px; margin: 0 auto;">
-                The only cold wallet that checks counterparty reputation before every transaction.
-                FairScore-gated. Air-gapped. $10 USB drive. Your keys never touch the internet.
-            </p>
-
-            <div class="badges">
-                <span class="badge highlight" style="background: linear-gradient(135deg, #ff00ff, #7B2FBE); color: #fff;">🛡️ FairScore Gated</span>
-                <span class="badge highlight">Air-Gapped</span>
-                <span class="badge">Solana</span>
-                <span class="badge">DeFi Ready</span>
-                <span class="badge">DAO Governance</span>
-                <span class="badge">Open Source</span>
+        <div class="usb-visualization">
+            <div class="usb-drive">
+                <span class="usb-label">AES-256</span>
             </div>
-
-            <div class="cta-buttons">
-                <a href="https://github.com/ExpertVagabond/coldstar-colosseum" class="btn btn-primary" target="_blank">
-                    View on GitHub →
-                </a>
-                <a href="./demo.html" class="btn btn-secondary">
-                    View Demo
-                </a>
-                <a href="docs/whitepaper.html" class="btn btn-secondary">
-                    Whitepaper
-                </a>
+            <span class="arrow-icon">→</span>
+            <div class="ram-box">
+                <span class="ram-label">System RAM</span>
+                <span class="ram-status">● Keys decrypted briefly</span>
             </div>
+        </div>
 
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-number">$10</div>
-                    <div class="stat-label">vs $200 Hardware Wallet</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">2,500+</div>
-                    <div class="stat-label">Lines of Code</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">5</div>
-                    <div class="stat-label">Major Integrations</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Air-Gapped</div>
-                </div>
+        <h1>Take control of your <span>crypto</span> today</h1>
+        <p class="tagline">Transform any USB drive into disposable cold storage. Keys exist in RAM only during signing. Open source. No proprietary hardware.</p>
+
+        <div class="hero-buttons">
+            <a href="https://github.com/devsyrem/coldstar" class="cta-button">
+                Get Started
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+            <a href="#comparison" class="cta-button secondary">
+                Learn More
+            </a>
+        </div>
+
+        <div class="follow-section">
+            <p>Follow our journey</p>
+            <div class="follow-buttons">
+                <a href="https://github.com/devsyrem/coldstar" class="follow-btn" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </a>
+                <a href="https://twitter.com/coldstar_prog" class="follow-btn" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    Twitter
+                </a>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section class="section">
-        <h2 class="section-title">Why Coldstar?</h2>
+    <section class="features">
+        <div class="features-header">
+            <h2>Why Coldstar?</h2>
+            <p>A fundamentally different approach to cold storage that minimizes trust assumptions</p>
+        </div>
+
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>Air-Gap Security</h3>
-                <p>Complete network isolation. Private keys generated offline on air-gapped USB with Alpine Linux. Network drivers blacklisted at boot.</p>
-                <ul>
-                    <li>Hardware-grade isolation</li>
-                    <li>No network access</li>
-                    <li>Encrypted key storage</li>
-                    <li>QR-based signing</li>
-                </ul>
+                <div class="feature-icon">🧠</div>
+                <h3>RAM-Only Signing</h3>
+                <p>Private keys are decrypted only in volatile memory for the brief moment required to sign. Once complete, keys are immediately erased. No persistent exposure.</p>
             </div>
-
-            <div class="feature-card" style="border-color: #7B2FBE;">
-                <div class="feature-icon">🛡️</div>
-                <h3 style="color: #ff00ff;">FairScore Reputation</h3>
-                <p>Every transaction gated by FairScale's real-time reputation scoring. Bronze addresses hard-blocked. Silver requires confirmation. The only cold wallet with counterparty intelligence.</p>
-                <ul>
-                    <li>Real-time FairScore (0-100)</li>
-                    <li>Tier-based blocking/warnings</li>
-                    <li>Dynamic transfer limits</li>
-                    <li>Badge display (LST Staker, etc.)</li>
-                </ul>
-            </div>
-
             <div class="feature-card">
-                <div class="feature-icon">💱</div>
-                <h3>DeFi Integration</h3>
-                <p>Jupiter DEX for best swap routes. Pyth Network for real-time price feeds. Create transactions online, sign offline, broadcast.</p>
-                <ul>
-                    <li>Jupiter aggregation</li>
-                    <li>Pyth price feeds</li>
-                    <li>USD portfolio valuation</li>
-                    <li>SPL token support</li>
-                </ul>
+                <div class="feature-icon">💾</div>
+                <h3>Disposable Hardware</h3>
+                <p>Use any standard USB drive. No serial numbers, no proprietary chips, no manufacturing fingerprints. Rotate, destroy, or replace drives at minimal cost.</p>
             </div>
-
             <div class="feature-card">
-                <div class="feature-icon">🏛️</div>
-                <h3>DAO Governance</h3>
-                <p>Multi-sig vaults with M-of-N signatures. On-chain voting and proposals. Air-gapped approval from each member.</p>
-                <ul>
-                    <li>Multi-sig cold vaults</li>
-                    <li>Proposal creation</li>
-                    <li>On-chain voting</li>
-                    <li>Deployed on devnet</li>
-                </ul>
+                <div class="feature-icon">⌨️</div>
+                <h3>CLI-First Design</h3>
+                <p>Built for developers and operators. Scriptable, automation-friendly, and CI/CD ready. Sign transactions headlessly in air-gapped environments.</p>
             </div>
-
             <div class="feature-card">
-                <div class="feature-icon">🎨</div>
-                <h3>Beautiful Interface</h3>
-                <p>Modern TUI with Rich terminal graphics. Portfolio dashboard with real-time prices. Guided USB flashing tool.</p>
-                <ul>
-                    <li>Professional TUI</li>
-                    <li>Progress visualization</li>
-                    <li>Portfolio tracking</li>
-                    <li>Keyboard shortcuts</li>
-                </ul>
+                <div class="feature-icon">🔓</div>
+                <h3>Open Source</h3>
+                <p>Fully inspectable and verifiable codebase. Deterministic builds. Audit the code, reproduce builds, and adapt to your requirements.</p>
             </div>
-
             <div class="feature-card">
-                <div class="feature-icon">🔧</div>
-                <h3>Easy Setup</h3>
-                <p>Turn any USB drive into a cold wallet in minutes. Bootable Alpine Linux with all dependencies included.</p>
-                <ul>
-                    <li>Any $10 USB drive</li>
-                    <li>Automated flashing</li>
-                    <li>< 50MB footprint</li>
-                    <li>No installation needed</li>
-                </ul>
+                <div class="feature-icon">🔐</div>
+                <h3>AES-256 Encryption</h3>
+                <p>Industry-standard encryption for all stored key material. Keys never exist in plaintext on any storage medium.</p>
             </div>
-
             <div class="feature-card">
-                <div class="feature-icon">🤖</div>
-                <h3>Agent-Friendly</h3>
-                <p>Designed for AI agents managing treasuries. MCP integration planned for hot+cold wallet architecture.</p>
-                <ul>
-                    <li>Programmable interface</li>
-                    <li>Smart routing</li>
-                    <li>Threshold-based security</li>
-                    <li>API-ready</li>
-                </ul>
+                <div class="feature-icon">🚫</div>
+                <h3>No Vendor Lock-in</h3>
+                <p>No proprietary secure elements, no firmware approval processes, no components that must be trusted indefinitely.</p>
             </div>
         </div>
     </section>
 
-    <!-- FairScore Integration Section -->
-    <section class="section" style="background: linear-gradient(135deg, #0d001a 0%, #1a0033 50%, #0d001a 100%); margin: 0; max-width: 100%; padding: 100px 20px;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h2 class="section-title" style="background: linear-gradient(135deg, #ff00ff, #7B2FBE, #58d1eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">FairScore Reputation Gating</h2>
-            <p style="text-align: center; color: #ccc; font-size: 1.3em; margin-bottom: 50px; max-width: 800px; margin-left: auto; margin-right: auto;">
-                Every outbound transaction is checked against FairScale's reputation API <strong style="color: #ff00ff;">before</strong> it crosses the air gap. The last checkpoint before the point of no return.
-            </p>
-
-            <!-- Tier Table -->
-            <div style="background: #1a1a2e; border-radius: 12px; padding: 40px; border: 2px solid #7B2FBE; margin-bottom: 50px;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 15px; text-align: left; color: #ff00ff; border-bottom: 2px solid #7B2FBE;">Tier</th>
-                            <th style="padding: 15px; text-align: left; color: #ff00ff; border-bottom: 2px solid #7B2FBE;">FairScore</th>
-                            <th style="padding: 15px; text-align: left; color: #ff00ff; border-bottom: 2px solid #7B2FBE;">Action</th>
-                            <th style="padding: 15px; text-align: left; color: #ff00ff; border-bottom: 2px solid #7B2FBE;">Transfer Limit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td style="padding: 12px 15px; color: #ff4444;">🔴 Bronze</td><td style="padding: 12px 15px; color: #ccc;">0 - 19</td><td style="padding: 12px 15px; color: #ff4444; font-weight: 700;">HARD BLOCK</td><td style="padding: 12px 15px; color: #ff4444;">Blocked</td></tr>
-                        <tr style="background: rgba(255,255,255,0.03);"><td style="padding: 12px 15px; color: #ffaa00;">🟡 Silver</td><td style="padding: 12px 15px; color: #ccc;">20 - 39</td><td style="padding: 12px 15px; color: #ffaa00; font-weight: 700;">SOFT WARNING</td><td style="padding: 12px 15px; color: #ffaa00;">10 SOL max</td></tr>
-                        <tr><td style="padding: 12px 15px; color: #00ff88;">🟢 Gold</td><td style="padding: 12px 15px; color: #ccc;">40 - 59</td><td style="padding: 12px 15px; color: #00ff88; font-weight: 700;">PROCEED</td><td style="padding: 12px 15px; color: #00ff88;">100 SOL max</td></tr>
-                        <tr style="background: rgba(255,255,255,0.03);"><td style="padding: 12px 15px; color: #00ccff;">🔵 Platinum</td><td style="padding: 12px 15px; color: #ccc;">60 - 79</td><td style="padding: 12px 15px; color: #00ccff; font-weight: 700;">PROCEED</td><td style="padding: 12px 15px; color: #00ccff;">500 SOL max</td></tr>
-                        <tr><td style="padding: 12px 15px; color: #cc66ff;">🟣 Diamond</td><td style="padding: 12px 15px; color: #ccc;">80 - 100</td><td style="padding: 12px 15px; color: #cc66ff; font-weight: 700;">PROCEED</td><td style="padding: 12px 15px; color: #cc66ff;">Unlimited</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Integration Points Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
-                <div style="background: #1a1a2e; padding: 25px; border-radius: 10px; border-left: 4px solid #ff00ff;">
-                    <h4 style="color: #ff00ff; margin-bottom: 8px;">1. Transaction Gating</h4>
-                    <p style="color: #999; font-size: 0.95em;">Block or warn before the transaction crosses the air gap. Bronze = hard block. Silver = explicit confirmation required.</p>
-                </div>
-                <div style="background: #1a1a2e; padding: 25px; border-radius: 10px; border-left: 4px solid #7B2FBE;">
-                    <h4 style="color: #7B2FBE; margin-bottom: 8px;">2. Dynamic Transfer Limits</h4>
-                    <p style="color: #999; font-size: 0.95em;">Transfer caps scale with recipient reputation. Higher trust = higher limits. Configurable base amounts.</p>
-                </div>
-                <div style="background: #1a1a2e; padding: 25px; border-radius: 10px; border-left: 4px solid #58d1eb;">
-                    <h4 style="color: #58d1eb; margin-bottom: 8px;">3. DAO Governance Weighting</h4>
-                    <p style="color: #999; font-size: 0.95em;">Vote weight in multi-sig proposals scaled by voter's FairScore. Sybil wallets can't participate in governance.</p>
-                </div>
-                <div style="background: #1a1a2e; padding: 25px; border-radius: 10px; border-left: 4px solid #98e024;">
-                    <h4 style="color: #98e024; margin-bottom: 8px;">4. Jupiter Swap Screening</h4>
-                    <p style="color: #999; font-size: 0.95em;">Token deployer addresses checked for reputation before creating swap transactions. Honeypot protection.</p>
-                </div>
-                <div style="background: #1a1a2e; padding: 25px; border-radius: 10px; border-left: 4px solid #ffaa00;">
-                    <h4 style="color: #ffaa00; margin-bottom: 8px;">5. Dashboard Badges</h4>
-                    <p style="color: #999; font-size: 0.95em;">Reputation tier and badges (LST Staker, SOL Maxi) displayed alongside portfolio balances in the vault TUI.</p>
-                </div>
-                <div style="background: #1a1a2e; padding: 25px; border-radius: 10px; border-left: 4px solid #00ff88;">
-                    <h4 style="color: #00ff88; margin-bottom: 8px;">6. MCP Agent Gates</h4>
-                    <p style="color: #999; font-size: 0.95em;">AI agents get autonomy proportional to their FairScore. Tier 4-5 auto-execute, Tier 2-3 need human approval.</p>
-                </div>
-            </div>
-
-            <!-- Live API Example -->
-            <div style="background: #0d0d0d; border: 2px solid #7B2FBE; border-radius: 10px; padding: 30px; margin-top: 40px; font-family: 'JetBrains Mono', monospace;">
-                <p style="color: #666; margin-bottom: 15px;">// Live FairScale API response — Jupiter Aggregator wallet</p>
-                <p style="color: #ccc; margin-bottom: 5px;">GET /score?wallet=JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN</p>
-                <p style="color: #ffaa00; margin-top: 15px;">FairScore: <span style="color: #fff; font-weight: 700;">34.2</span>/100 &nbsp;|&nbsp; Tier: <span style="color: #ffaa00; font-weight: 700;">Silver</span></p>
-                <p style="color: #58d1eb; margin-top: 5px;">Badges: <span style="background: #1a1a2e; padding: 3px 10px; border-radius: 12px; font-size: 0.85em;">LST Staker</span> <span style="background: #1a1a2e; padding: 3px 10px; border-radius: 12px; font-size: 0.85em;">SOL Maxi</span> <span style="background: #1a1a2e; padding: 3px 10px; border-radius: 12px; font-size: 0.85em;">No Instant Dumps</span></p>
-                <p style="color: #ffaa00; margin-top: 15px; font-weight: 700;">⚠️ SOFT WARNING — Confirm to proceed with Silver-tier recipient</p>
-            </div>
-
-            <div style="text-align: center; margin-top: 40px;">
-                <a href="docs/FAIRSCORE_INTEGRATION.md" class="btn btn-primary" style="display: inline-block; background: linear-gradient(135deg, #ff00ff, #7B2FBE); color: #fff;">
-                    Full Integration Docs →
-                </a>
-            </div>
+    <!-- Comparison Table -->
+    <section class="comparison" id="comparison">
+        <div class="comparison-header">
+            <h2>How Coldstar Compares</h2>
+            <p>A different trust model from traditional hardware wallets</p>
         </div>
-    </section>
 
-    <!-- Comparison Section -->
-    <section class="section">
-        <h2 class="section-title">How Does It Stack Up?</h2>
-        <div class="comparison">
+        <div class="comparison-table">
             <table>
                 <thead>
                     <tr>
-                        <th>Feature</th>
-                        <th>Coldstar</th>
-                        <th>Hardware Wallet</th>
-                        <th>Hot Wallet</th>
+                        <th>Attribute</th>
+                        <th class="highlight">Coldstar</th>
+                        <th>Unruggable</th>
+                        <th>Ledger</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Air-Gap Security</td>
-                        <td class="yes">✅ Yes</td>
-                        <td class="yes">✅ Yes</td>
-                        <td class="no">❌ No</td>
+                        <td>Cold Storage Model</td>
+                        <td class="highlight">Disposable USB + RAM-only signing</td>
+                        <td>Dedicated hardware with persistent keys</td>
+                        <td>Proprietary hardware with secure element</td>
                     </tr>
                     <tr>
-                        <td>Cost</td>
-                        <td class="yes">$10</td>
-                        <td class="no">$79-279</td>
-                        <td class="yes">Free</td>
+                        <td>Key Lifetime</td>
+                        <td class="highlight">Decrypted briefly in RAM only</td>
+                        <td>Persists on device for lifetime</td>
+                        <td>Persists in secure element for lifetime</td>
+                    </tr>
+                    <tr>
+                        <td>Hardware Dependency</td>
+                        <td class="highlight">Any USB drive (disposable)</td>
+                        <td>Custom hardware required</td>
+                        <td>Proprietary hardware required</td>
+                    </tr>
+                    <tr>
+                        <td>Supply Chain Risk</td>
+                        <td class="highlight">Minimal (user-supplied USB)</td>
+                        <td>Manufacturing dependency</td>
+                        <td>Vendor supply-chain risk</td>
+                    </tr>
+                    <tr>
+                        <td>Automation Support</td>
+                        <td class="highlight"><span class="check">✓</span> CLI-first, scriptable</td>
+                        <td>Limited automation</td>
+                        <td>Limited automation</td>
                     </tr>
                     <tr>
                         <td>Open Source</td>
-                        <td class="yes">✅ Yes</td>
-                        <td class="no">❌ No</td>
-                        <td class="maybe">⚠️ Varies</td>
+                        <td class="highlight"><span class="check">✓</span> Fully verifiable</td>
+                        <td><span class="check">✓</span> Open firmware</td>
+                        <td><span class="cross">✗</span> Proprietary</td>
                     </tr>
                     <tr>
-                        <td>DAO Governance</td>
-                        <td class="yes">✅ Yes</td>
-                        <td class="no">❌ No</td>
-                        <td class="no">❌ No</td>
-                    </tr>
-                    <tr>
-                        <td>Jupiter Swaps</td>
-                        <td class="yes">✅ Yes</td>
-                        <td class="maybe">⚠️ Limited</td>
-                        <td class="yes">✅ Yes</td>
-                    </tr>
-                    <tr>
-                        <td>Pyth Prices</td>
-                        <td class="yes">✅ Yes</td>
-                        <td class="no">❌ No</td>
-                        <td class="yes">✅ Yes</td>
-                    </tr>
-                    <tr>
-                        <td>Reputation Gating</td>
-                        <td class="yes">✅ FairScore</td>
-                        <td class="no">❌ No</td>
-                        <td class="no">❌ No</td>
-                    </tr>
-                    <tr>
-                        <td>Programmable</td>
-                        <td class="yes">✅ Yes</td>
-                        <td class="no">❌ No</td>
-                        <td class="yes">✅ Yes</td>
-                    </tr>
-                    <tr>
-                        <td>Agent-Friendly</td>
-                        <td class="yes">✅ Yes</td>
-                        <td class="no">❌ No</td>
-                        <td class="maybe">⚠️ Risky</td>
+                        <td>Target Users</td>
+                        <td class="highlight">Developers, traders, operators</td>
+                        <td>Security-focused DIY users</td>
+                        <td>Retail consumers</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </section>
 
-    <!-- Demo Section -->
-    <section class="section">
-        <h2 class="section-title">See It in Action</h2>
-        <div class="demo-preview">
-            <h3 style="color: #58d1eb; margin-bottom: 20px; text-align: center;">USB Flashing Animation</h3>
-            <iframe src="./screenshots/flash_usb_animated.html" title="Coldstar Demo Animation"></iframe>
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="./demo.html" class="btn btn-primary" style="display: inline-block;">
-                    View Full Demo Gallery →
-                </a>
+    <!-- Code Section -->
+    <section class="code-section">
+        <div class="code-header">
+            <h2>Simple CLI Workflow</h2>
+            <p>Initialize, sign, and manage your cold wallet from the terminal</p>
+        </div>
+
+        <div class="code-block">
+            <div class="code-block-header">
+                <span class="code-dot red"></span>
+                <span class="code-dot yellow"></span>
+                <span class="code-dot green"></span>
+            </div>
+            <pre><code><span class="comment"># Initialize a new cold wallet on USB</span>
+<span class="command">coldstar</span> <span class="flag">init</span> <span class="string">/media/usb</span>
+
+<span class="comment"># Sign a transaction (keys decrypted in RAM only)</span>
+<span class="command">coldstar</span> <span class="flag">sign</span> <span class="string">--tx transaction.json</span>
+
+<span class="comment"># Stake SOL with cold signing</span>
+<span class="command">coldstar</span> <span class="flag">stake</span> <span class="string">--amount 100 --validator &lt;pubkey&gt;</span>
+
+<span class="comment"># Export public key (safe, no secrets exposed)</span>
+<span class="command">coldstar</span> <span class="flag">pubkey</span></code></pre>
+        </div>
+    </section>
+
+    <!-- Assets Section -->
+    <section class="assets">
+        <div class="assets-header">
+            <h2>Full Asset Support</h2>
+            <p>Secure signing for all Solana assets under one unified security model</p>
+        </div>
+
+        <div class="assets-grid">
+            <div class="asset-card">
+                <div class="asset-icon">◎</div>
+                <h3>Native SOL</h3>
+                <p>Transfers and staking operations</p>
+            </div>
+            <div class="asset-card">
+                <div class="asset-icon">💵</div>
+                <h3>Stablecoins</h3>
+                <p>USDC, USDT, and other stables</p>
+            </div>
+            <div class="asset-card">
+                <div class="asset-icon">🥇</div>
+                <h3>Tokenized Gold</h3>
+                <p>PAXG and commodity-backed tokens</p>
+            </div>
+            <div class="asset-card">
+                <div class="asset-icon">📈</div>
+                <h3>Tokenized Equities</h3>
+                <p>xStocks and equity instruments</p>
+            </div>
+            <div class="asset-card">
+                <div class="asset-icon">🔒</div>
+                <h3>Staking</h3>
+                <p>Delegate and manage stake positions</p>
+            </div>
+            <div class="asset-card">
+                <div class="asset-icon">🎨</div>
+                <h3>NFTs & SPL Tokens</h3>
+                <p>Any Solana program instruction</p>
             </div>
         </div>
     </section>
 
-    <!-- Hackathon Section -->
-    <section class="section" style="background: #1a1a1a; margin: 0; max-width: 100%; padding: 80px 20px;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h2 class="section-title">Built for Colosseum Agent Hackathon</h2>
-            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-                <p style="font-size: 1.2em; color: #9e9e9e; margin-bottom: 30px;">
-                    Coldstar is the only air-gapped security infrastructure in the hackathon. Not another DeFi tool—foundational security for the agent economy.
-                </p>
-                <div class="badges">
-                    <span class="badge">Agent ID: 127</span>
-                    <span class="badge">Project ID: 62</span>
-                    <span class="badge highlight">Security Category</span>
-                    <span class="badge">Feb 2-12, 2026</span>
+    <!-- Partners Section -->
+    <section class="partners">
+        <div class="partners-header">
+            <h2>Ecosystem Compatibility</h2>
+            <p>Works with leading Solana protocols and infrastructure</p>
+        </div>
+
+        <div class="partner-section">
+            <h3>Supported Protocols</h3>
+            <div class="partner-grid">
+                <div class="partner-logo">
+                    <img src="images/logo-squads-1.svg" alt="Squads" class="partner-img">
                 </div>
-                <div style="margin-top: 40px;">
-                    <h3 style="color: #58d1eb; margin-bottom: 20px;">Deployed Infrastructure</h3>
-                    <p style="color: #9e9e9e; margin-bottom: 15px;">
-                        <strong>Coldstar DAO:</strong> <code style="background: #0a0a0a; padding: 4px 8px; border-radius: 4px; color: #58d1eb;">Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat</code>
-                    </p>
-                    <p style="color: #9e9e9e;">
-                        <strong>Voter Registry:</strong> <code style="background: #0a0a0a; padding: 4px 8px; border-radius: 4px; color: #58d1eb;">2ueu2H3tN8U3SWNsQPogd3dWhjnNBXH5AqiZ1H47ViZx</code>
-                    </p>
-                    <p style="margin-top: 15px;">
-                        <a href="https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet"
-                           style="color: #58d1eb; text-decoration: none;" target="_blank">
-                            View on Solana Explorer →
-                        </a>
-                    </p>
+                <div class="partner-logo">
+                    <img src="images/logo-backpack-1.svg" alt="Backpack" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/yellow-solflare-logo.svg" alt="Solflare" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/logo-meteora.svg" alt="Meteora" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/logo-pyth.svg" alt="Pyth" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/dexscreener-logo.svg" alt="DexScreener" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/logo-photon.svg" alt="Photon" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/logo-drip.svg" alt="Drip" class="partner-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="partner-section">
+            <h3>Infrastructure Partners</h3>
+            <div class="partner-grid">
+                <div class="partner-logo">
+                    <img src="images/logo-solana-foundation-1.svg" alt="Solana Foundation" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/logo-coinbase-1.svg" alt="Coinbase" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/logo-crossmint-1.svg" alt="Crossmint" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/logo-helium.svg" alt="Helium" class="partner-img">
+                </div>
+                <div class="partner-logo">
+                    <img src="images/logo-shopify-1.svg" alt="Shopify" class="partner-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="partner-section">
+            <h3>Backed By</h3>
+            <div class="partner-grid">
+                <div class="partner-logo superteam-logo">
+                    <span style="font-size: 1.5rem;">⚡</span>
+                    <span>Superteam</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Partners & Integrations Section -->
-    <section class="section" style="background: var(--bg-secondary); margin: 0; max-width: 100%; padding: 80px 20px;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h2 class="section-title">Built on Solana, Integrated with the Ecosystem</h2>
-            <p style="text-align: center; color: #999; font-size: 1.2em; margin-bottom: 60px; max-width: 700px; margin-left: auto; margin-right: auto;">
-                Coldstar integrates with leading Solana protocols to provide seamless DeFi access while maintaining air-gapped security.
-            </p>
+    <!-- DAO Governance Section -->
+    <section class="dao" id="dao">
+        <div class="dao-header">
+            <h2>Decentralized Governance</h2>
+            <p>Community-owned protocol with transparent on-chain voting</p>
+        </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; align-items: center; justify-items: center;">
-                <div style="text-align: center;">
-                    <img src="./assets/partners/pyth.svg" alt="Pyth Network" style="height: 50px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Price Oracles</p>
+        <div class="dao-grid">
+            <div class="dao-card">
+                <div class="dao-icon">🗳️</div>
+                <h3>Voting Rights</h3>
+                <p>Token holders participate in critical decisions affecting protocol evolution. Vote weight scales with lockup duration using the veToken model.</p>
+            </div>
+            <div class="dao-card">
+                <div class="dao-icon">💰</div>
+                <h3>Treasury Management</h3>
+                <p>Decentralized control of community funds with multi-sig approvals. All treasury actions require on-chain governance approval.</p>
+            </div>
+            <div class="dao-card">
+                <div class="dao-icon">📋</div>
+                <h3>Proposal System</h3>
+                <p>Anyone can submit proposals for protocol upgrades, parameter changes, or fund allocation. Community debate and votes determine outcomes.</p>
+            </div>
+            <div class="dao-card">
+                <div class="dao-icon">🤝</div>
+                <h3>Delegation</h3>
+                <p>Delegate your voting power to trusted community members or participate directly. Earn rewards for active governance participation.</p>
+            </div>
+        </div>
+
+        <div class="dao-stats">
+            <div class="dao-stat">
+                <div class="dao-stat-value">4 yrs</div>
+                <div class="dao-stat-label">Max lockup period</div>
+            </div>
+            <div class="dao-stat">
+                <div class="dao-stat-value">100x</div>
+                <div class="dao-stat-label">Max vote multiplier</div>
+            </div>
+            <div class="dao-stat">
+                <div class="dao-stat-value">24h</div>
+                <div class="dao-stat-label">Epoch duration</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem;">
+            <a href="dao.html" class="cta-button accent">
+                Enter DAO
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- Pre-Order Section -->
+    <section class="preorder-section" id="preorder">
+        <div class="preorder-container">
+            <div class="preorder-badge">LIMITED RUN</div>
+            <h2>1,000 Pre-Built USB Wallets</h2>
+            <p class="preorder-subtitle">First batch shipping March 2025</p>
+
+            <div class="preorder-features">
+                <div class="preorder-feature">
+                    <span class="preorder-icon">💾</span>
+                    <span>Pre-configured USB drive</span>
                 </div>
-                <div style="text-align: center;">
-                    <img src="./assets/partners/meteora.svg" alt="Meteora" style="height: 50px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Liquidity Pools</p>
+                <div class="preorder-feature">
+                    <span class="preorder-icon">🔐</span>
+                    <span>AES-256 encrypted</span>
                 </div>
-                <div style="text-align: center;">
-                    <img src="./assets/partners/squads.svg" alt="Squads Protocol" style="height: 50px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Multi-Sig</p>
-                </div>
-                <div style="text-align: center;">
-                    <img src="./assets/partners/solana.svg" alt="Solana" style="height: 50px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Infrastructure</p>
-                </div>
-                <div style="text-align: center;">
-                    <img src="./assets/partners/fairscale.svg" alt="FairScale" style="height: 50px; opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-                    <p style="color: #666; margin-top: 10px; font-size: 0.9em;">Reputation Scoring</p>
+                <div class="preorder-feature">
+                    <span class="preorder-icon">📦</span>
+                    <span>Ready to use out of box</span>
                 </div>
             </div>
 
-            <div style="text-align: center; margin-top: 60px;">
-                <p style="color: #00A3FF; font-size: 1.1em;">
-                    🔗 Integration with Jupiter DEX for best swap routes across all Solana DEXes
-                </p>
+            <a href="#waitlist" class="cta-button preorder-btn">
+                Join Waitlist
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+            <p class="preorder-note">Limited to 1,000 units • Superteam members get priority</p>
+        </div>
+    </section>
+
+    <!-- Roadmap Section -->
+    <section class="roadmap">
+        <div class="roadmap-header">
+            <h2>Roadmap</h2>
+            <p>From software to hardware ecosystem</p>
+        </div>
+
+        <div class="roadmap-timeline">
+            <div class="roadmap-item active">
+                <div class="roadmap-marker"></div>
+                <div class="roadmap-content">
+                    <span class="roadmap-date">NOW</span>
+                    <h3>Open Source CLI</h3>
+                    <p>Coldstar CLI available on GitHub. Use any USB drive.</p>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-marker"></div>
+                <div class="roadmap-content">
+                    <span class="roadmap-date">MAR 2025</span>
+                    <h3>1,000 Pre-Built USB Wallets</h3>
+                    <p>First batch of ready-to-use Coldstar USB drives ship to waitlist.</p>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-marker"></div>
+                <div class="roadmap-content">
+                    <span class="roadmap-date">Q2 2025</span>
+                    <h3>DIY Hardware Kits</h3>
+                    <p>Build-your-own kits for users who trust products they assemble themselves.</p>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-marker"></div>
+                <div class="roadmap-content">
+                    <span class="roadmap-date">FUTURE</span>
+                    <h3>Companion App</h3>
+                    <p>Optional mobile/desktop app for transaction building and broadcasting.</p>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- CTA Section -->
     <section class="cta-section">
-        <h2>Ready to Secure Your Solana Assets?</h2>
-        <p>Turn any USB drive into a hardware wallet. Start protecting your keys today.</p>
-        <div class="cta-buttons">
-            <a href="https://github.com/ExpertVagabond/coldstar-colosseum" class="btn btn-primary" target="_blank">
-                View on GitHub →
-            </a>
-            <a href="https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault" class="btn btn-secondary" target="_blank">
-                Hackathon Project Page
-            </a>
-        </div>
+        <h2>Ready to Take Control?</h2>
+        <p>Coldstar is open source and free to use. Audit the code, run it yourself, and own your security.</p>
+        <a href="https://github.com/devsyrem/coldstar" class="cta-button">
+            Get Started on GitHub
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+        </a>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-links">
-            <a href="https://github.com/ExpertVagabond/coldstar-colosseum" target="_blank">GitHub</a>
-            <a href="docs/whitepaper.html">Whitepaper</a>
-            <a href="docs/FAIRSCORE_INTEGRATION.md">FairScore Docs</a>
-            <a href="https://superteam.fun/earn/listing/fairathon/" target="_blank">Fairathon</a>
-            <a href="./demo.html">Demo</a>
-            <a href="https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet" target="_blank">DAO Explorer</a>
+    <footer>
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-logo">
+                    <img src="images/coldstar-logo.png" alt="Coldstar" class="logo-img">
+                </div>
+                <span class="copyright">© 2025 Coldstar</span>
+            </div>
+            <div class="footer-links">
+                <a href="docs.html">Docs</a>
+                <a href="docs/whitepaper.html">Whitepaper</a>
+                <a href="https://github.com/devsyrem/coldstar">GitHub</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+            </div>
         </div>
-        <div class="footer-note">
-            <p>Made with ✦ for the Solana Agent Economy</p>
-            <p style="margin-top: 10px;">Coldstar • FairScore Reputation Gating • Air-Gapped Security • Open Source (MIT License)</p>
-            <p style="margin-top: 10px; font-size: 0.9em;"><a href="https://x.com/buildcoldstar" target="_blank" style="color: #58d1eb; text-decoration: none;">@buildcoldstar</a> • <a href="https://coldstar.dev" target="_blank" style="color: #58d1eb; text-decoration: none;">Purple Squirrel Media</a></p>
-            <p style="margin-top: 5px; font-size: 0.85em; color: #555;"><a href="https://superteam.fun/earn/listing/fairathon/" target="_blank" style="color: #7B2FBE; text-decoration: none;">FairScale Fairathon</a> • <a href="https://colosseum.com/agent-hackathon/" target="_blank" style="color: #555; text-decoration: none;">Colosseum Agent Hackathon</a></p>
-        </div>
-    </footer>
+    
+  <div style="font-size:0.65rem;opacity:0.6;margin-top:0.5rem;"><a href="/privacy.html" style="color:inherit;">Privacy</a> · <a href="/terms.html" style="color:inherit;">Terms</a></div>
+</footer>
 </body>
 </html>
