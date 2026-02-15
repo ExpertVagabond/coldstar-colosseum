@@ -28,6 +28,13 @@ WHITEPAPER = PROJECT / "whitepaper.md"
 FONT_DIR = PROJECT / "book" / "fonts"
 OUTPUT = PROJECT / "book" / "output" / "coldstar-whitepaper.pdf"
 
+# -- Brand Assets ----------------------------------------------------------
+LOGO_MAIN = PROJECT / "assets" / "coldstar-logo-main.png"   # White wordmark + star on transparent
+ICON_1024 = PROJECT / "assets" / "favicons" / "coldstar-icon-1024.png"  # Star icon hi-res
+ICON_STAR = PROJECT / "assets" / "coldstar-icon.png"        # Dual star mark
+SCREENSHOT_WALLET = PROJECT / "attached_assets" / "Screenshot_2025-12-24_at_00.36.12_1766536575372.png"
+SCREENSHOT_USB = PROJECT / "attached_assets" / "Screenshot_2025-12-24_at_00.41.39_1766536906322.png"
+
 # -- Register TTF fonts ----------------------------------------------------
 pdfmetrics.registerFont(TTFont('SpaceGrotesk', str(FONT_DIR / 'SpaceGrotesk-Regular.ttf')))
 pdfmetrics.registerFont(TTFont('SpaceGrotesk-Medium', str(FONT_DIR / 'SpaceGrotesk-Medium.ttf')))
@@ -348,6 +355,72 @@ class CyanAccentBlock(Flowable):
         self._para.drawOn(c, 22, 0)
 
 
+class ScreenshotBlock(Flowable):
+    """Embed a screenshot with border and caption."""
+    def __init__(self, img_path, caption="", max_width=4.5*inch):
+        super().__init__()
+        self._img_path = str(img_path)
+        self._caption = caption
+        self._max_width = max_width
+        from reportlab.lib.utils import ImageReader
+        img = ImageReader(self._img_path)
+        iw, ih = img.getSize()
+        scale = min(self._max_width / iw, 3.0 * inch / ih)
+        self._img_w = iw * scale
+        self._img_h = ih * scale
+
+    def wrap(self, aW, aH):
+        self.width = aW
+        caption_h = 16 if self._caption else 0
+        self.height = self._img_h + 16 + caption_h  # padding + caption
+        return aW, self.height
+
+    def draw(self):
+        c = self.canv
+        x = (self.width - self._img_w) / 2  # center
+        caption_h = 16 if self._caption else 0
+
+        # Dark background behind screenshot
+        c.setFillColor(HexColor("#1a1a1a"))
+        c.roundRect(x - 6, caption_h, self._img_w + 12, self._img_h + 12, 4, fill=1, stroke=0)
+
+        # Cyan border
+        c.setStrokeColor(CYAN)
+        c.setLineWidth(0.5)
+        c.roundRect(x - 6, caption_h, self._img_w + 12, self._img_h + 12, 4, fill=0, stroke=1)
+
+        # Image
+        c.drawImage(self._img_path, x, caption_h + 6,
+                     width=self._img_w, height=self._img_h,
+                     preserveAspectRatio=True)
+
+        # Caption
+        if self._caption:
+            c.setFont("IBMPlexMono", 7)
+            c.setFillColor(MUTED)
+            c.drawCentredString(self.width / 2, 2, self._caption)
+
+
+class BrandIcon(Flowable):
+    """Centered brand icon at a given size."""
+    def __init__(self, img_path, size=0.6*inch):
+        super().__init__()
+        self._img_path = str(img_path)
+        self._size = size
+
+    def wrap(self, aW, aH):
+        self.width = aW
+        self.height = self._size + 8
+        return aW, self.height
+
+    def draw(self):
+        c = self.canv
+        x = (self.width - self._size) / 2
+        c.drawImage(self._img_path, x, 4,
+                     width=self._size, height=self._size,
+                     preserveAspectRatio=True, mask='auto')
+
+
 # -- Page templates --------------------------------------------------------
 class WhitepaperDocTemplate(BaseDocTemplate):
     """Doc template with programmatic cover, alternating gutters, page numbers."""
@@ -378,56 +451,58 @@ class WhitepaperDocTemplate(BaseDocTemplate):
         ])
 
     def _draw_cover(self, canvas, doc):
-        """Programmatic dark cover with geometric accents."""
+        """Dark cover using actual Coldstar brand assets."""
         self.page_count += 1
+
+        cx = PAGE_W / 2
 
         # Dark background
         canvas.setFillColor(HexColor("#0a0a0a"))
         canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
 
-        # Geometric accent lines (circuit-board inspired)
+        # Subtle geometric accent lines (circuit-board inspired)
         canvas.setStrokeColor(HexColor("#1a3a42"))
         canvas.setLineWidth(0.5)
         for y in range(0, int(PAGE_H), 24):
-            canvas.line(0, y, PAGE_W * 0.15, y)
-            canvas.line(PAGE_W * 0.85, y, PAGE_W, y)
+            canvas.line(0, y, PAGE_W * 0.12, y)
+            canvas.line(PAGE_W * 0.88, y, PAGE_W, y)
 
         # Cyan accent bar at top
         canvas.setFillColor(CYAN)
         canvas.rect(0, PAGE_H - 4, PAGE_W, 4, fill=1, stroke=0)
 
-        # Small cyan accent square (logo placeholder)
-        cx = PAGE_W / 2
-        sq_size = 0.4 * inch
-        canvas.setFillColor(CYAN)
-        canvas.rect(cx - sq_size / 2, 6.2 * inch, sq_size, sq_size, fill=1, stroke=0)
+        # Star icon (actual brand asset) — centered, upper portion
+        if ICON_1024.exists():
+            icon_w = 1.4 * inch
+            icon_h = 1.4 * inch
+            canvas.drawImage(str(ICON_1024), cx - icon_w / 2, 6.4 * inch,
+                             width=icon_w, height=icon_h,
+                             preserveAspectRatio=True, mask='auto')
 
-        # Star symbol in the square
-        canvas.setFillColor(HexColor("#0a0a0a"))
-        canvas.setFont("SpaceGrotesk-Bold", 18)
-        canvas.drawCentredString(cx, 6.28 * inch, "\u2605")
+        # Logo wordmark (actual brand asset) — below icon
+        if LOGO_MAIN.exists():
+            logo_w = 4.0 * inch
+            logo_h = 1.2 * inch
+            canvas.drawImage(str(LOGO_MAIN), cx - logo_w / 2, 4.8 * inch,
+                             width=logo_w, height=logo_h,
+                             preserveAspectRatio=True, mask='auto')
 
         # "TECHNICAL WHITEPAPER" label
         canvas.setFillColor(CYAN)
         canvas.setFont("IBMPlexMono", 7)
-        canvas.drawCentredString(cx, 5.8 * inch, "TECHNICAL WHITEPAPER  \u2022  V1.0")
-
-        # Main title
-        canvas.setFillColor(WHITE)
-        canvas.setFont("SpaceGrotesk-Bold", 36)
-        canvas.drawCentredString(cx, 4.9 * inch, "COLDSTAR")
+        canvas.drawCentredString(cx, 4.5 * inch, "TECHNICAL WHITEPAPER  \u2022  V1.0")
 
         # Subtitle
         canvas.setFont("SpaceGrotesk-Light", 11)
         canvas.setFillColor(HexColor("#a0a0a0"))
-        canvas.drawCentredString(cx, 4.5 * inch, "A Python-Based Air-Gapped Cold Wallet")
-        canvas.drawCentredString(cx, 4.25 * inch, "Tool for Solana")
+        canvas.drawCentredString(cx, 4.05 * inch, "A Python-Based Air-Gapped Cold Wallet")
+        canvas.drawCentredString(cx, 3.8 * inch, "Tool for Solana")
 
         # Cyan rule
         canvas.setStrokeColor(CYAN)
         canvas.setLineWidth(2)
         rule_w = 1.5 * inch
-        canvas.line(cx - rule_w / 2, 4.0 * inch, cx + rule_w / 2, 4.0 * inch)
+        canvas.line(cx - rule_w / 2, 3.55 * inch, cx + rule_w / 2, 3.55 * inch)
 
         # Key features (stacked)
         features = [
@@ -437,12 +512,12 @@ class WhitepaperDocTemplate(BaseDocTemplate):
             "100% Open Source",
         ]
         canvas.setFont("IBMPlexMono", 7)
-        y = 3.6 * inch
+        y = 3.2 * inch
         for feat in features:
             canvas.setFillColor(CYAN)
-            canvas.drawCentredString(cx - 0.5 * inch, y, "\u25a0")
+            canvas.drawString(cx - 1.1 * inch, y, "\u25a0")
             canvas.setFillColor(HexColor("#cccccc"))
-            canvas.drawCentredString(cx + 0.15 * inch, y, feat)
+            canvas.drawString(cx - 0.9 * inch, y, feat)
             y -= 0.22 * inch
 
         # Author
@@ -730,15 +805,21 @@ def parse_section_content(text, styles):
 def build_front_matter(styles, sections):
     story = []
 
-    # Half title
-    story.append(Spacer(1, 2.8 * inch))
+    # Half title with star icon
+    story.append(Spacer(1, 2.0 * inch))
+    if ICON_STAR.exists():
+        story.append(BrandIcon(ICON_STAR, size=0.8 * inch))
+        story.append(Spacer(1, 16))
     story.append(Paragraph("COLDSTAR", styles["title_main"]))
     story.append(Spacer(1, 8))
     story.append(Paragraph("Technical Whitepaper", styles["title_subtitle"]))
     story.append(PageBreak())
 
-    # Title page
-    story.append(Spacer(1, 1.5 * inch))
+    # Title page with star icon
+    story.append(Spacer(1, 0.8 * inch))
+    if ICON_STAR.exists():
+        story.append(BrandIcon(ICON_STAR, size=1.0 * inch))
+        story.append(Spacer(1, 12))
     story.append(Paragraph("TECHNICAL WHITEPAPER  \u2022  V1.0", styles["title_series"]))
     story.append(Spacer(1, 12))
     story.append(Paragraph("COLDSTAR", styles["title_main"]))
@@ -749,11 +830,11 @@ def build_front_matter(styles, sections):
     story.append(Paragraph(
         "A Python-Based Air-Gapped Cold Wallet<br/>Tool for Solana",
         styles["title_subtitle"]))
-    story.append(Spacer(1, 1.0 * inch))
+    story.append(Spacer(1, 0.8 * inch))
     story.append(Paragraph("&lt;/Syrem&gt;", styles["title_author"]))
     story.append(Spacer(1, 6))
     story.append(Paragraph("ChainLabs Technologies", styles["title_org"]))
-    story.append(Spacer(1, 1.5 * inch))
+    story.append(Spacer(1, 1.2 * inch))
     story.append(Paragraph("Purple Squirrel Media", styles["title_publisher"]))
     story.append(PageBreak())
 
@@ -877,6 +958,18 @@ def build_pdf():
                     story.append(Paragraph(clean_md(stripped), styles["abstract_body"]))
         else:
             story.extend(parse_section_content(content, styles))
+
+            # Inject CLI screenshots for relevant sections
+            if "5. User Guide" in title and SCREENSHOT_WALLET.exists():
+                story.append(Spacer(1, 12))
+                story.append(ScreenshotBlock(
+                    SCREENSHOT_WALLET,
+                    caption="Figure 1: Coldstar CLI \u2014 Wallet Status & Main Menu"))
+            if "5. User Guide" in title and SCREENSHOT_USB.exists():
+                story.append(Spacer(1, 12))
+                story.append(ScreenshotBlock(
+                    SCREENSHOT_USB,
+                    caption="Figure 2: Coldstar CLI \u2014 USB Detection & Network Status"))
 
         story.append(PageBreak())
 
