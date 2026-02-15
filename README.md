@@ -444,7 +444,7 @@ We welcome contributions! Here's how:
 4. Push to branch (`git push origin feature/amazing`)
 5. Open a Pull Request
 
-**Security Issues**: Email security@coldstar.dev (or open a private issue)
+**Security Issues**: Open a [private security advisory](https://github.com/ExpertVagabond/coldstar-colosseum/security/advisories/new)
 
 ---
 
@@ -465,8 +465,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ## 💬 Community
 
-**X**: [@buildcoldstar](https://x.com/buildcoldstar) | STIE Member
-**STIE Member** | [chainlabs.uno](https://chainlabs.uno)
+**X**: [@buildcoldstar](https://x.com/buildcoldstar)
 **Hackathons**: Colosseum Agent Hackathon (Project #62) + FairScale Fairathon
 
 <p align="center">
