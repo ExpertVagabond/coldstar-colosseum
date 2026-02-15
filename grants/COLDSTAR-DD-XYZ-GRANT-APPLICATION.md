@@ -2,7 +2,7 @@
 
 > Ready to paste into the DD.xyz application form.
 > Contact: MatthewKarstenConnects@gmail.com | @buildcoldstar
-> Submitted by: @buildcoldstar | STIE Member | chainlabs.uno
+> Submitted by: @buildcoldstar | Purple Squirrel Media
 
 ---
 
@@ -201,4 +201,4 @@ Each milestone will be deployed incrementally. Bi-weekly progress updates provid
 
 *Application prepared February 2026 for DD.xyz API Credits Grant Program*
 *Project: Coldstar — https://coldstar.dev/colosseum*
-*Applicant: @buildcoldstar | STIE Member | chainlabs.uno*
+*Applicant: @buildcoldstar | Purple Squirrel Media*
