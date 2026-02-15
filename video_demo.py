@@ -126,7 +126,7 @@ Key Features Demonstrated:
 - Offline transaction signing
 - Online broadcast of pre-signed transactions
 
-github.com/ChainLabs-Technologies/coldstar
+github.com/ExpertVagabond/coldstar-colosseum
 """)
 
     network.close()

@@ -544,7 +544,7 @@ pip install rich questionary solana solders pynacl httpx aiofiles base58
 
 **Step 2: Clone Repository**
 ```bash
-git clone https://github.com/ChainLabs-Technologies/coldstar.git
+git clone https://github.com/ExpertVagabond/coldstar-colosseum.git
 cd coldstar
 ```
 
@@ -893,7 +893,7 @@ Coldstar v1.0 provides a production-ready, open-source cold wallet solution for 
 
 **Development Setup:**
 ```bash
-git clone https://github.com/ChainLabs-Technologies/coldstar.git
+git clone https://github.com/ExpertVagabond/coldstar-colosseum.git
 cd coldstar
 python -m venv venv
 source venv/bin/activate  # or `venv\Scripts\activate` on Windows
@@ -1067,8 +1067,8 @@ SOFTWARE.
 ---
 
 **Contact & Support:**
-- **GitHub:** https://github.com/ChainLabs-Technologies/coldstar
-- **Issues:** https://github.com/ChainLabs-Technologies/coldstar/issues
+- **GitHub:** https://github.com/ExpertVagabond/coldstar-colosseum
+- **Issues:** https://github.com/ExpertVagabond/coldstar-colosseum/issues
 - **Email:** syrem@chainlabs.uno
 
 ---
