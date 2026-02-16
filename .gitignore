@@ -23,12 +23,8 @@ output/
 
 # Sensitive wallet data - NEVER COMMIT
 local_wallet/
-*.json
-!package.json
-!package-lock.json
-!pyproject.toml
-!secure_signer/Cargo.toml
 pubkey.txt
+keypair.json
 
 # Installer files
 rustup-init.exe
@@ -54,5 +50,8 @@ uv.lock
 
 # Local development files
 .local/
-test_*.py
-check_*.py
+
+# Build artifacts
+coldstar-manim/
+coldstar-video/
+node_modules/
