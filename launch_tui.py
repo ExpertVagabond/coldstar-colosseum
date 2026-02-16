@@ -13,13 +13,18 @@ def main():
     choice = select(
         "Which Coldstar interface would you like to launch?",
         choices=[
+            "Coldstar Dashboard (Full UI)",
             "Flash USB Cold Wallet",
             "Vault Dashboard",
             "Exit"
         ]
     ).ask()
 
-    if choice == "Flash USB Cold Wallet":
+    if choice == "Coldstar Dashboard (Full UI)":
+        from coldstar_tui import run_dashboard
+        run_dashboard()
+
+    elif choice == "Flash USB Cold Wallet":
         from flash_usb_tui import run_flash_ui
         run_flash_ui()
 
