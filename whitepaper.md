@@ -888,7 +888,7 @@ Coldstar v1.0 provides a production-ready, open-source cold wallet solution for 
 **How to Contribute:**
 - Report bugs: GitHub Issues
 - Submit patches: Pull Requests
-- Security vulnerabilities: security@chainlabs.io (responsible disclosure)
+- Security vulnerabilities: [GitHub Security Advisory](https://github.com/ExpertVagabond/coldstar-colosseum/security/advisories/new) (responsible disclosure)
 - Documentation improvements: Edit `README.md` or this whitepaper
 
 **Development Setup:**

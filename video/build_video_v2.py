@@ -192,7 +192,7 @@ def composite_terminal_frame(content_png_path, output_path, window_title="coldst
         brand_font = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 13)
     except (OSError, IOError):
         brand_font = title_font
-    branding = "coldstar.dev  |  X: @buildcoldstar  |  chainlabs.uno  |  FairScale Fairathon 2026"
+    branding = "coldstar.dev  |  X: @buildcoldstar  |  FairScale Fairathon 2026"
     bbox = draw.textbbox((0, 0), branding, font=brand_font)
     bw = bbox[2] - bbox[0]
     draw.text(((WIDTH - bw) // 2, HEIGHT - 28), branding, fill=BRANDING_COLOR, font=brand_font)
@@ -222,7 +222,7 @@ def render_title(c):
     c.print()
     c.print("[bold white]     Reputation-Gated Air-Gapped Cold Wallet for Solana[/]")
     c.print()
-    c.print("[dim]     STIE Member  •  chainlabs.uno  •  coldstar.dev[/]")
+    c.print("[dim]     STIE Member  •  coldstar.dev[/]")
     c.print("[dim]     X: @buildcoldstar  •  Insta: @devsyrem[/]")
     c.print()
     c.print()
@@ -776,7 +776,7 @@ def render_live_api(c):
     "CTA",
     12,
     "Coldstar is live at coldstar.dev. The code is open source on GitHub. "
-    "Follow build coldstar on X. STIE member, chainlabs.uno. "
+    "Follow build coldstar on X. STIE member, coldstar.dev. "
     "The future of cold storage is intelligent. Thank you.",
     accent="#ff00ff",
 )
@@ -793,12 +793,12 @@ def render_cta(c):
     c.print("  [bold white]X:[/]         [cyan]@buildcoldstar[/]")
     c.print("  [bold white]Insta:[/]     [cyan]@devsyrem[/]")
     c.print()
-    c.print("  [bold white]STIE Member[/]  •  [cyan]chainlabs.uno[/]")
+    c.print("  [bold white]STIE Member[/]  •  [cyan]coldstar.dev[/]")
     c.print()
     c.print('  [bold white italic]"The future of cold storage is intelligent."[/]')
     c.print()
     c.print("  [dim]FairScale Fairathon 2026[/]")
-    c.print("  [dim]STIE Member  •  chainlabs.uno[/]")
+    c.print("  [dim]STIE Member  •  coldstar.dev[/]")
     c.print()
 
 

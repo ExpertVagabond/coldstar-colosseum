@@ -65,8 +65,8 @@ pip install -e .
 ### 2. Clone & Run
 
 ```bash
-git clone https://github.com/ChainLabs-Technologies/coldstar.git
-cd coldstar
+git clone https://github.com/ExpertVagabond/coldstar-colosseum.git
+cd coldstar-colosseum
 python main.py
 ```
 
@@ -250,7 +250,7 @@ Check out our demo videos:
 
 ## Security Disclosure
 
-Found a vulnerability? Email: security@chainlabs.uno
+Found a vulnerability? [Open a Security Advisory](https://github.com/ExpertVagabond/coldstar-colosseum/security/advisories/new)
 
 ## License
 
@@ -261,5 +261,5 @@ MIT License - See [LICENSE](LICENSE) for details.
 <p align="center">
   <strong>Your keys, your responsibility. Open source, open trust.</strong>
   <br><br>
-  Made with ✦ by <a href="https://github.com/ChainLabs-Technologies">ChainLabs Technologies</a>
+  Made with ✦ by <a href="https://github.com/ExpertVagabond/coldstar-colosseum">Coldstar Contributors</a>
 </p>
