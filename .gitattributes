@@ -1,0 +1,11 @@
+# GitHub linguist overrides — Coldstar is a Python + Rust project
+# Static HTML site pages are documentation, not application code
+*.html linguist-documentation
+*.css linguist-documentation
+*.svg linguist-documentation
+
+# Vendor/generated files
+screenshots/* linguist-generated
+slides/* linguist-generated
+book/output/* linguist-generated
+site/dist/* linguist-generated
