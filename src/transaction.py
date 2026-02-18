@@ -327,7 +327,7 @@ class TransactionManager:
     def decode_transaction_info(self, tx_bytes: bytes) -> Optional[dict]:
         try:
             tx = Transaction.from_bytes(tx_bytes)
-            
+
             info = {
                 "signatures": len(tx.signatures),
                 "is_signed": len(tx.signatures) > 0 and tx.signatures[0] != bytes(64),
@@ -335,8 +335,24 @@ class TransactionManager:
                 "recent_blockhash": str(tx.message.recent_blockhash),
                 "fee_payer": str(tx.message.account_keys[0]) if tx.message.account_keys else None
             }
-            
+
             return info
-        except Exception as e:
-            print_error(f"Failed to decode transaction: {e}")
-            return None
+        except Exception:
+            # Try versioned transaction format (e.g. Jupiter swaps)
+            try:
+                from solders.transaction import VersionedTransaction
+                vtx = VersionedTransaction.from_bytes(tx_bytes)
+
+                info = {
+                    "signatures": len(vtx.signatures),
+                    "is_signed": len(vtx.signatures) > 0 and vtx.signatures[0] != bytes(64),
+                    "num_instructions": len(vtx.message.instructions),
+                    "recent_blockhash": str(vtx.message.recent_blockhash),
+                    "fee_payer": str(vtx.message.account_keys[0]) if vtx.message.account_keys else None,
+                    "versioned": True
+                }
+
+                return info
+            except Exception as e:
+                print_error(f"Failed to decode transaction: {e}")
+                return None

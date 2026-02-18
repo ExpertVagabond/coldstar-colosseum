@@ -234,6 +234,55 @@ class SolanaSecureSigner:
         
         return signature, signed_tx
 
+    def decrypt_private_key(
+        self,
+        encrypted_container: dict,
+        passphrase: str
+    ) -> list:
+        """
+        Decrypt the private key from an encrypted container.
+
+        SECURITY WARNING: This returns the plaintext private key in Python memory.
+        Use ONLY for backup/export operations. For transaction signing, always use
+        sign_transaction() which keeps keys in Rust's secure memory.
+
+        Args:
+            encrypted_container: Encrypted key container (Rust format with base64 fields)
+            passphrase: Passphrase for decryption
+
+        Returns:
+            List of 32 int values (Ed25519 seed bytes)
+
+        Raises:
+            RuntimeError: If decryption fails (wrong password or corrupted container)
+        """
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        from cryptography.hazmat.primitives.kdf.argon2 import Argon2id
+
+        # Decode container fields from base64
+        salt = base64.b64decode(encrypted_container['salt'])
+        nonce = base64.b64decode(encrypted_container['nonce'])
+        ciphertext = base64.b64decode(encrypted_container['ciphertext'])
+
+        # Derive key with Argon2id matching Rust params: 64MB, 3 iters, 4 lanes
+        kdf = Argon2id(
+            salt=salt,
+            length=32,
+            iterations=3,
+            lanes=4,
+            memory_cost=65536,
+        )
+        derived_key = kdf.derive(passphrase.encode('utf-8'))
+
+        # Decrypt with AES-256-GCM
+        try:
+            aesgcm = AESGCM(derived_key)
+            plaintext = aesgcm.decrypt(nonce, ciphertext, None)
+        except Exception:
+            raise RuntimeError("Decryption failed: wrong password or corrupted container")
+
+        return list(plaintext[:32])
+
 
 # ============================================================================
 # Method 2: CLI Subprocess Integration
