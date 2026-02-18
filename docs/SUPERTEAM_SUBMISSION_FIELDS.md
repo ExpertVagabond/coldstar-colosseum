@@ -1,11 +1,12 @@
-# Fairathon Submission — Copy-Paste Guide
+# Fairathon Submission -- Copy-Paste Guide
 
 > Open https://superteam.fun/earn/listing/fairathon/ and paste these into each field.
 >
 > **Deadline:** March 1, 2026
 > **Winner Announcement:** March 15, 2026
-> **Prize:** 5,000 USDC (futarchy vote by FAIR token holders on top 5 finalists)
-> **Bonus:** 3 months free FairScale API access ($500/month value) for shortlisted teams
+> **Prize:** 5,000 USDC (futarchy vote by FAIR token holders on top 6 finalists -> top 3 -> winner)
+> **Bonus:** 3 months free FairScale Pro API access ($500/month value) for top 6 finalists
+> **Legends.fun:** Top 10 leaderboard earns DePitch Academy Pass + 50% FairScale Pro discount
 
 ---
 
@@ -181,28 +182,74 @@ User acquisition strategy: Solana developer community first (hackathon exposure)
 
 ---
 
+## Field 11: Legends.fun Product Page URL
+*(Required -- "Product page URL with demo video and founder's card, using invite code FAIRAT")*
+
+```
+[TO BE ADDED -- Create product listing at https://legends.fun first]
+```
+
+**Steps to create:**
+1. Visit https://legends.fun
+2. Connect Solana wallet
+3. Use invite code: FAIRAT
+4. Create product page:
+   - Name: Coldstar
+   - Description: The only air-gapped Solana cold wallet with FairScore reputation gating. Every transaction is checked against on-chain reputation before crossing the air gap for offline signing.
+   - Demo video: Link to YouTube upload
+   - Category: Security / Wallet / DeFi Infrastructure
+5. Create founder's card with @buildcoldstar profile
+6. Share and engage for leaderboard ranking
+
+**Why this matters:** Top 10 leaderboard = DePitch Academy Pass + 50% FairScale Pro discount. This is separate from the $5K USDC prize but increases visibility with judges.
+
+---
+
+## Field 12: Telegram Contact Link
+*(Required -- "Telegram contact link")*
+
+```
+https://t.me/buildcoldstar
+```
+
+**NOTE:** Ensure @buildcoldstar is registered on Telegram. If not, create the account or use an existing handle. This is how judges and FairScale team will reach out directly.
+
+---
+
 ## Pre-Submission Checklist
 
-- [ ] **FairScale GitHub org:** Confirm whether repo must be forked into FairScale's GitHub org — this was explicitly mentioned in the listing requirements
-- [ ] **Demo video** recorded and uploaded (YouTube or Loom, 5 min max)
-- [ ] **Pitch deck** finalized with business viability section (revenue model, user acquisition path to 100/1K/10K users)
-- [ ] **Launch tweet thread** posted from @buildcoldstar (draft in docs/LAUNCH_TWEETS.md)
+**Critical Path (must complete before March 1):**
+- [ ] **FairScale API key** obtained from https://sales.fairscale.xyz/ and tested with real API calls
+- [ ] **Legends.fun product page** created with invite code FAIRAT, demo video, and founder's card
+- [ ] **Demo video** uploaded to YouTube (existing videos in videos/ dir, or record fresh using script in grants/COLDSTAR-FAIRSCALE-SUBMISSION.md Section 7)
+- [ ] **Launch tweet thread** posted from @buildcoldstar (draft ready in docs/LAUNCH_TWEETS.md)
+- [ ] **Telegram contact** set up as @buildcoldstar on Telegram
+- [ ] **FairScale GitHub org** -- confirm with team in Telegram (https://t.me/+XF23ay9aY1AzYzlk or DM https://t.me/zkishann) whether repo must be forked into their org
+
+**Important but not blocking:**
 - [ ] **Analytics screenshots** captured after tweet thread gets engagement
-- [ ] **FairScale API key** obtained from https://sales.fairscale.xyz/ and tested
+- [ ] **Pitch deck** finalized (docs/pitch-deck.html exists, review for completeness)
+- [ ] **Join FairScale Telegram** community for visibility: https://t.me/+XF23ay9aY1AzYzlk
 - [ ] All form fields above filled in with final URLs
-- [ ] Review submission once more before clicking Submit
-- [ ] Join FairScale Telegram for support and community visibility
+- [ ] Final review of all fields before clicking Submit
 
 ---
 
 ## Judging Criteria Reference
 
-| Criterion | Weight | Coldstar Strength |
-|-----------|--------|-------------------|
-| FairScore Integration | 30% | 6 integration points, core gating mechanism at air-gap boundary |
-| Technical Quality | 25% | Production Python, Rich TUI, OpenAPI spec, graceful degradation |
-| Traction & Users | 20% | Hackathon launch, public repo, live site — NEEDS more marketing |
-| Business Viability | 15% | Clear problem/solution, revenue path — NEEDS pitch deck |
-| Team Quality | 10% | Solo full-stack dev, 10-day build sprint, polyglot stack |
+| Criterion | Weight | Coldstar Strength | Action Needed |
+|-----------|--------|-------------------|---------------|
+| FairScore Integration | 30% | 6 integration points, core gating mechanism at air-gap boundary | READY -- verify with real API key |
+| Technical Quality | 25% | Production Python (341-line module), Rich TUI, OpenAPI spec, graceful degradation | READY |
+| Traction & Users | 20% | Hackathon launch, public repo, live site | POST tweet thread, create Legends.fun page |
+| Business Viability | 15% | Clear problem/solution, revenue path, competitive analysis | Review pitch deck |
+| Team Quality | 10% | Solo full-stack dev, 10-day build sprint, polyglot stack | READY |
 
-**Weakest areas to shore up before submitting:** Traction (post the tweet thread, get engagement) and Business Viability (create or finalize the pitch deck with revenue model and user acquisition funnel).
+**Priority order for remaining work:**
+1. Get FairScale API key (blocks testing)
+2. Post tweet thread from @buildcoldstar (builds traction)
+3. Create Legends.fun listing with FAIRAT code (required field)
+4. Upload demo video to YouTube (required field)
+5. Set up Telegram contact (required field)
+6. Capture analytics screenshots (evidence of traction)
+7. Confirm GitHub org requirement with FairScale team
