@@ -1,25 +1,44 @@
-# Coldstar x FairScale — Hackathon Submission
+# Coldstar x FairScale Fairathon -- Submission Package
 
-> Project: Coldstar — Reputation-Gated Air-Gapped Cold Wallet for Solana
+> Project: Coldstar -- Reputation-Gated Air-Gapped Cold Wallet for Solana
 > Team: @buildcoldstar | Purple Squirrel Media
 > Contact: MatthewKarstenConnects@gmail.com | @buildcoldstar
+> Telegram: @buildcoldstar
+> Deadline: March 1, 2026 | Winner Announcement: March 15, 2026
+> Prize: 5,000 USDC (top 6 shortlisted, final winner via futarchy vote by FAIR token holders)
 
 ---
 
 ## SUBMISSION CHECKLIST
 
-- [x] **Live Platform URL:** https://coldstar.dev/colosseum (LIVE)
-- [x] **FairScore Integration:** src/fairscore_integration.py (BUILT - 260+ lines)
+### Already Complete
+- [x] **Live Platform URL:** https://coldstar.dev/colosseum (LIVE on Cloudflare)
+- [x] **FairScore Integration:** src/fairscore_integration.py (BUILT - 341 lines)
 - [x] **Transaction Gating:** Tier-based blocking in main.py (BUILT)
 - [x] **Vault Dashboard:** Reputation column added (BUILT)
-- [x] **Slides:** slides/index.html - 11-slide HTML deck (BUILT)
-- [x] **Docs:** docs/FAIRSCORE_INTEGRATION.md (BUILT)
-- [x] **Launch Tweets:** docs/LAUNCH_TWEETS.md - 10-tweet thread (BUILT)
-- [ ] **GitHub Repo:** Push to FairScale's GitHub org with integration
-- [ ] **Demo Video:** Record 5-min Loom/YouTube showing FairScore in action
-- [ ] **X/Twitter:** Post launch thread from @buildcoldstar
-- [ ] **Analytics Screenshots:** Capture GitHub stars, site visits, user metrics
-- [ ] **FairScale API Key:** Get from https://sales.fairscale.xyz/
+- [x] **Slides/Pitch Deck:** slides/index.html + docs/pitch-deck.html (BUILT)
+- [x] **Docs:** docs/FAIRSCORE_INTEGRATION.md (BUILT - comprehensive)
+- [x] **Launch Tweets:** docs/LAUNCH_TWEETS.md - 10-tweet thread (DRAFTED)
+- [x] **Demo Videos:** 4 videos in videos/ directory (7.4MB demo, 2.2MB explainer, 6.6MB square, 1.8MB vertical)
+- [x] **OpenAPI Spec:** docs/fairscale-openapi.yaml (BUILT)
+- [x] **Superteam Fields Guide:** docs/SUPERTEAM_SUBMISSION_FIELDS.md (BUILT)
+
+### Manual Actions Required Before March 1
+- [ ] **FairScale API Key:** Get from https://sales.fairscale.xyz/ -- CRITICAL, needed to verify live API integration works end-to-end
+- [ ] **Legends.fun Product Page:** Create listing at https://legends.fun using invite code **FAIRAT** -- REQUIRED by judging criteria
+  - Must include: demo video, founder's card, product description
+  - Aim for Top 10 leaderboard placement (earns DePitch Academy Pass + 50% FairScale Pro discount)
+- [ ] **GitHub Repo to FairScale Org:** Confirm with FairScale team whether repo must be forked into their GitHub org, or if linking ExpertVagabond/coldstar-colosseum is sufficient
+  - Ask in Telegram: https://t.me/+XF23ay9aY1AzYzlk or DM https://t.me/zkishann
+- [ ] **Demo Video (YouTube/Loom):** Upload one of the existing videos to YouTube (5-min max), or record a fresh walkthrough using the script in Section 7
+- [ ] **X/Twitter Launch Thread:** Post the 10-tweet thread from docs/LAUNCH_TWEETS.md via @buildcoldstar
+- [ ] **Analytics Screenshots:** Capture after tweet thread is posted:
+  - GitHub repository insights (traffic, clones, stars)
+  - coldstar.dev analytics (page views, unique visitors)
+  - Tweet engagement metrics
+  - Colosseum hackathon upvote/view counts
+- [ ] **Telegram Contact:** Set up @buildcoldstar on Telegram (or provide existing handle) -- required submission field
+- [ ] **Join FairScale Telegram:** https://t.me/+XF23ay9aY1AzYzlk for visibility and support
 
 ---
 
@@ -471,41 +490,94 @@ FairScore x Solana | @buildcoldstar
 
 ---
 
-## 9. IMPLEMENTATION ROADMAP
+## 9. IMPLEMENTATION STATUS
 
-### Week 1: FairScore Integration Core
-- [ ] Get FairScale API key from sales.fairscale.xyz
-- [ ] Implement FairScoreClient module (src/fairscore_integration.py)
-- [ ] Integrate into transfer flow with tier-based gating
-- [ ] Add reputation display to vault dashboard TUI
+### FairScore Integration Core -- COMPLETE
+- [x] FairScoreClient module: src/fairscore_integration.py (341 lines)
+- [x] Transfer flow with tier-based gating in main.py
+- [x] Reputation display in vault dashboard TUI
+- [x] Dynamic transaction limits by FairScore tier
+- [x] DAO governance vote weighting
+- [x] Jupiter swap counterparty screening
+- [x] MCP agent reputation gates
+- [x] 5-minute TTL response cache
+- [x] Graceful degradation when API is unreachable
+- [x] Configurable thresholds and limits
 
-### Week 2: Advanced Features
-- [ ] Dynamic transaction limits by FairScore tier
-- [ ] DAO governance vote weighting
-- [ ] Jupiter swap counterparty screening
-- [ ] MCP agent reputation gates
-
-### Week 3: Polish & Submission
-- [ ] Push code to FairScale's GitHub org
-- [ ] Write comprehensive README with setup instructions
-- [ ] Record 5-minute demo video
-- [ ] Create slide deck
-- [ ] Launch tweets and marketing thread
+### Remaining Before Submission (by March 1)
+- [ ] Obtain and test FairScale API key (production)
+- [ ] Create Legends.fun product page with invite code FAIRAT
+- [ ] Upload demo video to YouTube
+- [ ] Post launch tweet thread
 - [ ] Capture analytics screenshots
-- [ ] Submit
+- [ ] Confirm GitHub org requirement with FairScale team
+- [ ] Final review of all submission fields
 
 ---
 
-## 10. TECHNICAL SUPPORT NEEDS
+## 10. LEGENDS.FUN REQUIREMENT
 
-- FairScale API key (Pro tier preferred for development)
-- Clarification on exact API endpoint format for Solana wallet queries
-- Access to FairScale technical support Telegram: https://t.me/+XF23ay9aY1AzYzlk
-- Feedback on integration approach before final submission
+The Fairathon requires a product listing on Legends.fun:
+
+**Steps:**
+1. Visit https://legends.fun
+2. Sign up / connect wallet
+3. Use invite code: **FAIRAT**
+4. Create product page for Coldstar with:
+   - Product name: Coldstar
+   - Description: Reputation-gated air-gapped cold wallet for Solana
+   - Demo video link (YouTube)
+   - Founder's card (profile/bio)
+5. Aim for Top 10 leaderboard placement
+
+**Why it matters:** Top 10 Legends.fun leaderboard earns:
+- DePitch Academy Pass (6-video Solana pitch course)
+- 50% discount on FairScale Pro Tier
 
 ---
 
-*Prepared February 2026*
-*Project: Coldstar — https://coldstar.dev/colosseum*
+## 11. JUDGING CRITERIA ALIGNMENT
+
+| Criterion | Weight | Coldstar Strength | Status |
+|-----------|--------|-------------------|--------|
+| FairScore Integration | 30% | 6 integration points, core gating at air-gap boundary, 341-line module | STRONG |
+| Technical Quality | 25% | Production Python, Rich TUI, OpenAPI spec, graceful degradation, modular arch | STRONG |
+| Traction & Users | 20% | Hackathon launch, public repo, live site -- needs marketing push | NEEDS WORK |
+| Business Viability | 15% | Clear problem/solution, revenue tiers, user acquisition funnel | ADEQUATE |
+| Team & Commitment | 10% | Solo full-stack dev, 10-day sprint, polyglot, long-term builder | STRONG |
+
+**Priority actions to strengthen weakest areas:**
+1. Post the tweet thread and build social proof (Traction - 20%)
+2. Create Legends.fun listing and engage community (Traction - 20%)
+3. Finalize pitch deck with revenue projections (Business - 15%)
+
+---
+
+## 12. TECHNICAL SUPPORT CONTACTS
+
+- **FairScale API access:** https://sales.fairscale.xyz/
+- **FairScale API docs:** https://docs.fairscale.xyz/
+- **Technical support Telegram:** https://t.me/+XF23ay9aY1AzYzlk
+- **Direct contact:** https://t.me/zkishann
+- **Team formation (if needed):** Available via Airtable on Fairathon listing page
+
+---
+
+## 13. FINALIST BENEFITS
+
+**Top 6 Finalists Receive:**
+- 3 months free Pro API access (worth ~$500/month = $1,500 value)
+- Free pitch training with DePitch team
+- Public pitch roast session with FairScale
+- Advancement to futarchy voting round (FAIR token holders decide winner)
+
+**Winner Receives:**
+- 5,000 USDC
+- All finalist benefits
+
+---
+
+*Prepared February 2026 | Updated February 17, 2026*
+*Project: Coldstar -- https://coldstar.dev/colosseum*
 *Applicant: @buildcoldstar | Purple Squirrel Media*
-*FairScale Hackathon Submission*
+*FairScale Fairathon Submission -- Deadline: March 1, 2026*
