@@ -8,10 +8,12 @@ A terminal-based tool for creating and managing Solana cold wallets on USB drive
 B - Love U 3000
 """
 
+import json
 import sys
 import os
 import tempfile
 from pathlib import Path
+from typing import Optional
 
 from rich.console import Console
 
@@ -50,6 +52,36 @@ class SolanaColdWalletCLI:
         self.current_public_key = None
         self.usb_is_cold_wallet = False
     
+    def _load_container_with_migration(self, keypair_path: str) -> Optional[dict]:
+        """Load encrypted container, auto-detecting and converting PyNaCl format.
+
+        If the wallet is in legacy PyNaCl format (argon2i_xsalsa20poly1305),
+        prompts for password and triggers auto-conversion to Rust format.
+        """
+        container = self.wallet_manager.load_encrypted_container(keypair_path)
+        if container is not None:
+            return container
+
+        # Check if this is a PyNaCl-format wallet that needs password for conversion
+        try:
+            with open(keypair_path, 'r') as f:
+                data = json.load(f)
+            if isinstance(data, dict) and data.get('algo') == 'argon2i_xsalsa20poly1305':
+                print_warning("Legacy PyNaCl wallet detected. Conversion to Rust format required.")
+                password = get_password_input("Enter wallet password for conversion:")
+                if not password:
+                    print_error("Password required for wallet conversion")
+                    return None
+                container = self.wallet_manager.load_encrypted_container(keypair_path, password=password)
+                if container:
+                    print_success("Wallet converted to Rust secure format successfully")
+                return container
+        except (json.JSONDecodeError, IOError):
+            pass
+
+        print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
+        return None
+
     def _check_usb_for_wallet(self, mount_point: str) -> tuple:
         """Check if mounted USB has a cold wallet with pubkey.txt"""
         pubkey_path = Path(mount_point) / "wallet" / "pubkey.txt"
@@ -348,7 +380,7 @@ class SolanaColdWalletCLI:
     
     def _unmount_usb(self):
         if self.current_usb_device:
-            self.usb_manager.unmount_device(self.current_usb_device['device'])
+            self.usb_manager.unmount_device(self.usb_manager.mount_point)
         self.current_usb_device = None
         self.current_public_key = None
         self.usb_is_cold_wallet = False
@@ -504,9 +536,8 @@ class SolanaColdWalletCLI:
             print_error("Keypair not found on USB")
             return
 
-        container = self.wallet_manager.load_encrypted_container(str(keypair_path))
+        container = self._load_container_with_migration(str(keypair_path))
         if not container:
-            print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
             return
 
         password = get_password_input("Enter wallet password to sign transaction:")
@@ -751,9 +782,8 @@ class SolanaColdWalletCLI:
             print_error("Keypair not found on USB")
             return
 
-        container = self.wallet_manager.load_encrypted_container(str(keypair_path))
+        container = self._load_container_with_migration(str(keypair_path))
         if not container:
-            print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
             return
 
         password = get_password_input("Enter wallet password to sign transaction:")
@@ -1013,9 +1043,8 @@ class SolanaColdWalletCLI:
             return
 
         # Load encrypted container and decrypt for backup operations
-        container = self.wallet_manager.load_encrypted_container(str(keypair_path))
+        container = self._load_container_with_migration(str(keypair_path))
         if not container:
-            print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
             return
 
         # Show public key from file (no decryption needed)
