@@ -6,6 +6,8 @@
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License"/>
   <img src="https://img.shields.io/badge/Security-Air--Gapped-red?style=for-the-badge" alt="Air-Gapped"/>
   <img src="https://img.shields.io/badge/FairScore-Reputation_Gating-ff00ff?style=for-the-badge" alt="FairScore"/>
+  <a href="https://huggingface.co/purplesquirrelnetworks/coldstar-whitepaper"><img src="https://img.shields.io/badge/🤗_Whitepaper-Hugging_Face-orange?style=for-the-badge" alt="HF Whitepaper"/></a>
+  <a href="https://huggingface.co/collections/purplesquirrelnetworks/purple-squirrel-ai-models-papers-and-data-699b4a18abe59a025baf2149"><img src="https://img.shields.io/badge/🤗_Collection-Purple_Squirrel_AI-yellow?style=for-the-badge" alt="HF Collection"/></a>
 </p>
 
 <p align="center">
