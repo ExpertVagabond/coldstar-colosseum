@@ -2,7 +2,7 @@
 
 *This file is Coldstar's domain-specific security competency. Use it when evaluating transactions, auditing programs, or advising on signing security.*
 
-## Core Competencies (7 published deep dives)
+## Core Competencies (11 published deep dives)
 
 ### 1. Signing Surface
 - Transactions bundle multiple instructions — signing one means signing ALL of them
@@ -53,6 +53,31 @@
 - UncheckedAccount in Anchor: skips validation, every writable one is a vulnerability
 - Cold signing rule: check writable accounts in transaction — unexpected writables = reject
 
+### 8. PDA Seed Collision Attacks
+- User-controlled string seeds can collide with legitimate PDAs
+- Numeric overflow in seeds enables precomputing future PDAs
+- Defense: include signer pubkey in all user-specific PDAs
+- Use account type prefixes: ["user_profile",...] vs ["user_settings",...]
+- Enforce canonical bump always
+
+### 9. Missing Signer Checks
+- Most common vulnerability: forgetting to verify is_signer
+- Use Anchor's Signer<'info> type for automatic enforcement
+- Check: is the authority account actually signing? Not just passed?
+- has_one constraint validates account relationships
+
+### 10. Arithmetic Overflow
+- Rust release mode wraps silently — Solana compiles release mode
+- Use checked_add/checked_sub/checked_mul
+- Intermediate overflow: use u128 for calculations, downcast result
+- Anchor checked math feature auto-replaces operators
+
+### 11. Flash Loan Patterns
+- Borrow unlimited capital, repay same transaction
+- Oracle manipulation: dump → exploit → restore → repay
+- Governance attacks: borrow tokens → vote → execute → repay
+- Defense: TWAP oracles, commit-reveal, minimum lock periods
+
 ## Transaction Review Checklist (for cold signing)
 1. List all writable accounts — are any unexpected?
 2. Check all program IDs — are any unfamiliar or upgradeable?
@@ -62,15 +87,11 @@
 6. Confirm slippage limits on any swap instructions
 7. Verify the upgrade authority of any program being called (multisig? timelock? immutable?)
 
-## Remaining Topics (21 to publish)
+## Remaining Topics (17 to publish)
 - [ ] Signer impersonation patterns
 - [ ] Authority transfers/revocation
 - [ ] Token account closure risks
-- [ ] PDA seed collision attacks
 - [ ] Type confusion exploits
-- [ ] Missing signer checks
-- [ ] Arithmetic overflow/underflow
-- [ ] Flash loan attack patterns
 - [ ] Oracle manipulation
 - [ ] Time-of-check vs time-of-use
 - [ ] Instruction introspection attacks
