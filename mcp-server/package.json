@@ -1,0 +1,34 @@
+{
+  "name": "coldstar-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for AI-agent secure Solana transactions -- FairScore reputation gating, Jupiter swaps, Pyth price feeds",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "coldstar-mcp": "index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.8.0",
+    "zod": "^3.22.0"
+  },
+  "keywords": [
+    "mcp",
+    "solana",
+    "cold-wallet",
+    "ai-agent",
+    "defi",
+    "fairscore",
+    "reputation-gating",
+    "jupiter",
+    "pyth"
+  ],
+  "license": "MIT",
+  "author": "Purple Squirrel Media",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ExpertVagabond/coldstar"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
