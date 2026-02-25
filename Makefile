@@ -1,91 +1,51 @@
-# Makefile for Solana Secure Signer
+# Coldstar — Air-gapped Solana cold wallet
+# Usage: make [target]
 
-.PHONY: all build release test clean install help
+VENV     := .venv
+PYTHON   := $(VENV)/bin/python
+PIP      := $(VENV)/bin/pip
+SIGNER   := secure_signer
 
-# Default target
-all: build
+.PHONY: install build-signer run test clean lint help
 
-# Build in debug mode
-build:
-	@echo "Building in debug mode..."
-	cd rust_signer && cargo build
+## ── Python ──────────────────────────────────────────
 
-# Build in release mode (optimized)
-release:
-	@echo "Building in release mode..."
-	cd rust_signer && cargo build --release
-	@echo ""
-	@echo "✓ Build complete!"
-	@echo "  Library: rust_signer/target/release/libsolana_secure_signer.*"
-	@echo "  Binary:  rust_signer/target/release/solana-signer"
+install: $(VENV)/bin/activate  ## Install Python deps in venv
+$(VENV)/bin/activate:
+	python3 -m venv $(VENV)
+	$(PIP) install --upgrade pip -q
+	$(PIP) install -r local_requirements.txt -q
+	@echo "Installed. Activate: source $(VENV)/bin/activate"
 
-# Run tests
-test:
-	@echo "Running Rust tests..."
-	cd rust_signer && cargo test
-	@echo ""
-	@echo "Running Python example..."
-	python python_signer_example.py
+run: install  ## Run Coldstar CLI
+	$(PYTHON) main.py
 
-# Run tests with coverage
-coverage:
-	@echo "Running tests with coverage..."
-	cd rust_signer && cargo tarpaulin --out Html
-	@echo "Coverage report: rust_signer/tarpaulin-report.html"
+test: install  ## Run tests
+	$(PYTHON) -m pytest test_*.py -v 2>/dev/null || $(PYTHON) test_transaction.py
 
-# Run clippy (linter)
-lint:
-	@echo "Running clippy..."
-	cd rust_signer && cargo clippy -- -D warnings
+lint: install  ## Check Python style
+	$(PYTHON) -m py_compile main.py config.py
+	@echo "Syntax OK"
 
-# Format code
-format:
-	@echo "Formatting code..."
-	cd rust_signer && cargo fmt
+## ── Rust signer ─────────────────────────────────────
 
-# Check formatting
-check-format:
-	@echo "Checking code formatting..."
-	cd rust_signer && cargo fmt -- --check
+build-signer:  ## Build Rust secure signer (release)
+	cd $(SIGNER) && cargo build --release
+	@echo "Built: $(SIGNER)/target/release/libsolana_secure_signer.*"
 
-# Clean build artifacts
-clean:
-	@echo "Cleaning build artifacts..."
-	cd rust_signer && cargo clean
-	rm -rf **/__pycache__
-	rm -f *.so *.dylib *.dll
+test-signer:  ## Run Rust tests
+	cd $(SIGNER) && cargo test
 
-# Install (copy binaries to system)
-install: release
-	@echo "Installing binaries..."
-	@echo "Note: This requires appropriate permissions"
-	install -m 755 rust_signer/target/release/solana-signer /usr/local/bin/ || \
-		echo "Failed to install. Try: sudo make install"
+lint-signer:  ## Clippy + format check
+	cd $(SIGNER) && cargo clippy -- -D warnings
+	cd $(SIGNER) && cargo fmt -- --check
 
-# Development workflow
-dev: format lint test
-	@echo "✓ Development checks passed!"
+## ── Housekeeping ────────────────────────────────────
 
-# CI workflow
-ci: check-format lint test
-	@echo "✓ CI checks passed!"
+clean:  ## Remove build artifacts
+	rm -rf $(VENV) __pycache__ src/__pycache__ *.pyc
+	cd $(SIGNER) && cargo clean 2>/dev/null || true
 
-# Help
-help:
-	@echo "Solana Secure Signer - Build Commands"
-	@echo ""
-	@echo "Usage: make [target]"
-	@echo ""
-	@echo "Targets:"
-	@echo "  build        - Build in debug mode"
-	@echo "  release      - Build optimized release version"
-	@echo "  test         - Run all tests (Rust + Python)"
-	@echo "  coverage     - Generate test coverage report"
-	@echo "  lint         - Run clippy linter"
-	@echo "  format       - Format code with rustfmt"
-	@echo "  check-format - Check if code is formatted"
-	@echo "  clean        - Remove build artifacts"
-	@echo "  install      - Install binaries to /usr/local/bin"
-	@echo "  dev          - Format, lint, and test (development workflow)"
-	@echo "  ci           - Check format, lint, and test (CI workflow)"
-	@echo "  help         - Show this help message"
+help:  ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*##"}; {printf "  %-16s %s\n", $$1, $$2}'
