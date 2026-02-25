@@ -11,10 +11,11 @@
 </p>
 
 <p align="center">
-  <strong>Hardware-grade security meets reputation intelligence. FairScore-gated transactions on Solana.</strong>
+  <strong>Secure signing infrastructure for AI agents. Reputation-gated transactions prevent rogue agents from draining wallets.</strong>
 </p>
 
 <p align="center">
+  <a href="#-ai-agent-integration">AI Agents</a> •
   <a href="#-features">Features</a> •
   <a href="#-fairscore-integration">FairScore</a> •
   <a href="#-quick-start">Quick Start</a> •
@@ -38,6 +39,62 @@ Create transactions online → Sign on air-gapped USB → Broadcast
                            ↓
               Private keys NEVER touch the network
 ```
+
+---
+
+## 🤖 AI Agent Integration
+
+Coldstar provides the security layer AI agents need for crypto transactions.
+
+**The Problem**: AI agents with wallet access can be tricked into sending funds to malicious addresses — via prompt injection, hallucinated addresses, or compromised tool calls. There is no guardrail between "agent decides to send" and "funds are gone forever."
+
+**The Solution**: FairScore reputation gating blocks transactions to low-reputation wallets — even if the agent is compromised. Coldstar sits between the agent and the blockchain as an infrastructure-level kill switch.
+
+### Why This Matters Now
+
+As AI agents gain access to crypto wallets for payments, DeFi, and autonomous trading, the attack surface expands from "trick a human" to "trick an AI." Coldstar is the guardrail layer that makes agent-controlled wallets safe:
+
+- **Agent sends to scam wallet?** Blocked. Bronze-tier recipients are hard-blocked regardless of agent intent.
+- **Agent tries to drain treasury?** Limited. Transfer caps are enforced per-recipient reputation tier.
+- **Agent gets prompt-injected?** Protected. Reputation gating runs at the infrastructure layer, not the prompt layer.
+
+### MCP Server
+
+Install the Coldstar MCP server to give any AI agent secure Solana capabilities:
+
+```bash
+npm install -g coldstar-mcp
+```
+
+**8 tools:** `check_reputation`, `get_token_price`, `get_swap_quote`, `check_wallet_balance`, `validate_transaction`, `list_supported_tokens`, `get_portfolio`, `estimate_swap_cost`
+
+Add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "coldstar": {
+      "command": "npx",
+      "args": ["-y", "coldstar-mcp"],
+      "env": {
+        "SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com"
+      }
+    }
+  }
+}
+```
+
+### Target Acquirers / Integration Partners
+
+| Company | Use Case |
+|---------|----------|
+| **Phantom / Backpack** | Wallet-level agent reputation gating |
+| **Coinbase** | Institutional agent custody guardrails |
+| **Anthropic** | Agent safety infrastructure (tool use) |
+| **OpenAI** | Agent payment safety layer |
+| **Stripe** | Crypto payment validation for AI commerce |
+
+📖 [Full MCP Server Documentation →](mcp-server/README.md)
 
 ---
 
@@ -322,7 +379,7 @@ coldstar-colosseum/
 ├── flash_usb_tui.py           # USB flashing interface
 ├── vault_dashboard_tui.py     # Portfolio dashboard
 ├── companion-app/             # PWA for online operations
-└── mcp-server/                # Solana MCP integration
+└── mcp-server/                # AI-agent MCP server (8 tools, npm package)
 ```
 
 ### Build from Source
