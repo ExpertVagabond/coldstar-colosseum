@@ -402,7 +402,7 @@ Duration: ~100 microseconds
 If you discover a security vulnerability in Coldstar, please report it responsibly:
 
 1. **Do NOT** open a public GitHub issue
-2. Email security details to: syrem.dev@gmail.com
+2. Open a [private security advisory](https://github.com/ExpertVagabond/coldstar-colosseum/security/advisories/new)
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -441,6 +441,6 @@ For maximum protection: **Air-gap everything**.
 
 ---
 
-**Last Updated:** February 10, 2026  
-**Version:** 1.0  
-**Coldstar Project:** https://github.com/your-repo/coldstar
+**Last Updated:** February 25, 2026
+**Version:** 1.0
+**Coldstar Project:** https://github.com/ExpertVagabond/coldstar-colosseum
