@@ -26,7 +26,7 @@ use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::io::{self, BufRead, Write};
 
-use solana_secure_signer::{
+use coldstar_secure_signer::{
     create_encrypted_key_container, decrypt_and_sign, sign_transaction, EncryptedKeyContainer,
     SignerError,
 };
@@ -181,7 +181,8 @@ fn main() {
             println!("{}", serde_json::to_string_pretty(&output).unwrap());
         }
         Err(e) => {
-            let output = Output::error(&e.to_string());
+            let err_msg: String = e.to_string();
+            let output = Output::error(&err_msg);
             eprintln!("{}", serde_json::to_string_pretty(&output).unwrap());
             std::process::exit(1);
         }
@@ -241,7 +242,7 @@ fn process_stdin_command(json: &str) -> Output {
 
     match result {
         Ok(output) => output,
-        Err(e) => Output::error(&e.to_string()),
+        Err(e) => { let msg: String = e.to_string(); Output::error(&msg) },
     }
 }
 
@@ -324,13 +325,13 @@ fn handle_sign_direct(key_b58: &str, message_b64: &str) -> Result<Output, Signer
 }
 
 fn handle_check() -> Result<Output, SignerError> {
-    use solana_secure_signer::SecureBuffer;
+    use coldstar_secure_signer::SecureBuffer;
 
     let buffer = SecureBuffer::new(64)?;
     let mlock_supported = buffer.is_locked();
 
     Ok(Output::success(serde_json::json!({
-        "version": solana_secure_signer::VERSION,
+        "version": coldstar_secure_signer::VERSION,
         "mlock_supported": mlock_supported,
         "platform": std::env::consts::OS,
         "arch": std::env::consts::ARCH,
