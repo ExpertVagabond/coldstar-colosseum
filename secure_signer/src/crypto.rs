@@ -4,6 +4,7 @@
 //! - Key derivation (Argon2id)
 //! - Symmetric encryption/decryption (AES-256-GCM)
 //! - Ed25519 signing (Solana-compatible)
+//! - secp256k1 ECDSA signing (EVM/Base-compatible)
 //!
 //! # Security Model
 //!
@@ -16,9 +17,11 @@ use aes_gcm::{
 };
 use argon2::{Argon2, Params, Version};
 use ed25519_dalek::{Signature, Signer, SigningKey};
+use k256::ecdsa::{SigningKey as K256SigningKey, VerifyingKey as K256VerifyingKey};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
+use sha3::{Digest, Keccak256};
 
 use crate::error::SignerError;
 use crate::secure_buffer::{LockingMode, SecureBuffer};
@@ -312,6 +315,135 @@ pub fn create_encrypted_key_container(
     container.to_json()
 }
 
+// ════════════════════════════════════════════════════════════
+//  EVM (secp256k1) signing support
+// ════════════════════════════════════════════════════════════
+
+/// Result of an EVM signing operation
+#[derive(Serialize, Deserialize)]
+pub struct EVMSigningResult {
+    /// The ECDSA signature (hex-encoded, 65 bytes: r || s || v)
+    pub signature: String,
+    /// The EVM address that signed (0x-prefixed, checksummed)
+    pub address: String,
+    /// Recovery ID (v value: 27 or 28)
+    pub v: u8,
+}
+
+/// Derive an EVM address from a secp256k1 public key
+///
+/// EVM address = last 20 bytes of keccak256(uncompressed_pubkey[1..])
+fn evm_address_from_pubkey(verifying_key: &K256VerifyingKey) -> String {
+    let uncompressed = verifying_key.to_encoded_point(false);
+    let pubkey_bytes = &uncompressed.as_bytes()[1..]; // skip 0x04 prefix
+    let hash = Keccak256::digest(pubkey_bytes);
+    let addr_bytes = &hash[12..]; // last 20 bytes
+    format!("0x{}", hex::encode(addr_bytes))
+}
+
+/// Sign an EVM transaction hash with a key in a secure buffer
+///
+/// For EVM, we sign a 32-byte hash (the tx hash), not the raw transaction bytes.
+/// The caller is responsible for hashing the transaction with keccak256 first.
+fn sign_evm_with_secure_key(
+    secure_key: &mut SecureBuffer,
+    message_hash: &[u8],
+) -> Result<EVMSigningResult, SignerError> {
+    if secure_key.len() != 32 {
+        return Err(SignerError::InvalidKeyFormat(secure_key.len()));
+    }
+
+    // Create secp256k1 signing key
+    let signing_key = K256SigningKey::from_bytes(
+        secure_key.as_slice().into(),
+    ).map_err(|e| SignerError::SigningFailed(format!("Invalid secp256k1 key: {}", e)))?;
+
+    let verifying_key = signing_key.verifying_key();
+    let address = evm_address_from_pubkey(verifying_key);
+
+    // Sign the message hash (recoverable signature)
+    let (signature, recovery_id) = signing_key
+        .sign_prehash_recoverable(message_hash)
+        .map_err(|e| SignerError::SigningFailed(format!("ECDSA signing failed: {}", e)))?;
+
+    // Build 65-byte signature: r (32) || s (32) || v (1)
+    let r = signature.r().to_bytes();
+    let s = signature.s().to_bytes();
+    let v = recovery_id.to_byte() + 27; // EVM convention: 27 or 28
+
+    let mut sig_bytes = Vec::with_capacity(65);
+    sig_bytes.extend_from_slice(&r);
+    sig_bytes.extend_from_slice(&s);
+    sig_bytes.push(v);
+
+    Ok(EVMSigningResult {
+        signature: format!("0x{}", hex::encode(&sig_bytes)),
+        address,
+        v,
+    })
+}
+
+/// Decrypt a key container and sign an EVM transaction hash
+///
+/// Same security model as `decrypt_and_sign` but uses secp256k1 ECDSA.
+///
+/// # Arguments
+/// * `container_json` - JSON-serialized EncryptedKeyContainer
+/// * `passphrase` - The passphrase for decryption
+/// * `message_hash` - The 32-byte keccak256 hash of the transaction
+pub fn decrypt_and_sign_evm(
+    container_json: &str,
+    passphrase: &str,
+    message_hash: &[u8],
+) -> Result<EVMSigningResult, SignerError> {
+    if message_hash.len() != 32 {
+        return Err(SignerError::InvalidTransaction(
+            format!("EVM message hash must be 32 bytes, got {}", message_hash.len())
+        ));
+    }
+
+    // Parse the container
+    let container = EncryptedKeyContainer::from_json(container_json)?;
+
+    // Decode base64 fields
+    let salt = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.salt)?;
+    let nonce = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.nonce)?;
+    let ciphertext = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.ciphertext)?;
+
+    // Derive decryption key
+    let mut derived_key = derive_key(passphrase.as_bytes(), &salt)?;
+
+    // Decrypt the private key into secure buffer
+    let cipher = Aes256Gcm::new_from_slice(derived_key.as_slice())
+        .map_err(|e| SignerError::KeyDerivationFailed(e.to_string()))?;
+
+    let plaintext = cipher
+        .decrypt(Nonce::from_slice(&nonce), ciphertext.as_slice())
+        .map_err(|_| SignerError::DecryptionFailed)?;
+
+    let mut secure_key = SecureBuffer::from_slice_with_mode(&plaintext, get_locking_mode())?;
+    derived_key.zeroize();
+
+    let result = sign_evm_with_secure_key(&mut secure_key, message_hash);
+    secure_key.zeroize();
+
+    result
+}
+
+/// Sign an EVM message hash with a raw private key
+///
+/// # Security Warning
+/// Prefer using decrypt_and_sign_evm() for the full secure workflow.
+pub fn sign_evm_transaction(
+    private_key: &[u8],
+    message_hash: &[u8],
+) -> Result<EVMSigningResult, SignerError> {
+    let mut secure_key = SecureBuffer::from_slice_with_mode(private_key, get_locking_mode())?;
+    let result = sign_evm_with_secure_key(&mut secure_key, message_hash);
+    secure_key.zeroize();
+    result
+}
+
 /// Derive an encryption key from a passphrase using Argon2id
 ///
 /// # Memory Lifecycle
@@ -392,7 +524,7 @@ mod tests {
     #[test]
     fn test_signature_verification() {
         enable_permissive_mode();
-        
+
         use ed25519_dalek::Verifier;
 
         let mut seed = [0u8; 32];
@@ -407,5 +539,82 @@ mod tests {
         let signature = Signature::from_slice(&signature_bytes).unwrap();
 
         assert!(signing_key.verifying_key().verify(message, &signature).is_ok());
+    }
+
+    // ── EVM (secp256k1) tests ──────────────────────────────
+
+    #[test]
+    fn test_evm_sign_transaction() {
+        enable_permissive_mode();
+
+        let mut seed = [0u8; 32];
+        OsRng.fill_bytes(&mut seed);
+
+        // Simulate a keccak256 tx hash (32 bytes)
+        let mut message_hash = [0u8; 32];
+        OsRng.fill_bytes(&mut message_hash);
+
+        let result = sign_evm_transaction(&seed, &message_hash).unwrap();
+
+        // Verify result structure
+        assert!(result.address.starts_with("0x"));
+        assert_eq!(result.address.len(), 42); // 0x + 40 hex chars
+        assert!(result.signature.starts_with("0x"));
+        assert_eq!(result.signature.len(), 132); // 0x + 130 hex chars (65 bytes)
+        assert!(result.v == 27 || result.v == 28);
+    }
+
+    #[test]
+    fn test_evm_encrypt_decrypt_sign_roundtrip() {
+        enable_permissive_mode();
+
+        let mut seed = [0u8; 32];
+        OsRng.fill_bytes(&mut seed);
+        let passphrase = "test_evm_passphrase";
+
+        // Encrypt (same container format for both chains)
+        let container = EncryptedKeyContainer::encrypt(&seed, passphrase).unwrap();
+        let json = container.to_json().unwrap();
+
+        // Create a test message hash
+        let mut hash = [0u8; 32];
+        OsRng.fill_bytes(&mut hash);
+
+        // Decrypt and sign EVM
+        let result = decrypt_and_sign_evm(&json, passphrase, &hash).unwrap();
+
+        assert!(result.address.starts_with("0x"));
+        assert!(result.signature.starts_with("0x"));
+    }
+
+    #[test]
+    fn test_evm_wrong_passphrase_fails() {
+        enable_permissive_mode();
+
+        let mut seed = [0u8; 32];
+        OsRng.fill_bytes(&mut seed);
+
+        let container = EncryptedKeyContainer::encrypt(&seed, "correct").unwrap();
+        let json = container.to_json().unwrap();
+
+        let hash = [0u8; 32];
+        let result = decrypt_and_sign_evm(&json, "wrong", &hash);
+        assert!(matches!(result, Err(SignerError::DecryptionFailed)));
+    }
+
+    #[test]
+    fn test_evm_invalid_hash_size() {
+        enable_permissive_mode();
+
+        let mut seed = [0u8; 32];
+        OsRng.fill_bytes(&mut seed);
+
+        let container = EncryptedKeyContainer::encrypt(&seed, "pass").unwrap();
+        let json = container.to_json().unwrap();
+
+        // 16 bytes instead of 32
+        let bad_hash = [0u8; 16];
+        let result = decrypt_and_sign_evm(&json, "pass", &bad_hash);
+        assert!(result.is_err());
     }
 }

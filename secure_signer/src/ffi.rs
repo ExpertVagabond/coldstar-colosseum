@@ -15,7 +15,7 @@
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
-use crate::crypto::{create_encrypted_key_container, decrypt_and_sign};
+use crate::crypto::{create_encrypted_key_container, decrypt_and_sign, decrypt_and_sign_evm};
 
 /// Result code for FFI operations
 #[repr(C)]
@@ -190,6 +190,64 @@ pub unsafe extern "C" fn signer_sign_direct(
 
     // Sign
     match crate::crypto::sign_transaction(&private_key, &message) {
+        Ok(result) => match serde_json::to_string(&result) {
+            Ok(json) => SignerResult::success(json),
+            Err(e) => SignerResult::error(5, &format!("Serialization error: {}", e)),
+        },
+        Err(e) => SignerResult::error(4, &e.to_string()),
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  EVM (secp256k1) FFI bindings
+// ════════════════════════════════════════════════════════════
+
+/// Decrypt a key container and sign an EVM transaction hash (secp256k1)
+///
+/// # Arguments
+/// * `container_json` - Null-terminated JSON string of the encrypted container
+/// * `passphrase` - Null-terminated passphrase string
+/// * `message_hash_hex` - Hex-encoded 32-byte keccak256 hash (with or without 0x prefix)
+///
+/// # Returns
+/// SignerResult with JSON EVMSigningResult on success
+///
+/// # Safety
+/// All pointers must be valid, null-terminated C strings.
+#[no_mangle]
+pub unsafe extern "C" fn signer_sign_evm_transaction(
+    container_json: *const c_char,
+    passphrase: *const c_char,
+    message_hash_hex: *const c_char,
+) -> SignerResult {
+    if container_json.is_null() || passphrase.is_null() || message_hash_hex.is_null() {
+        return SignerResult::error(1, "Null pointer argument");
+    }
+
+    let container_str = match CStr::from_ptr(container_json).to_str() {
+        Ok(s) => s,
+        Err(_) => return SignerResult::error(2, "Invalid UTF-8 in container"),
+    };
+
+    let passphrase_str = match CStr::from_ptr(passphrase).to_str() {
+        Ok(s) => s,
+        Err(_) => return SignerResult::error(2, "Invalid UTF-8 in passphrase"),
+    };
+
+    let hash_str = match CStr::from_ptr(message_hash_hex).to_str() {
+        Ok(s) => s,
+        Err(_) => return SignerResult::error(2, "Invalid UTF-8 in message hash"),
+    };
+
+    // Decode hex hash (strip 0x prefix if present)
+    let hash_hex = hash_str.strip_prefix("0x").unwrap_or(hash_str);
+    let message_hash = match hex::decode(hash_hex) {
+        Ok(h) => h,
+        Err(e) => return SignerResult::error(3, &format!("Hex decode error: {}", e)),
+    };
+
+    // Decrypt and sign
+    match decrypt_and_sign_evm(container_str, passphrase_str, &message_hash) {
         Ok(result) => match serde_json::to_string(&result) {
             Ok(json) => SignerResult::success(json),
             Err(e) => SignerResult::error(5, &format!("Serialization error: {}", e)),
