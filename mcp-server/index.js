@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 
 /**
- * Coldstar MCP Server
+ * Coldstar MCP Server — Multichain
  *
- * Secure signing infrastructure for AI agents on Solana.
+ * Secure signing infrastructure for AI agents on Solana and Base.
  * FairScore reputation gating prevents rogue agents from draining wallets.
  *
- * 8 tools: check_reputation, get_token_price, get_swap_quote,
- *          check_wallet_balance, validate_transaction, list_supported_tokens,
- *          get_portfolio, estimate_swap_cost
+ * Solana tools: check_reputation, get_token_price, get_swap_quote,
+ *               check_wallet_balance, validate_transaction, list_supported_tokens,
+ *               get_portfolio, estimate_swap_cost, solana_get_fees
+ *
+ * Base tools:   base_check_balance, base_get_gas_price, base_get_token_price,
+ *               base_get_portfolio, base_list_tokens
+ *
+ * 14 tools total across both chains.
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -68,6 +73,49 @@ const TOKEN_DECIMALS = {
   BONK: 5,
   JUP: 6,
   RAY: 6,
+};
+
+// ---------------------------------------------------------------------------
+// Base (EVM) Constants
+// ---------------------------------------------------------------------------
+
+const BASE_RPC_URL =
+  process.env.BASE_RPC_URL || "https://mainnet.base.org";
+const BASE_CHAIN_ID = 8453;
+
+// Common Base token addresses (checksummed)
+const BASE_TOKENS = {
+  ETH: { address: "native", decimals: 18, name: "Ethereum" },
+  WETH: {
+    address: "0x4200000000000000000000000000000000000006",
+    decimals: 18,
+    name: "Wrapped Ether",
+  },
+  USDC: {
+    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    decimals: 6,
+    name: "USD Coin",
+  },
+  USDbC: {
+    address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
+    decimals: 6,
+    name: "USD Base Coin (bridged)",
+  },
+  DAI: {
+    address: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+    decimals: 18,
+    name: "Dai Stablecoin",
+  },
+  cbETH: {
+    address: "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
+    decimals: 18,
+    name: "Coinbase Wrapped Staked ETH",
+  },
+  AERO: {
+    address: "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+    decimals: 18,
+    name: "Aerodrome",
+  },
 };
 
 // Reputation tiers
@@ -205,12 +253,51 @@ async function fetchTokenAccounts(walletAddress, rpcUrl) {
 }
 
 // ---------------------------------------------------------------------------
+// Base (EVM) API wrappers
+// ---------------------------------------------------------------------------
+
+async function baseRpcCall(method, params = [], rpcUrl) {
+  const rpc = rpcUrl || BASE_RPC_URL;
+  const body = { jsonrpc: "2.0", id: 1, method, params };
+  const result = await httpPost(rpc, body);
+  if (result.error) throw new Error(result.error.message);
+  return result.result;
+}
+
+async function fetchBaseEthBalance(address, rpcUrl) {
+  const hex = await baseRpcCall("eth_getBalance", [address, "latest"], rpcUrl);
+  return parseInt(hex, 16) / 1e18;
+}
+
+async function fetchBaseTokenBalance(walletAddress, tokenAddress, decimals, rpcUrl) {
+  // ERC-20 balanceOf(address) = 0x70a08231 + padded address
+  const paddedAddr = walletAddress.slice(2).toLowerCase().padStart(64, "0");
+  const data = `0x70a08231${paddedAddr}`;
+  const hex = await baseRpcCall(
+    "eth_call",
+    [{ to: tokenAddress, data }, "latest"],
+    rpcUrl
+  );
+  return parseInt(hex, 16) / 10 ** decimals;
+}
+
+async function fetchBaseGasPrice(rpcUrl) {
+  const hex = await baseRpcCall("eth_gasPrice", [], rpcUrl);
+  return parseInt(hex, 16);
+}
+
+async function fetchBaseBlockNumber(rpcUrl) {
+  const hex = await baseRpcCall("eth_blockNumber", [], rpcUrl);
+  return parseInt(hex, 16);
+}
+
+// ---------------------------------------------------------------------------
 // Server
 // ---------------------------------------------------------------------------
 
 const server = new McpServer({
   name: "coldstar-mcp",
-  version: "0.1.0",
+  version: "0.2.0",
 });
 
 // 1. check_reputation ---------------------------------------------------------
@@ -846,6 +933,496 @@ server.tool(
         isError: true,
       };
     }
+  }
+);
+
+// 9. solana_get_fees ----------------------------------------------------------
+
+server.tool(
+  "solana_get_fees",
+  "Get current Solana network fees, slot height, and transaction cost estimates. Returns base fee, priority fee stats, and estimated costs for common operations.",
+  {
+    rpc_url: z
+      .string()
+      .url()
+      .optional()
+      .describe("Solana RPC URL (defaults to mainnet-beta)"),
+  },
+  async ({ rpc_url }) => {
+    try {
+      const rpc = rpc_url || SOLANA_RPC_URL;
+
+      // Get recent prioritization fees
+      const feesResult = await httpPost(rpc, {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getRecentPrioritizationFees",
+        params: [],
+      });
+
+      // Get current slot
+      const slotResult = await httpPost(rpc, {
+        jsonrpc: "2.0",
+        id: 2,
+        method: "getSlot",
+        params: [],
+      });
+
+      // Get latest blockhash (includes fee context)
+      const blockhashResult = await httpPost(rpc, {
+        jsonrpc: "2.0",
+        id: 3,
+        method: "getLatestBlockhash",
+        params: [{ commitment: "finalized" }],
+      });
+
+      const fees = feesResult.result || [];
+      const slot = slotResult.result || 0;
+      const lastValidBlockHeight =
+        blockhashResult.result?.value?.lastValidBlockHeight || 0;
+
+      // Calculate priority fee stats from recent slots
+      const priorityFees = fees
+        .map((f) => f.prioritizationFee)
+        .filter((f) => f > 0);
+      const avgPriorityFee =
+        priorityFees.length > 0
+          ? priorityFees.reduce((a, b) => a + b, 0) / priorityFees.length
+          : 0;
+      const maxPriorityFee =
+        priorityFees.length > 0 ? Math.max(...priorityFees) : 0;
+      const medianPriorityFee =
+        priorityFees.length > 0
+          ? priorityFees.sort((a, b) => a - b)[
+              Math.floor(priorityFees.length / 2)
+            ]
+          : 0;
+
+      // Solana base fee is 5000 lamports per signature
+      const baseFeePerSig = 5000;
+      const baseFeeSOL = baseFeePerSig / 1e9;
+
+      // Estimate costs
+      const simpleTransferLamports = baseFeePerSig + medianPriorityFee;
+      const tokenTransferLamports =
+        baseFeePerSig + medianPriorityFee + 5000; // additional compute
+
+      // Get SOL price for USD estimates
+      let solPrice = null;
+      try {
+        const p = await fetchPythPrice("SOL");
+        solPrice = p.price;
+      } catch {
+        // unavailable
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              {
+                chain: "Solana",
+                current_slot: slot,
+                last_valid_block_height: lastValidBlockHeight,
+                base_fee_lamports: baseFeePerSig,
+                base_fee_sol: baseFeeSOL,
+                priority_fees: {
+                  median_lamports: medianPriorityFee,
+                  average_lamports: Math.round(avgPriorityFee),
+                  max_lamports: maxPriorityFee,
+                  sample_count: priorityFees.length,
+                },
+                estimated_costs: {
+                  sol_transfer_lamports: simpleTransferLamports,
+                  sol_transfer_sol: simpleTransferLamports / 1e9,
+                  sol_transfer_usd:
+                    solPrice !== null
+                      ? parseFloat(
+                          ((simpleTransferLamports / 1e9) * solPrice).toFixed(8)
+                        )
+                      : null,
+                  token_transfer_lamports: tokenTransferLamports,
+                  token_transfer_sol: tokenTransferLamports / 1e9,
+                },
+                sol_price_usd: solPrice,
+                rpc,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({ error: err.message }, null, 2),
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// ===========================================================================
+// BASE (EVM) TOOLS
+// ===========================================================================
+
+// 10. base_check_balance -------------------------------------------------------
+
+server.tool(
+  "base_check_balance",
+  "Check ETH and ERC-20 token balances for a Base wallet. Returns native ETH balance plus common token holdings on Base L2 (Chain ID 8453).",
+  {
+    wallet_address: z
+      .string()
+      .regex(/^0x[a-fA-F0-9]{40}$/)
+      .describe("Base/EVM wallet address (0x...)"),
+    rpc_url: z
+      .string()
+      .url()
+      .optional()
+      .describe("Base RPC URL (defaults to https://mainnet.base.org)"),
+  },
+  async ({ wallet_address, rpc_url }) => {
+    try {
+      const rpc = rpc_url || BASE_RPC_URL;
+      const ethBalance = await fetchBaseEthBalance(wallet_address, rpc);
+
+      const tokens = [];
+      for (const [symbol, info] of Object.entries(BASE_TOKENS)) {
+        if (info.address === "native") continue;
+        try {
+          const balance = await fetchBaseTokenBalance(
+            wallet_address,
+            info.address,
+            info.decimals,
+            rpc
+          );
+          if (balance > 0) {
+            tokens.push({
+              symbol,
+              name: info.name,
+              address: info.address,
+              balance,
+              decimals: info.decimals,
+            });
+          }
+        } catch {
+          // skip tokens that fail
+        }
+      }
+
+      tokens.sort((a, b) => b.balance - a.balance);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              {
+                chain: "Base",
+                chain_id: BASE_CHAIN_ID,
+                wallet: wallet_address,
+                eth_balance: ethBalance,
+                token_count: tokens.length,
+                tokens,
+                rpc,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [
+          { type: "text", text: JSON.stringify({ error: err.message }, null, 2) },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 11. base_get_gas_price ------------------------------------------------------
+
+server.tool(
+  "base_get_gas_price",
+  "Get current gas price on Base L2. Returns gas price in Gwei and Wei, plus latest block number. Useful for estimating transaction costs.",
+  {
+    rpc_url: z
+      .string()
+      .url()
+      .optional()
+      .describe("Base RPC URL (defaults to https://mainnet.base.org)"),
+  },
+  async ({ rpc_url }) => {
+    try {
+      const rpc = rpc_url || BASE_RPC_URL;
+      const [gasPriceWei, blockNumber] = await Promise.all([
+        fetchBaseGasPrice(rpc),
+        fetchBaseBlockNumber(rpc),
+      ]);
+
+      const gasPriceGwei = gasPriceWei / 1e9;
+
+      // Estimate costs for common operations (21000 gas for ETH transfer)
+      const ethTransferCost = (gasPriceWei * 21000) / 1e18;
+      const erc20TransferCost = (gasPriceWei * 65000) / 1e18;
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              {
+                chain: "Base",
+                chain_id: BASE_CHAIN_ID,
+                gas_price_gwei: parseFloat(gasPriceGwei.toFixed(6)),
+                gas_price_wei: gasPriceWei,
+                latest_block: blockNumber,
+                estimated_costs_eth: {
+                  eth_transfer: parseFloat(ethTransferCost.toFixed(10)),
+                  erc20_transfer: parseFloat(erc20TransferCost.toFixed(10)),
+                },
+                note: "Base L2 gas costs are typically very low compared to Ethereum mainnet",
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [
+          { type: "text", text: JSON.stringify({ error: err.message }, null, 2) },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 12. base_get_token_price ----------------------------------------------------
+
+server.tool(
+  "base_get_token_price",
+  "Get token price on Base via Pyth Network oracle. Supports ETH, BTC, USDC, USDT. Returns price in USD with confidence interval.",
+  {
+    token: z
+      .string()
+      .describe('Token symbol (ETH, BTC, USDC, USDT) or Pyth pair like "ETH/USD"'),
+  },
+  async ({ token }) => {
+    try {
+      // Map Base token names to Pyth feeds
+      const baseTokenMap = {
+        ETH: "ETH/USD",
+        WETH: "ETH/USD",
+        cbETH: "ETH/USD", // approximate
+      };
+      const mapped = baseTokenMap[token.toUpperCase()] || token;
+      const priceData = await fetchPythPrice(mapped);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              {
+                chain: "Base",
+                symbol: token.toUpperCase(),
+                pyth_feed: priceData.symbol,
+                price_usd: priceData.price,
+                confidence_usd: priceData.confidence,
+                publish_time: priceData.publish_time,
+                source: "Pyth Network (Hermes)",
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [
+          { type: "text", text: JSON.stringify({ error: err.message }, null, 2) },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 13. base_get_portfolio ------------------------------------------------------
+
+server.tool(
+  "base_get_portfolio",
+  "Get full portfolio with USD values for a Base wallet. Combines on-chain ETH and ERC-20 balances with Pyth oracle prices.",
+  {
+    wallet_address: z
+      .string()
+      .regex(/^0x[a-fA-F0-9]{40}$/)
+      .describe("Base/EVM wallet address (0x...)"),
+    rpc_url: z
+      .string()
+      .url()
+      .optional()
+      .describe("Base RPC URL (defaults to https://mainnet.base.org)"),
+  },
+  async ({ wallet_address, rpc_url }) => {
+    try {
+      const rpc = rpc_url || BASE_RPC_URL;
+      const ethBalance = await fetchBaseEthBalance(wallet_address, rpc);
+
+      const holdings = [];
+      let totalUsd = 0;
+
+      // ETH balance + price
+      let ethPrice = null;
+      try {
+        const p = await fetchPythPrice("ETH");
+        ethPrice = p.price;
+      } catch {
+        // unavailable
+      }
+      const ethValue = ethPrice !== null ? ethBalance * ethPrice : null;
+      if (ethValue !== null) totalUsd += ethValue;
+      holdings.push({
+        symbol: "ETH",
+        amount: ethBalance,
+        price_usd: ethPrice,
+        value_usd: ethValue,
+      });
+
+      // ERC-20 tokens
+      for (const [symbol, info] of Object.entries(BASE_TOKENS)) {
+        if (info.address === "native") continue;
+        try {
+          const balance = await fetchBaseTokenBalance(
+            wallet_address,
+            info.address,
+            info.decimals,
+            rpc
+          );
+          if (balance === 0) continue;
+
+          let price = null;
+          // Map token to Pyth feed
+          const priceFeedMap = {
+            WETH: "ETH",
+            USDC: "USDC",
+            USDbC: "USDC",
+            DAI: "USDC", // approximate stablecoin
+            cbETH: "ETH", // approximate
+          };
+          const feedSymbol = priceFeedMap[symbol];
+          if (feedSymbol) {
+            try {
+              const p = await fetchPythPrice(feedSymbol);
+              price = p.price;
+            } catch {
+              // unavailable
+            }
+          }
+
+          const value = price !== null ? balance * price : null;
+          if (value !== null) totalUsd += value;
+
+          holdings.push({
+            symbol,
+            name: info.name,
+            amount: balance,
+            price_usd: price,
+            value_usd: value,
+          });
+        } catch {
+          // skip
+        }
+      }
+
+      // Calculate percentages
+      for (const h of holdings) {
+        h.pct_of_portfolio =
+          totalUsd > 0 && h.value_usd !== null
+            ? parseFloat(((h.value_usd / totalUsd) * 100).toFixed(2))
+            : null;
+      }
+
+      holdings.sort((a, b) => (b.value_usd ?? 0) - (a.value_usd ?? 0));
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              {
+                chain: "Base",
+                chain_id: BASE_CHAIN_ID,
+                wallet: wallet_address,
+                total_value_usd: parseFloat(totalUsd.toFixed(2)),
+                holdings,
+                token_count: holdings.length,
+                source: "Base RPC + Pyth Network",
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [
+          { type: "text", text: JSON.stringify({ error: err.message }, null, 2) },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 14. base_list_tokens --------------------------------------------------------
+
+server.tool(
+  "base_list_tokens",
+  "List all tokens supported on Base for balance checks and price lookups. Returns symbol, contract address, decimals, and name.",
+  {},
+  async () => {
+    const tokens = Object.entries(BASE_TOKENS).map(([symbol, info]) => ({
+      symbol,
+      name: info.name,
+      address: info.address,
+      decimals: info.decimals,
+    }));
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              chain: "Base",
+              chain_id: BASE_CHAIN_ID,
+              tokens,
+              rpc_default: BASE_RPC_URL,
+              price_oracle: "Pyth Network (Hermes)",
+              note: "Coldstar supports air-gapped signing for Base via secp256k1 ECDSA + EIP-1559 Type 2 transactions",
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
   }
 );
 

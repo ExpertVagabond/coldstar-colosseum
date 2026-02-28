@@ -1,7 +1,7 @@
 {
   "name": "coldstar-mcp",
-  "version": "0.1.0",
-  "description": "MCP server for AI-agent secure Solana transactions -- FairScore reputation gating, Jupiter swaps, Pyth price feeds",
+  "version": "0.2.0",
+  "description": "Multichain MCP server for AI-agent secure transactions on Solana and Base -- reputation gating, DEX quotes, price feeds, balance checks",
   "main": "index.js",
   "type": "module",
   "bin": {
@@ -14,13 +14,16 @@
   "keywords": [
     "mcp",
     "solana",
+    "base",
+    "evm",
     "cold-wallet",
     "ai-agent",
     "defi",
     "fairscore",
     "reputation-gating",
     "jupiter",
-    "pyth"
+    "pyth",
+    "multichain"
   ],
   "license": "MIT",
   "author": "Purple Squirrel Media",
