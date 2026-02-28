@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Generate Coldstar for Base demo video using actual brand assets.
+"""Generate Coldstar for Base demo video.
 
-Uses promo images, logos, TUI screenshots as slide backgrounds
-with text overlays synced to voiceover audio.
+Renders animated title card slides with Coldstar logo,
+synced to voiceover audio segments.
 """
 
 import os
 import subprocess
 import shutil
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from PIL import Image, ImageDraw, ImageFont
 
 AUDIO_DIR = "/Volumes/Virtual Server/projects/coldstar/demo-audio"
 VIDEO_DIR = "/Volumes/Virtual Server/projects/coldstar/demo-video"
@@ -27,35 +27,24 @@ SEGMENTS = [
     "s08-open-source", "s09-cta",
 ]
 
-# (title, subtitle, detail, background_image_path)
-# Slide 0 and 8 are "hero" slides — get the large centered logo instead of text
+# (title, subtitle, detail)
+# All slides use generated backgrounds — no Solana-branded images
+# Slide 0 and 8 are "hero" slides with large centered logo
 SLIDES = [
-    ("COLDSTAR", "Air-Gapped Cold Wallet · Now on Base", "",
-     None),
-    ("THE PROBLEM", "Browser wallets expose keys in memory", "Hardware wallets still connect over USB",
-     None),
-    ("TRUE AIR GAP", "No USB · No Bluetooth · No WiFi", "QR codes are the only bridge",
-     f"{ASSETS}/promo/architecture-flow.png"),
-    ("HOW IT WORKS", "Build > QR > Sign Offline > QR > Broadcast", "4 steps · Zero network exposure",
-     f"{ASSETS}/screenshots/tui/tui-architecture.png"),
-    ("RUST SECURE SIGNER", "mlock · Argon2id · AES-256-GCM · Zeroize", "Keys exist only in locked memory pages",
-     f"{ASSETS}/screenshots/tui/tui-features.png"),
-    ("BUILT FOR BASE", "secp256k1 ECDSA · EIP-1559 Type 2", "Base Mainnet + Sepolia Testnet",
-     None),
-    ("MULTICHAIN", "Solana (Ed25519) + Base (secp256k1)", "Same encryption layer · Same air gap",
-     f"{ASSETS}/promo/architecture-flow.png"),
-    ("OPEN SOURCE", "18,000 lines · Fully auditable", "Don't trust us · Verify",
-     f"{ASSETS}/screenshots/tui/tui-home.png"),
-    ("coldstar.dev", "Cold Signing for Base", "github.com/ExpertVagabond/coldstar-colosseum",
-     None),
+    ("COLDSTAR", "Air-Gapped Cold Wallet · Now on Base", ""),
+    ("THE PROBLEM", "Browser wallets expose keys in memory", "Hardware wallets still connect over USB"),
+    ("TRUE AIR GAP", "No USB · No Bluetooth · No WiFi", "QR codes are the only bridge"),
+    ("HOW IT WORKS", "Build > QR > Sign Offline > QR > Broadcast", "4 steps · Zero network exposure"),
+    ("RUST SECURE SIGNER", "mlock · Argon2id · AES-256-GCM · Zeroize", "Keys exist only in locked memory pages"),
+    ("BUILT FOR BASE", "secp256k1 ECDSA · EIP-1559 Type 2", "Base Mainnet + Sepolia Testnet"),
+    ("MULTICHAIN", "Solana (Ed25519) + Base (secp256k1)", "Same encryption layer · Same air gap"),
+    ("OPEN SOURCE", "18,000 lines · Fully auditable", "Don't trust us · Verify"),
+    ("coldstar.dev", "Cold Signing for Base", "github.com/ExpertVagabond/coldstar-colosseum"),
 ]
 
-# Hero slides get the large centered logo
 HERO_SLIDES = {0, 8}
 
 LOGO_PATH = f"{ASSETS}/assets/coldstar-logo.png"
-ICON_PATH = f"{ASSETS}/assets/coldstar-icon.png"
-LOGO_1024_PATH = f"{ASSETS}/assets/favicons/coldstar-icon-1024.png"
 
 GAP = 0.8
 
@@ -65,10 +54,6 @@ WHITE = (255, 255, 255)
 GRAY = (138, 138, 154)
 GREEN = (0, 210, 106)
 BG = (0, 0, 0)
-OVERLAY_COLOR = (0, 0, 8)
-
-# Slides with TUI screenshot backgrounds — push text to lower third
-TUI_BG_SLIDES = {3, 4, 7}
 
 
 def get_duration(filepath):
@@ -95,18 +80,6 @@ def get_font(size, bold=False):
     return ImageFont.load_default()
 
 
-def load_and_fit(img_path, target_w, target_h):
-    """Load image and cover-fit to target dimensions."""
-    img = Image.open(img_path).convert("RGB")
-    iw, ih = img.size
-    scale = max(target_w / iw, target_h / ih)
-    new_w, new_h = int(iw * scale), int(ih * scale)
-    img = img.resize((new_w, new_h), Image.LANCZOS)
-    # Center crop
-    left = (new_w - target_w) // 2
-    top = (new_h - target_h) // 2
-    return img.crop((left, top, left + target_w, top + target_h))
-
 
 def draw_text_with_shadow(draw, xy, text, font, fill, shadow_color=(0, 0, 0), offset=2):
     """Draw text with a drop shadow for readability."""
@@ -130,43 +103,21 @@ def centered_text(draw, y, text, font, fill, shadow=True):
         draw.text((x, y), text, fill=fill, font=font)
 
 
-def render_frame(slide_idx, alpha, bg_cache):
+def render_frame(slide_idx, alpha):
     """Render a single video frame."""
-    title, subtitle, detail, bg_path = SLIDES[slide_idx]
+    title, subtitle, detail = SLIDES[slide_idx]
     is_hero = slide_idx in HERO_SLIDES
-    is_tui = slide_idx in TUI_BG_SLIDES
 
-    # ── Background ──
-    if bg_path and bg_path in bg_cache:
-        img = bg_cache[bg_path].copy()
-        if is_tui:
-            # TUI screenshots: lighter darken so the TUI is still visible
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(0.45)
-            overlay = Image.new("RGB", (W, H), OVERLAY_COLOR)
-            img = Image.blend(img, overlay, 0.25)
-        elif is_hero:
-            # Hero slides: moderate darken, let the promo art show through
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(0.35)
-            overlay = Image.new("RGB", (W, H), OVERLAY_COLOR)
-            img = Image.blend(img, overlay, 0.3)
-        else:
-            # Standard background slides
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(0.3)
-            overlay = Image.new("RGB", (W, H), OVERLAY_COLOR)
-            img = Image.blend(img, overlay, 0.4)
-    else:
-        img = Image.new("RGB", (W, H), BG)
-        draw_temp = ImageDraw.Draw(img)
-        for r in range(400, 0, -2):
-            a = int(15 * (r / 400))
-            color = (0, min(a, 12), min(a * 3, 45))
-            draw_temp.ellipse(
-                [W // 2 - r, H // 2 - r - 40, W // 2 + r, H // 2 + r - 40],
-                fill=color,
-            )
+    # ── Background: dark with subtle blue glow ──
+    img = Image.new("RGB", (W, H), BG)
+    draw_temp = ImageDraw.Draw(img)
+    for r in range(400, 0, -2):
+        a = int(15 * (r / 400))
+        color = (0, min(a, 12), min(a * 3, 45))
+        draw_temp.ellipse(
+            [W // 2 - r, H // 2 - r - 40, W // 2 + r, H // 2 + r - 40],
+            fill=color,
+        )
 
     draw = ImageDraw.Draw(img)
 
@@ -224,33 +175,19 @@ def render_frame(slide_idx, alpha, bg_cache):
         img.paste(logo, (40, 30), logo)
         draw = ImageDraw.Draw(img)
 
-    # Text vertical positioning
-    if is_tui:
-        # TUI background: push text to bottom third with a dark bar
-        bar_y = H - 220
-        bar = Image.new("RGBA", (W, 220), (0, 0, 8, int(200 * alpha)))
-        img.paste(Image.alpha_composite(
-            Image.new("RGBA", (W, 220), (0, 0, 0, 0)), bar
-        ), (0, bar_y), bar)
-        draw = ImageDraw.Draw(img)
-        title_y = bar_y + 20
-        sub_y = bar_y + 85
-        det_y = bar_y + 130
-    else:
-        # Standard centered layout
-        title_y = H // 2 - 90
-        sub_y = H // 2 + 10
-        det_y = H // 2 + 60
+    # Standard centered layout
+    title_y = H // 2 - 90
+    sub_y = H // 2 + 10
+    det_y = H // 2 + 60
 
-    # Accent line above title (non-TUI only)
-    if not is_tui:
-        line_w = int(200 * alpha)
-        if line_w > 0:
-            blue_faded = tuple(int(c * alpha) for c in BASE_BLUE)
-            draw.rectangle(
-                [W // 2 - line_w // 2, title_y - 50, W // 2 + line_w // 2, title_y - 48],
-                fill=blue_faded,
-            )
+    # Accent line above title
+    line_w = int(200 * alpha)
+    if line_w > 0:
+        blue_faded = tuple(int(c * alpha) for c in BASE_BLUE)
+        draw.rectangle(
+            [W // 2 - line_w // 2, title_y - 50, W // 2 + line_w // 2, title_y - 48],
+            fill=blue_faded,
+        )
 
     # Title
     title_font = get_font(60, bold=True)
@@ -259,37 +196,30 @@ def render_frame(slide_idx, alpha, bg_cache):
 
     # Subtitle
     sub_alpha_val = max(0, min(1, (alpha - 0.15) / 0.85))
-    sub_font = get_font(26 if is_tui else 28)
+    sub_font = get_font(28)
     faded_sub = tuple(int(c * sub_alpha_val) for c in GRAY)
     centered_text(draw, sub_y, subtitle, sub_font, faded_sub)
 
     # Detail
     if detail:
         det_alpha_val = max(0, min(1, (alpha - 0.3) / 0.7))
-        det_font = get_font(22 if is_tui else 24)
+        det_font = get_font(24)
         faded_det = tuple(int(c * det_alpha_val) for c in GREEN)
         centered_text(draw, det_y, detail, det_font, faded_det)
 
-    # Bottom accent line (non-TUI only)
-    if not is_tui:
-        line_w = int(200 * alpha)
-        if line_w > 0:
-            draw.rectangle(
-                [W // 2 - line_w // 3, det_y + 50, W // 2 + line_w // 3, det_y + 52],
-                fill=tuple(int(c * alpha * 0.5) for c in BASE_BLUE),
-            )
+    # Bottom accent line
+    line_w2 = int(200 * alpha)
+    if line_w2 > 0:
+        draw.rectangle(
+            [W // 2 - line_w2 // 3, det_y + 50, W // 2 + line_w2 // 3, det_y + 52],
+            fill=tuple(int(c * alpha * 0.5) for c in BASE_BLUE),
+        )
 
     return img
 
 
 def main():
-    # Pre-load backgrounds
     print("Loading brand assets...")
-    bg_cache = {}
-    for _, _, _, bg_path in SLIDES:
-        if bg_path and bg_path not in bg_cache and os.path.exists(bg_path):
-            print(f"  Loading {os.path.basename(bg_path)}...")
-            bg_cache[bg_path] = load_and_fit(bg_path, W, H)
 
     # Pre-load logos
     # Large logo for hero slides (centered, ~700px wide)
@@ -347,7 +277,7 @@ def main():
                 alpha = 1.0
             alpha = max(0, min(1, alpha))
 
-            img = render_frame(i, alpha, bg_cache)
+            img = render_frame(i, alpha)
             img.save(os.path.join(slide_frames_dir, f"frame_{f:05d}.png"))
 
         print("done")
