@@ -1,6 +1,8 @@
-//! Solana Secure Signer - A memory-safe signing core for Solana transactions
+//! Coldstar Secure Signer - A memory-safe signing core for Solana and EVM transactions
 //!
-//! This library provides secure Ed25519 signing for Solana transactions with:
+//! This library provides secure signing with:
+//! - Ed25519 signing for Solana
+//! - secp256k1 ECDSA signing for EVM (Base, Ethereum)
 //! - Memory-locked key storage (mlock/VirtualLock)
 //! - Automatic zeroization of sensitive data
 //! - Panic-safe cleanup
@@ -27,10 +29,17 @@ pub mod secure_buffer;
 #[cfg(feature = "ffi")]
 pub mod ffi;
 
+// Solana (Ed25519)
 pub use crypto::{
     create_encrypted_key_container, decrypt_and_sign, sign_transaction, EncryptedKeyContainer,
     SigningResult,
 };
+
+// EVM (secp256k1)
+pub use crypto::{
+    decrypt_and_sign_evm, sign_evm_transaction, EVMSigningResult,
+};
+
 pub use error::SignerError;
 pub use secure_buffer::{LockingMode, SecureBuffer};
 
@@ -40,7 +49,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Re-export for convenience
 pub mod prelude {
     pub use crate::crypto::{
-        create_encrypted_key_container, decrypt_and_sign, EncryptedKeyContainer,
+        create_encrypted_key_container, decrypt_and_sign, decrypt_and_sign_evm,
+        EncryptedKeyContainer, EVMSigningResult,
     };
     pub use crate::error::SignerError;
     pub use crate::secure_buffer::SecureBuffer;
