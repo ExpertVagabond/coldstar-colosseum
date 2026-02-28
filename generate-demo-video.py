@@ -31,7 +31,7 @@ SEGMENTS = [
 # Slide 0 and 8 are "hero" slides — get the large centered logo instead of text
 SLIDES = [
     ("COLDSTAR", "Air-Gapped Cold Wallet · Now on Base", "",
-     f"{ASSETS}/promo/hero-image.png"),
+     None),
     ("THE PROBLEM", "Browser wallets expose keys in memory", "Hardware wallets still connect over USB",
      None),
     ("TRUE AIR GAP", "No USB · No Bluetooth · No WiFi", "QR codes are the only bridge",
@@ -47,7 +47,7 @@ SLIDES = [
     ("OPEN SOURCE", "18,000 lines · Fully auditable", "Don't trust us · Verify",
      f"{ASSETS}/screenshots/tui/tui-home.png"),
     ("coldstar.dev", "Cold Signing for Base", "github.com/ExpertVagabond/coldstar-colosseum",
-     f"{ASSETS}/promo/hero-image.png"),
+     None),
 ]
 
 # Hero slides get the large centered logo
