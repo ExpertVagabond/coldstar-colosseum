@@ -1,22 +1,26 @@
 [package]
-name = "solana_secure_signer"
-version = "1.0.0"
+name = "coldstar_secure_signer"
+version = "1.1.0"
 edition = "2021"
-description = "Secure signing core for Solana transactions with memory-locked key handling"
+description = "Secure signing core for Solana and EVM (Base) transactions with memory-locked key handling"
 license = "MIT"
 authors = ["ColdStar Development Team"]
 
 [lib]
-name = "solana_secure_signer"
+name = "coldstar_secure_signer"
 crate-type = ["cdylib", "rlib", "staticlib"]
 
 [[bin]]
-name = "solana-signer"
+name = "coldstar-signer"
 path = "src/main.rs"
 
 [dependencies]
 # Ed25519 signing (Solana-compatible)
 ed25519-dalek = { version = "2.1", features = ["rand_core", "zeroize"] }
+
+# secp256k1 ECDSA signing (EVM/Base-compatible)
+k256 = { version = "0.13", features = ["ecdsa", "arithmetic"] }
+sha3 = "0.10"
 
 # Secure memory handling
 zeroize = { version = "1.7", features = ["derive"] }
