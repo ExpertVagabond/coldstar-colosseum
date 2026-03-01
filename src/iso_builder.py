@@ -19,7 +19,7 @@ from src.ui import (
     print_step, create_progress_bar, confirm_dangerous_action,
     print_wallet_info
 )
-from config import ALPINE_MINIROOTFS_URL, NETWORK_BLACKLIST_MODULES
+from config import ALPINE_MINIROOTFS_URL, NETWORK_WHITELIST_MODULES
 
 
 class ISOBuilder:
@@ -153,26 +153,45 @@ class ISOBuilder:
             
             modprobe_dir = self.rootfs_dir / "etc" / "modprobe.d"
             modprobe_dir.mkdir(parents=True, exist_ok=True)
-            blacklist_conf = modprobe_dir / "blacklist-network.conf"
-            
-            with open(blacklist_conf, 'w') as f:
-                f.write("# Network modules blacklisted for offline cold wallet\n")
-                f.write("# Ethernet drivers\n")
-                for module in NETWORK_BLACKLIST_MODULES:
-                    f.write(f"blacklist {module}\n")
-                f.write("# Additional wireless drivers\n")
-                f.write("blacklist cfg80211\n")
-                f.write("blacklist mac80211\n")
-                f.write("blacklist rfkill\n")
-                f.write("blacklist bluetooth\n")
-                f.write("blacklist btusb\n")
-                f.write("# USB network adapters\n")
-                f.write("blacklist usbnet\n")
-                f.write("blacklist cdc_ether\n")
-                f.write("blacklist rndis_host\n")
-                f.write("blacklist ax88179_178a\n")
-            
-            print_success("Network drivers blacklisted")
+
+            # Whitelist approach: block ALL modules except those explicitly allowed.
+            # This is deny-by-default — any new/unknown driver is automatically blocked.
+            whitelist_conf = modprobe_dir / "coldstar-whitelist.conf"
+            with open(whitelist_conf, 'w') as f:
+                f.write("# Coldstar air-gap: DENY-BY-DEFAULT module loading\n")
+                f.write("# Only modules in NETWORK_WHITELIST_MODULES are allowed.\n")
+                f.write("# This script installs a modprobe wrapper that blocks everything else.\n")
+                f.write("#\n")
+                f.write("# Explicitly block all known network module families:\n")
+                for family in [
+                    "e1000", "e1000e", "r8169", "iwlwifi", "ath9k", "ath10k_pci",
+                    "rtl8xxxu", "mt7601u", "brcmfmac", "bcm43xx",
+                    "cfg80211", "mac80211", "rfkill", "bluetooth", "btusb",
+                    "usbnet", "cdc_ether", "rndis_host", "ax88179_178a",
+                    "bnx2", "igb", "ixgbe", "mlx4_en", "mlx5_core",
+                    "virtio_net", "vmxnet3", "hv_netvsc",
+                ]:
+                    f.write(f"blacklist {family}\n")
+                    f.write(f"install {family} /bin/false\n")
+
+            # Create a modprobe wrapper that enforces the whitelist
+            sbin_dir = self.rootfs_dir / "usr" / "local" / "sbin"
+            sbin_dir.mkdir(parents=True, exist_ok=True)
+            wrapper = sbin_dir / "modprobe-guard.sh"
+            allowed = " ".join(NETWORK_WHITELIST_MODULES)
+            with open(wrapper, 'w') as f:
+                f.write("#!/bin/sh\n")
+                f.write("# Coldstar module whitelist guard\n")
+                f.write(f'ALLOWED="{allowed}"\n')
+                f.write('MODULE="$1"\n')
+                f.write('for m in $ALLOWED; do\n')
+                f.write('  [ "$MODULE" = "$m" ] && exec /sbin/modprobe.real "$@"\n')
+                f.write('done\n')
+                f.write('echo "BLOCKED: module $MODULE not in whitelist" >&2\n')
+                f.write('exit 1\n')
+            os.chmod(wrapper, 0o755)
+
+            print_success("Module whitelist enforced (deny-by-default)")
             
             self._disable_network_services()
             self._create_network_lockdown_script()
