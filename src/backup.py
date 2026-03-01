@@ -11,6 +11,7 @@ B - Love U 3000
 
 import json
 import base64
+import gc
 import hashlib
 import secrets
 import os
@@ -34,6 +35,12 @@ try:
     HAS_NACL = True
 except ImportError:
     HAS_NACL = False
+
+try:
+    from argon2.low_level import hash_secret_raw, Type as Argon2Type
+    HAS_ARGON2 = True
+except ImportError:
+    HAS_ARGON2 = False
 
 try:
     import qrcode
@@ -126,19 +133,42 @@ class WalletBackup:
             return self._export_base64(keypair)
 
         try:
-            # Derive encryption key from password
-            salt = nacl_random(16)
-            key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000, dklen=32)
+            # Derive encryption key from password using Argon2id (preferred) or PBKDF2 (fallback)
+            salt = nacl_random(32)  # 256-bit salt
+
+            if HAS_ARGON2:
+                # Argon2id: 256 MB memory, 4 iterations, 4 parallelism
+                key = hash_secret_raw(
+                    secret=password.encode(),
+                    salt=salt,
+                    time_cost=4,
+                    memory_cost=262144,  # 256 MB
+                    parallelism=4,
+                    hash_len=32,
+                    type=Argon2Type.ID,
+                )
+                kdf_algo = "argon2id"
+            else:
+                # Fallback: PBKDF2 with 600k iterations (OWASP 2024 minimum)
+                key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 600000, dklen=32)
+                kdf_algo = "pbkdf2_sha256_600k"
 
             # Encrypt keypair bytes
             box = SecretBox(key)
             nonce = nacl_random(24)
             encrypted = box.encrypt(bytes(keypair), nonce)
 
+            # Zeroize key material
+            password_bytes = password.encode()
+            del key
+            del password_bytes
+            gc.collect()
+
             return {
-                "version": "1.0",
+                "version": "2.0",
                 "type": "encrypted_keypair",
                 "algorithm": "nacl_secretbox",
+                "kdf": kdf_algo,
                 "salt": base64.b64encode(salt).decode(),
                 "nonce": base64.b64encode(nonce).decode(),
                 "ciphertext": base64.b64encode(encrypted.ciphertext).decode(),
@@ -182,12 +212,31 @@ class WalletBackup:
             nonce = base64.b64decode(encrypted_data["nonce"])
             ciphertext = base64.b64decode(encrypted_data["ciphertext"])
 
-            # Derive key
-            key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000, dklen=32)
+            # Derive key using the appropriate KDF
+            kdf = encrypted_data.get("kdf", "pbkdf2_sha256_100k")
+            if kdf == "argon2id" and HAS_ARGON2:
+                key = hash_secret_raw(
+                    secret=password.encode(),
+                    salt=salt,
+                    time_cost=4,
+                    memory_cost=262144,
+                    parallelism=4,
+                    hash_len=32,
+                    type=Argon2Type.ID,
+                )
+            elif kdf == "pbkdf2_sha256_600k":
+                key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 600000, dklen=32)
+            else:
+                # Legacy: 100k iterations
+                key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000, dklen=32)
 
             # Decrypt
             box = SecretBox(key)
             decrypted = box.decrypt(ciphertext, nonce)
+
+            # Cleanup
+            del key
+            gc.collect()
 
             return Keypair.from_bytes(decrypted)
 

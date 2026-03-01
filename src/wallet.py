@@ -9,7 +9,9 @@ import os
 import gc
 import sys
 import base64
+import math
 import shutil
+import time
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -19,6 +21,85 @@ import base58
 
 from src.ui import print_success, print_error, print_info, print_warning, get_password_input, confirm_dangerous_action
 from src.secure_memory import SecureWalletHandler
+
+
+# ── Password strength validation ──────────────────────────────
+def validate_password_strength(password: str) -> Tuple[bool, str]:
+    """Validate password meets cold wallet security requirements.
+
+    Requirements:
+    - Minimum 12 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one digit
+    - At least one special character
+    - Estimated entropy >= 50 bits
+    """
+    if len(password) < 12:
+        return False, "Password must be at least 12 characters"
+    if not any(c.isupper() for c in password):
+        return False, "Password must contain at least one uppercase letter"
+    if not any(c.islower() for c in password):
+        return False, "Password must contain at least one lowercase letter"
+    if not any(c.isdigit() for c in password):
+        return False, "Password must contain at least one digit"
+    if not any(not c.isalnum() for c in password):
+        return False, "Password must contain at least one special character"
+
+    # Entropy estimation: charset_size ^ length
+    charset = 0
+    if any(c.islower() for c in password):
+        charset += 26
+    if any(c.isupper() for c in password):
+        charset += 26
+    if any(c.isdigit() for c in password):
+        charset += 10
+    if any(not c.isalnum() for c in password):
+        charset += 32
+    entropy = len(password) * math.log2(charset) if charset > 0 else 0
+    if entropy < 50:
+        return False, f"Password entropy too low ({entropy:.0f} bits, need >= 50)"
+
+    return True, "OK"
+
+
+# ── Attempt rate limiting ──────────────────────────────────────
+class PasswordAttemptTracker:
+    """Track failed password attempts with exponential backoff."""
+
+    MAX_ATTEMPTS = 10  # Lock after this many failures
+
+    def __init__(self):
+        self._failed_attempts = 0
+        self._last_attempt_time = 0.0
+
+    def check_allowed(self) -> Tuple[bool, str]:
+        """Check if another attempt is allowed. Returns (allowed, reason)."""
+        if self._failed_attempts >= self.MAX_ATTEMPTS:
+            return False, f"Wallet locked: {self.MAX_ATTEMPTS} failed attempts. Restart the application."
+
+        if self._failed_attempts > 0:
+            # Exponential backoff: 2^(attempts-1) seconds, capped at 60s
+            delay = min(2 ** (self._failed_attempts - 1), 60)
+            elapsed = time.time() - self._last_attempt_time
+            if elapsed < delay:
+                remaining = delay - elapsed
+                return False, f"Rate limited. Wait {remaining:.0f}s before retrying."
+
+        return True, ""
+
+    def record_failure(self):
+        self._failed_attempts += 1
+        self._last_attempt_time = time.time()
+        remaining = self.MAX_ATTEMPTS - self._failed_attempts
+        if remaining > 0:
+            print_warning(f"Incorrect password. {remaining} attempts remaining.")
+        else:
+            print_error(f"Wallet locked after {self.MAX_ATTEMPTS} failed attempts.")
+
+    def record_success(self):
+        self._failed_attempts = 0
+        self._last_attempt_time = 0.0
 
 # Import Rust signer (REQUIRED)
 try:
@@ -40,7 +121,8 @@ class WalletManager:
         self.keypair_path: Optional[Path] = None
         self.pubkey_path: Optional[Path] = None
         self.encrypted_container: Optional[dict] = None  # Store encrypted container for Rust signer
-        self._cached_password: Optional[str] = None  # Cache password to avoid multiple prompts
+        self._cached_password: Optional[bytearray] = None  # Cache password as mutable bytearray for zeroization
+        self._attempt_tracker = PasswordAttemptTracker()
         
         # Initialize Rust signer (REQUIRED for security)
         try:
@@ -99,6 +181,12 @@ class WalletManager:
                 
             if not password:
                 print_error("Password cannot be empty!")
+                return False
+
+            # Validate password strength for cold wallet
+            valid, reason = validate_password_strength(password)
+            if not valid:
+                print_error(f"Weak password: {reason}")
                 return False
 
             # Encrypt keypair
@@ -289,13 +377,18 @@ class WalletManager:
         """Securely clear the loaded keypair from memory"""
         self.keypair = None
         self.encrypted_container = None
-        self._cached_password = None  # Clear cached password
+        # Zeroize cached password bytearray before releasing
+        if self._cached_password is not None:
+            for i in range(len(self._cached_password)):
+                self._cached_password[i] = 0
+            self._cached_password = None
         gc.collect()
-        # print_info("Wallet memory cleared.")
-    
+
     def get_cached_password(self) -> Optional[str]:
-        """Get cached password if available"""
-        return self._cached_password
+        """Get cached password if available (converts from bytearray)"""
+        if self._cached_password is not None:
+            return self._cached_password.decode('utf-8')
+        return None
     
     def _normalize_container_format(self, container: dict) -> dict:
         """Normalize container format - convert array fields to base64 strings if needed"""
@@ -410,8 +503,8 @@ class WalletManager:
                     print_error("Password required for wallet conversion but not provided!")
                     return None
                 
-                # Cache the password for later use (signing)
-                self._cached_password = password
+                # Cache the password as bytearray for later use (signing) — zeroizable
+                self._cached_password = bytearray(password.encode('utf-8'))
                 
                 rust_container = self.convert_pynacl_to_rust_container(data, password)
                 if rust_container:

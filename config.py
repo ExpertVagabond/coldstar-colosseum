@@ -36,17 +36,36 @@ OUTBOX_DIR = "/outbox"
 # ── USB / ISO ───────────────────────────────────────────────
 ALPINE_MINIROOTFS_URL = "https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.1-x86_64.tar.gz"
 
+# DEPRECATED: Blacklist approach is incomplete — unknown drivers bypass it.
+# Kept for reference only. Use NETWORK_WHITELIST_MODULES instead.
 NETWORK_BLACKLIST_MODULES = [
-    "e1000",
-    "e1000e",
-    "r8169",
-    "iwlwifi",
-    "ath9k",
-    "ath10k",
-    "rtl8xxxu",
-    "mt7601u",
-    "brcmfmac",
-    "bcm43xx"
+    "e1000", "e1000e", "r8169", "iwlwifi", "ath9k", "ath10k",
+    "rtl8xxxu", "mt7601u", "brcmfmac", "bcm43xx",
+]
+
+# WHITELIST: Only these kernel modules are allowed to load in air-gapped mode.
+# Everything else (including ALL network drivers) is blocked by default.
+# This is the Apple Secure Enclave approach: deny-by-default, allow only what's needed.
+NETWORK_WHITELIST_MODULES = [
+    # Storage (USB mass storage for transaction shuttle)
+    "usb_storage",
+    "uas",
+    "sd_mod",
+    "sg",
+    # Filesystem (for reading USB transaction files)
+    "vfat",
+    "fat",
+    "nls_cp437",
+    "nls_utf8",
+    "ext4",
+    # HID (keyboard/mouse for TUI interaction)
+    "usbhid",
+    "hid",
+    "hid_generic",
+    # Core (required for boot)
+    "loop",
+    "overlay",
+    "squashfs",
 ]
 
 # ── App metadata ────────────────────────────────────────────

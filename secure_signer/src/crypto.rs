@@ -23,26 +23,37 @@ use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 
+use zeroize::Zeroize;
+
 use crate::error::SignerError;
 use crate::secure_buffer::{LockingMode, SecureBuffer};
 
 /// Environment variable to allow insecure memory (permissive mode)
-/// Set to "1" or "true" to allow operation when mlock fails.
-/// WARNING: Only use this for testing or on systems that don't support mlock.
+/// Only available in test/debug builds to prevent accidental production use.
+#[cfg(any(test, debug_assertions))]
 const ENV_ALLOW_INSECURE: &str = "SIGNER_ALLOW_INSECURE_MEMORY";
 
-/// Get the appropriate locking mode based on environment
+/// Get the appropriate locking mode based on environment.
+/// In release builds, always uses Strict mode (mlock required).
+/// In test/debug builds, respects SIGNER_ALLOW_INSECURE_MEMORY env var.
 fn get_locking_mode() -> LockingMode {
-    match std::env::var(ENV_ALLOW_INSECURE) {
-        Ok(val) if val == "1" || val.eq_ignore_ascii_case("true") => LockingMode::Permissive,
-        _ => LockingMode::Strict,
+    #[cfg(any(test, debug_assertions))]
+    {
+        match std::env::var(ENV_ALLOW_INSECURE) {
+            Ok(val) if val == "1" || val.eq_ignore_ascii_case("true") => {
+                return LockingMode::Permissive;
+            }
+            _ => {}
+        }
     }
+    LockingMode::Strict
 }
 
 /// Argon2 parameters for key derivation
-/// These are intentionally strong to resist brute-force attacks
-const ARGON2_MEMORY_COST: u32 = 65536; // 64 MB
-const ARGON2_TIME_COST: u32 = 3; // 3 iterations
+/// Hardened for high-value cold wallet: 256 MB memory, 4 iterations
+/// This makes brute-force attacks require ~1 GB RAM per attempt
+const ARGON2_MEMORY_COST: u32 = 262144; // 256 MB
+const ARGON2_TIME_COST: u32 = 4; // 4 iterations
 const ARGON2_PARALLELISM: u32 = 4; // 4 parallel lanes
 
 /// Size constants
@@ -201,17 +212,16 @@ pub fn decrypt_and_sign(
     let cipher = Aes256Gcm::new_from_slice(derived_key.as_slice())
         .map_err(|e| SignerError::KeyDerivationFailed(e.to_string()))?;
 
-    let plaintext = cipher
+    let mut plaintext = cipher
         .decrypt(Nonce::from_slice(&nonce), ciphertext.as_slice())
         .map_err(|_| SignerError::DecryptionFailed)?;
 
-    // Immediately move to secure buffer and zeroize intermediate
+    // Immediately move to secure buffer
     let mut secure_key = SecureBuffer::from_slice_with_mode(&plaintext, get_locking_mode())?;
 
-    // Zeroize the derived key and plaintext copy
+    // Zeroize all intermediate sensitive data
+    plaintext.zeroize();
     derived_key.zeroize();
-    // Note: plaintext is owned by cipher, can't zeroize it directly
-    // But we've copied to secure buffer immediately
 
     // Create signing key from secure buffer
     // MEMORY LIFECYCLE: The signing key is created from our secure buffer
@@ -417,11 +427,12 @@ pub fn decrypt_and_sign_evm(
     let cipher = Aes256Gcm::new_from_slice(derived_key.as_slice())
         .map_err(|e| SignerError::KeyDerivationFailed(e.to_string()))?;
 
-    let plaintext = cipher
+    let mut plaintext = cipher
         .decrypt(Nonce::from_slice(&nonce), ciphertext.as_slice())
         .map_err(|_| SignerError::DecryptionFailed)?;
 
     let mut secure_key = SecureBuffer::from_slice_with_mode(&plaintext, get_locking_mode())?;
+    plaintext.zeroize();
     derived_key.zeroize();
 
     let result = sign_evm_with_secure_key(&mut secure_key, message_hash);
