@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Generate Coldstar for Base demo video.
+"""Generate Coldstar Solana demo video.
 
-Renders animated title card slides with Coldstar logo,
+Renders animated title card slides with Coldstar logo (Solana purple accent),
 synced to voiceover audio segments.
 """
 
@@ -10,11 +10,11 @@ import subprocess
 import shutil
 from PIL import Image, ImageDraw, ImageFont
 
-AUDIO_DIR = "/Volumes/Virtual Server/projects/coldstar/demo-audio"
-VIDEO_DIR = "/Volumes/Virtual Server/projects/coldstar/demo-video"
+AUDIO_DIR = "/Volumes/Virtual Server/projects/coldstar/demo-audio-solana"
+VIDEO_DIR = "/Volumes/Virtual Server/projects/coldstar/demo-video-solana"
 FRAMES_DIR = os.path.join(VIDEO_DIR, "frames")
 ASSETS = "/Volumes/Virtual Server/projects/coldstar"
-OUTPUT = os.path.join(VIDEO_DIR, "coldstar-base-demo.mp4")
+OUTPUT = os.path.join(VIDEO_DIR, "coldstar-solana-demo.mp4")
 
 W, H = 1920, 1080
 FPS = 30
@@ -23,25 +23,22 @@ os.makedirs(FRAMES_DIR, exist_ok=True)
 
 SEGMENTS = [
     "s01-intro", "s02-problem", "s03-airgap", "s04-how-it-works",
-    "s05-rust-signer", "s06-base-native", "s07-mcp-server",
+    "s05-rust-signer", "s06-solana-native", "s07-mcp-server",
     "s08-agent-ready", "s09-multichain", "s10-open-source", "s11-cta",
 ]
 
-# (title, subtitle, detail)
-# All slides use generated backgrounds — no Solana-branded images
-# Slide 0 and 10 are "hero" slides with large centered logo
 SLIDES = [
-    ("COLDSTAR", "Air-Gapped Cold Wallet · Now on Base", ""),
+    ("COLDSTAR", "Air-Gapped Cold Wallet for Solana", ""),
     ("THE PROBLEM", "Browser wallets expose keys in memory", "Hardware wallets still connect over USB"),
     ("TRUE AIR GAP", "No USB · No Bluetooth · No WiFi", "QR codes are the only bridge"),
     ("HOW IT WORKS", "Build > QR > Sign Offline > QR > Broadcast", "4 steps · Zero network exposure"),
     ("RUST SECURE SIGNER", "mlock · Argon2id · AES-256-GCM · Zeroize", "Keys exist only in locked memory pages"),
-    ("BUILT FOR BASE", "secp256k1 ECDSA · EIP-1559 Type 2", "Base Mainnet + Sepolia Testnet"),
-    ("MCP SERVER", "5 AI Tools for Base", "Balances · Gas · Prices · Portfolio · Tokens"),
+    ("BUILT FOR SOLANA", "Ed25519 · SPL Tokens · Staking · Jupiter", "Native Solana signing from the ground up"),
+    ("MCP SERVER", "9 AI Tools for Solana", "Balances · Prices · Swaps · Portfolio · Fees"),
     ("AGENT-READY", "Claude · ChatGPT · Any MCP Client", "The agent reads. The human signs."),
     ("MULTICHAIN", "Solana (Ed25519) + Base (secp256k1)", "Same encryption layer · Same air gap"),
     ("OPEN SOURCE", "18,000 lines · Fully auditable", "Don't trust us · Verify"),
-    ("coldstar.dev", "Cold Signing for Base", "github.com/ExpertVagabond/coldstar-colosseum"),
+    ("coldstar.dev", "Cold Signing for Solana", "github.com/ExpertVagabond/coldstar-colosseum"),
 ]
 
 HERO_SLIDES = {0, 10}
@@ -50,8 +47,9 @@ LOGO_PATH = f"{ASSETS}/assets/coldstar-logo.png"
 
 GAP = 0.8
 
-# Colors
-BASE_BLUE = (0, 82, 255)
+# Solana purple accent
+ACCENT = (153, 69, 255)
+ACCENT_LIGHT = (179, 120, 255)
 WHITE = (255, 255, 255)
 GRAY = (138, 138, 154)
 GREEN = (0, 210, 106)
@@ -82,20 +80,15 @@ def get_font(size, bold=False):
     return ImageFont.load_default()
 
 
-
 def draw_text_with_shadow(draw, xy, text, font, fill, shadow_color=(0, 0, 0), offset=2):
-    """Draw text with a drop shadow for readability."""
     x, y = xy
-    # Shadow
     for dx in range(-offset, offset + 1):
         for dy in range(-offset, offset + 1):
             draw.text((x + dx, y + dy), text, fill=shadow_color, font=font)
-    # Main text
     draw.text(xy, text, fill=fill, font=font)
 
 
 def centered_text(draw, y, text, font, fill, shadow=True):
-    """Draw centered text at given y position."""
     bbox = draw.textbbox((0, 0), text, font=font)
     tw = bbox[2] - bbox[0]
     x = (W - tw) // 2
@@ -106,16 +99,15 @@ def centered_text(draw, y, text, font, fill, shadow=True):
 
 
 def render_frame(slide_idx, alpha):
-    """Render a single video frame."""
     title, subtitle, detail = SLIDES[slide_idx]
     is_hero = slide_idx in HERO_SLIDES
 
-    # ── Background: dark with subtle blue glow ──
+    # Background: dark with subtle purple glow
     img = Image.new("RGB", (W, H), BG)
     draw_temp = ImageDraw.Draw(img)
     for r in range(400, 0, -2):
         a = int(15 * (r / 400))
-        color = (0, min(a, 12), min(a * 3, 45))
+        color = (min(a, 12), 0, min(a * 2, 30))
         draw_temp.ellipse(
             [W // 2 - r, H // 2 - r - 40, W // 2 + r, H // 2 + r - 40],
             fill=color,
@@ -123,7 +115,7 @@ def render_frame(slide_idx, alpha):
 
     draw = ImageDraw.Draw(img)
 
-    # ── Hero slides: large centered logo ──
+    # Hero slides: large centered logo
     if is_hero and hasattr(render_frame, '_logo_large') and render_frame._logo_large:
         logo_large = render_frame._logo_large.copy()
         logo_alpha_val = int(255 * alpha)
@@ -133,30 +125,29 @@ def render_frame(slide_idx, alpha):
         lx = (W - logo_large.width) // 2
         ly = H // 2 - logo_large.height // 2 - 60
         img.paste(logo_large, (lx, ly), logo_large)
-        draw = ImageDraw.Draw(img)  # refresh draw after paste
+        draw = ImageDraw.Draw(img)
 
-        # Subtitle below logo
         sub_alpha = max(0, min(1, (alpha - 0.2) / 0.8))
         sub_font = get_font(30)
         faded_sub = tuple(int(c * sub_alpha) for c in WHITE)
         centered_text(draw, ly + logo_large.height + 30, subtitle, sub_font, faded_sub)
 
-        # "BASE" badge above logo
+        # "SOLANA" badge above logo
         if alpha > 0.4:
             badge_font = get_font(18)
-            badge_text = "× BASE"
+            badge_text = "× SOLANA"
             badge_alpha = min(1, (alpha - 0.4) / 0.6)
             bbox = draw.textbbox((0, 0), badge_text, font=badge_font)
             bw = bbox[2] - bbox[0] + 24
             bh = bbox[3] - bbox[1] + 12
             bx = W // 2 - bw // 2
             by = ly - bh - 16
-            badge_fill = tuple(int(c * badge_alpha) for c in BASE_BLUE)
+            badge_fill = tuple(int(c * badge_alpha) for c in ACCENT)
             draw.rounded_rectangle([bx, by, bx + bw, by + bh], radius=6, fill=badge_fill)
             text_color = tuple(int(255 * badge_alpha) for _ in range(3))
             centered_text(draw, by + 4, badge_text, badge_font, text_color, shadow=False)
 
-        # CTA slide: also show the URL
+        # CTA slide: URL
         if slide_idx == len(SLIDES) - 1 and detail:
             det_alpha = max(0, min(1, (alpha - 0.4) / 0.6))
             det_font = get_font(20)
@@ -165,9 +156,7 @@ def render_frame(slide_idx, alpha):
 
         return img
 
-    # ── Non-hero slides ──
-
-    # Small logo watermark top-left (non-hero only)
+    # Non-hero slides
     if hasattr(render_frame, '_logo_small') and render_frame._logo_small:
         logo = render_frame._logo_small.copy()
         logo_alpha_val = int(160 * alpha)
@@ -177,32 +166,28 @@ def render_frame(slide_idx, alpha):
         img.paste(logo, (40, 30), logo)
         draw = ImageDraw.Draw(img)
 
-    # Standard centered layout
     title_y = H // 2 - 90
     sub_y = H // 2 + 10
     det_y = H // 2 + 60
 
-    # Accent line above title
+    # Accent line
     line_w = int(200 * alpha)
     if line_w > 0:
-        blue_faded = tuple(int(c * alpha) for c in BASE_BLUE)
+        accent_faded = tuple(int(c * alpha) for c in ACCENT)
         draw.rectangle(
             [W // 2 - line_w // 2, title_y - 50, W // 2 + line_w // 2, title_y - 48],
-            fill=blue_faded,
+            fill=accent_faded,
         )
 
-    # Title
     title_font = get_font(60, bold=True)
     faded_title = tuple(int(c * alpha) for c in WHITE)
     centered_text(draw, title_y, title, title_font, faded_title)
 
-    # Subtitle
     sub_alpha_val = max(0, min(1, (alpha - 0.15) / 0.85))
     sub_font = get_font(28)
     faded_sub = tuple(int(c * sub_alpha_val) for c in GRAY)
     centered_text(draw, sub_y, subtitle, sub_font, faded_sub)
 
-    # Detail
     if detail:
         det_alpha_val = max(0, min(1, (alpha - 0.3) / 0.7))
         det_font = get_font(24)
@@ -214,7 +199,7 @@ def render_frame(slide_idx, alpha):
     if line_w2 > 0:
         draw.rectangle(
             [W // 2 - line_w2 // 3, det_y + 50, W // 2 + line_w2 // 3, det_y + 52],
-            fill=tuple(int(c * alpha * 0.5) for c in BASE_BLUE),
+            fill=tuple(int(c * alpha * 0.5) for c in ACCENT),
         )
 
     return img
@@ -223,8 +208,6 @@ def render_frame(slide_idx, alpha):
 def main():
     print("Loading brand assets...")
 
-    # Pre-load logos
-    # Large logo for hero slides (centered, ~700px wide)
     if os.path.exists(LOGO_PATH):
         logo_large = Image.open(LOGO_PATH).convert("RGBA")
         ratio = 700 / logo_large.width
@@ -234,7 +217,6 @@ def main():
     else:
         render_frame._logo_large = None
 
-    # Small logo watermark for non-hero slides (top-left, ~180px wide)
     if os.path.exists(LOGO_PATH):
         logo_small = Image.open(LOGO_PATH).convert("RGBA")
         ratio = 180 / logo_small.width
@@ -244,7 +226,6 @@ def main():
     else:
         render_frame._logo_small = None
 
-    # Get audio durations
     durations = []
     for seg in SEGMENTS:
         path = os.path.join(AUDIO_DIR, f"{seg}.wav")
@@ -255,7 +236,6 @@ def main():
     total = sum(durations) + GAP * (len(durations) - 1)
     print(f"\nTotal: {total:.1f}s ({int(total // 60)}:{int(total % 60):02d})")
 
-    # Generate each slide as video
     slide_files = []
     for i, (seg, dur) in enumerate(zip(SEGMENTS, durations)):
         title = SLIDES[i][0]
@@ -284,7 +264,6 @@ def main():
 
         print("done")
 
-        # Compose frames + audio
         audio_path = os.path.join(AUDIO_DIR, f"{seg}.wav")
         slide_path = os.path.join(VIDEO_DIR, f"slide_{i:02d}.mp4")
         slide_files.append(slide_path)
@@ -304,10 +283,8 @@ def main():
             print(f"    ffmpeg error: {result.stderr[-200:]}")
             return
 
-        # Clean up frames immediately
         shutil.rmtree(slide_frames_dir)
 
-    # Concatenate all slides
     print("\nConcatenating slides...")
     concat_file = os.path.join(VIDEO_DIR, "concat.txt")
     with open(concat_file, "w") as f:
@@ -336,12 +313,10 @@ def main():
     print(f"  Duration: {mins}:{secs:02d}")
     print(f"{'=' * 50}")
 
-    # Copy to Desktop
-    desktop = os.path.expanduser("~/Desktop/coldstar-base-demo.mp4")
+    desktop = os.path.expanduser("~/Desktop/coldstar-solana-demo.mp4")
     shutil.copy2(OUTPUT, desktop)
     print(f"  Copied to {desktop}")
 
-    # Clean up individual slides
     for sf in slide_files:
         if os.path.exists(sf):
             os.remove(sf)
