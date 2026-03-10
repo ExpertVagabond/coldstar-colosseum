@@ -59,3 +59,4 @@ node_modules/
 # Demo outputs (large media files)
 demo-audio/
 demo-video/
+coldstar_zk/target/
