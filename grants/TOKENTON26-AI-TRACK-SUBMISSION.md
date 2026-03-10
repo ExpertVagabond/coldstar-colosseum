@@ -77,6 +77,7 @@ PSM Neural Swarm is a full-stack AI agent infrastructure for Solana, built acros
 
 **Layer 4: Security**
 - **Coldstar air-gapped signing** — Rust secure signer, ~100μs plaintext exposure, memory-locked buffers, auto-zeroization
+- **ZK proof pipeline** — Schnorr NIZK ownership proofs (Ristretto255), Pedersen range proofs (bit decomposition + CDS OR-proofs), policy compliance proofs, HMAC-SHA256 envelope integrity — no trusted setup, 108 tests
 - **FairScore reputation gating** — 6 integration points, Bronze=BLOCK, dynamic transfer limits
 - **PreSign anomaly detection** — Neural autoencoder flags suspicious transactions before signing
 

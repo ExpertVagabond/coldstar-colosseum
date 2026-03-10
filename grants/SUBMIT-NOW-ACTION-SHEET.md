@@ -66,9 +66,9 @@ Open-source security infrastructure that replaces proprietary hardware wallets w
 ```
 Coldstar transforms any $10 USB drive into hardware-wallet-grade security for Solana. Private keys live on an air-gapped Alpine Linux system with network drivers blacklisted at the kernel level. The Rust secure signer holds plaintext in memory-locked buffers for ~100 microseconds, then auto-zeroizes.
 
-Full DeFi from cold storage: Jupiter V6 swaps, Pyth price feeds, FairScore reputation gating (6 integration points), DAO governance with veToken model, SPL token management. Transactions cross the air gap via QR codes — no USB data, no Bluetooth, no wireless.
+Full DeFi from cold storage: Jupiter V6 swaps, Pyth price feeds, FairScore reputation gating (6 integration points), ZK proof transaction layer (Schnorr ownership, Pedersen range proofs, policy compliance — Ristretto255, no trusted setup), DAO governance with veToken model, SPL token management. Transactions cross the air gap via QR codes — no USB data, no Bluetooth, no wireless.
 
-This is the only cold wallet on any chain with integrated on-chain reputation gating. FairScore checks run at the air-gap boundary — the point of no return before offline signing.
+This is the only cold wallet on any chain with integrated on-chain reputation gating AND zero-knowledge proof signing. FairScore checks and ZK proofs run at the air-gap boundary — the point of no return before offline signing. 108 tests across the ZK layer (47 Rust + 61 Python).
 
 Live and running: coldstar.dev, npm published MCP server (coldstar-mcp@0.2.0, 13 tools), DAO programs on devnet, Colosseum Agent Hackathon Project #62 (passed Feb 12, 2026).
 ```
@@ -109,6 +109,7 @@ Proof of work:
 - Colosseum Agent Hackathon: Project #62, passed (Feb 12, 2026)
 - 4 Graveyard Hackathon submissions (revived abandoned Solana protocols)
 - Rust signer: ~49K lines, memory-locked, auto-zeroizing
+- ZK transaction layer: Schnorr NIZK, Pedersen range proofs, 108 tests, Ristretto255
 - npm: coldstar-mcp@0.2.0 (13 tools)
 - DAO programs deployed on Solana devnet
 - 35+ commits, 5 forks, 4 contributors

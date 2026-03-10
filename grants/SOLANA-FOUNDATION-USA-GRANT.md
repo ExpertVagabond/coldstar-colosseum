@@ -32,11 +32,12 @@ The online companion CLI provides full DeFi access from cold storage:
 - **Jupiter Aggregator V6** — DEX swaps with optimal routing
 - **Pyth Network Hermes** — real-time price feeds and portfolio tracking
 - **FairScore reputation gating** — recipient reputation checked before every transaction
+- **ZK transaction layer** — Schnorr ownership proofs, Pedersen range proofs, and policy compliance proofs protect signing pipeline metadata (Ristretto255, Fiat-Shamir, no trusted setup)
 - **DAO governance** — on-chain voting with veToken model (deployed on devnet)
 - **SPL token transfers** — full token management
 - **Base/EVM support** — multichain signing with same security model
 
-This is the only cold wallet on any chain with integrated on-chain reputation gating — FairScore checks run at the air-gap boundary, the point of no return before offline signing.
+This is the only cold wallet on any chain with integrated on-chain reputation gating and zero-knowledge proof signing — FairScore checks and ZK proofs run at the air-gap boundary, the point of no return before offline signing.
 
 ## What problem does this solve?
 
@@ -64,6 +65,7 @@ For the Solana ecosystem specifically: power users, DAOs, and AI agents managing
 | Layer | Technology |
 |-------|------------|
 | Secure Signer | Rust (ed25519-dalek, k256, argon2, aes-gcm, zeroize, memsec) |
+| ZK Proofs | Rust (curve25519-dalek/Ristretto255, Fiat-Shamir, Pedersen commitments, HMAC-SHA256) |
 | CLI | Python 3.11+ (Rich TUI, httpx, questionary) |
 | Cold OS | Alpine Linux v3.19 (~50MB bootable) |
 | DEX | Jupiter Aggregator V6 |
@@ -78,9 +80,11 @@ For the Solana ecosystem specifically: power users, DAOs, and AI agents managing
 - **Colosseum Agent Hackathon:** Project #62, passed (Feb 12, 2026)
 - **Graveyard Hackathon:** Additional Solana protocol revival submissions (Tribeca DAO, Port Finance, Grape, Parrot TWAP)
 - **On-chain programs:** Coldstar DAO + Voter Stake Registry deployed on Solana devnet
+- **ZK transaction layer:** Schnorr NIZK ownership proofs, Pedersen range proofs, policy compliance proofs — 108 tests (47 Rust + 61 Python), no trusted setup, Ristretto255 curve
 - **npm published:** coldstar-mcp@0.2.0 (13 MCP tools for Solana + Base)
 - **Live website:** coldstar.dev
 - **Rust signer:** ~49,000 lines, memory-locked, auto-zeroizing, FFI to Python
+- **ZK crate:** 8,400+ lines of Rust/Python for proof generation, verification, and envelope integrity
 - **Python CLI:** 17 modules, 290,000+ lines total
 - **4 contributors:** devsyrem (founder/lead), 3 additional contributors
 - **GitHub:** 35+ commits, 5 forks, active development
