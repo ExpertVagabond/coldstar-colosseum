@@ -31,13 +31,12 @@ Coldstar transforms any $10 USB drive into hardware-wallet-grade security for So
 The online companion CLI provides full DeFi access from cold storage:
 - **Jupiter Aggregator V6** — DEX swaps with optimal routing
 - **Pyth Network Hermes** — real-time price feeds and portfolio tracking
-- **FairScore reputation gating** — recipient reputation checked before every transaction
 - **ZK transaction layer** — Schnorr ownership proofs, Pedersen range proofs, and policy compliance proofs protect signing pipeline metadata (Ristretto255, Fiat-Shamir, no trusted setup)
 - **DAO governance** — on-chain voting with veToken model (deployed on devnet)
 - **SPL token transfers** — full token management
 - **Base/EVM support** — multichain signing with same security model
 
-This is the only cold wallet on any chain with integrated on-chain reputation gating and zero-knowledge proof signing — FairScore checks and ZK proofs run at the air-gap boundary, the point of no return before offline signing.
+This is the only cold wallet on any chain with zero-knowledge proof signing — ZK proofs run at the air-gap boundary, the point of no return before offline signing.
 
 ## What problem does this solve?
 
@@ -70,7 +69,6 @@ For the Solana ecosystem specifically: power users, DAOs, and AI agents managing
 | Cold OS | Alpine Linux v3.19 (~50MB bootable) |
 | DEX | Jupiter Aggregator V6 |
 | Oracles | Pyth Network Hermes API |
-| Reputation | FairScale FairScore API |
 | DAO | Anchor 0.29.0, SPL Governance 4.0.0 |
 | EVM | k256 (secp256k1), web3.py, EIP-1559 |
 | MCP Server | Node.js, @modelcontextprotocol/sdk |
@@ -109,8 +107,8 @@ All milestones are independently verifiable via GitHub commits and CI artifacts.
 1. **It's built and running** — not a pitch deck. Live CLI, live website, published MCP server, deployed devnet programs.
 2. **Solana-native** — Jupiter, Pyth, Anchor, SPL tokens, Solana Pay, Realms-compatible governance.
 3. **Small ask, fast execution** — $7,500 for concrete deliverables in 6 weeks. All work is open source.
-4. **Unique in the ecosystem** — no other open-source air-gapped wallet exists for Solana with DeFi access and reputation gating.
-5. **Agent economy ready** — MCP server already integrates with Claude, providing AI agents secure Solana capabilities with reputation gates.
+4. **Unique in the ecosystem** — no other open-source air-gapped wallet exists for Solana with DeFi access and ZK proof signing.
+5. **Agent economy ready** — MCP server already integrates with Claude, providing AI agents secure Solana capabilities with ZK-verified transactions.
 
 ## Team
 

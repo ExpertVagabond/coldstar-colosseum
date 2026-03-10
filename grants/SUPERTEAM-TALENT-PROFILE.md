@@ -70,7 +70,7 @@ Bounties, grants, and ecosystem roles. Especially interested in:
 - Open-source CLI that turns any USB drive into hardware-wallet-grade security
 - Rust secure signer with memory-locked buffers (~100μs plaintext exposure)
 - ZK transaction layer: Schnorr NIZK, Pedersen range proofs, policy proofs (Ristretto255, no trusted setup, 108 tests)
-- Jupiter swaps + Pyth feeds + FairScore reputation gating from cold storage
+- Jupiter swaps + Pyth feeds from cold storage
 - DAO governance programs deployed on devnet (veToken model, sub-DAOs)
 - **Colosseum Agent Hackathon: Project #62, passed**
 - GitHub: github.com/ExpertVagabond/coldstar-colosseum
