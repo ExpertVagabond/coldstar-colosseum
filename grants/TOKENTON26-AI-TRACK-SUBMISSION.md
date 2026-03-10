@@ -78,7 +78,6 @@ PSM Neural Swarm is a full-stack AI agent infrastructure for Solana, built acros
 **Layer 4: Security**
 - **Coldstar air-gapped signing** — Rust secure signer, ~100μs plaintext exposure, memory-locked buffers, auto-zeroization
 - **ZK proof pipeline** — Schnorr NIZK ownership proofs (Ristretto255), Pedersen range proofs (bit decomposition + CDS OR-proofs), policy compliance proofs, HMAC-SHA256 envelope integrity — no trusted setup, 108 tests
-- **FairScore reputation gating** — 6 integration points, Bronze=BLOCK, dynamic transfer limits
 - **PreSign anomaly detection** — Neural autoencoder flags suspicious transactions before signing
 
 **Layer 5: MCP Tool Ecosystem (14+ Servers, 200+ Tools)**
@@ -124,7 +123,6 @@ Action Decision (execute / escalate / block)
     ↓
 If Solana transaction:
     PreSignAnalyzer (autoencoder anomaly check)
-    → FairScore reputation gate
     → Transaction creation
     → [Air-gap QR transfer if high-value]
     → Rust signer (~100μs)
@@ -133,9 +131,9 @@ If Solana transaction:
 
 ### Safety Systems
 
-1. **Reputation gating:** FairScore tiers control transaction limits (Bronze: 0 SOL, Diamond: unlimited)
+1. **ZK proof verification:** Schnorr ownership + range proofs verified before signing
 2. **Anomaly detection:** Neural autoencoder flags out-of-distribution transactions
-3. **Agent autonomy gradient:** AI agent capabilities scale with FairScore tier — Tier 1-2 agents are blocked from executing
+3. **Policy enforcement:** Transfer limits and allowlists enforced via ZK policy proofs
 4. **Air-gap isolation:** High-value transactions require physical human intervention via QR code transfer
 5. **Memory-locked signing:** Keys exist in RAM for ~100μs in mlock'd buffers, auto-zeroized
 6. **Tiered model fallback:** If primary AI (Opus) is unavailable, agents fall back gracefully (Flash → local Ollama) rather than failing
@@ -146,7 +144,7 @@ If Solana transaction:
 
 Potential utility angles:
 - **Agent compute credits** — Token required to access swarm compute resources
-- **Reputation staking** — Stake tokens to boost agent FairScore tier
+- **Proof staking** — Stake tokens to unlock higher ZK proof tiers
 - **MCP tool access** — Premium tool tiers gated by token holdings
 - **DAO governance** — Vote on swarm configuration, model selection, tool additions
 
@@ -159,7 +157,7 @@ Potential utility angles:
 1. **0:00-0:30** — Introduction: "This is PSM Neural Swarm — 10 AI agents, 200+ tools, pure Rust ML, all on Solana"
 2. **0:30-1:30** — Show OpenClaw gateway launching, agents registering, model fallback tiers
 3. **1:30-2:30** — Demo Neural MCP Router: natural language query → automatic tool selection → Solana balance check + Jupiter swap quote
-4. **2:30-3:30** — Show PreSignAnalyzer catching a suspicious transaction (anomaly score spike), then FairScore blocking a low-reputation recipient
+4. **2:30-3:30** — Show PreSignAnalyzer catching a suspicious transaction (anomaly score spike), then ZK policy proof blocking an out-of-bounds transfer
 5. **3:30-4:30** — Demo air-gapped signing flow: transaction built online → QR code → signed offline → broadcast
 6. **4:30-5:00** — Show WASM deployment (668KB), on-chain programs on devnet, wrap up with GitHub links
 
@@ -212,7 +210,7 @@ Potential utility angles:
 - Air-gapped signing provides actual security, not theater
 
 ### Safety & Guardrails ✅
-- 6-point FairScore reputation gating
+- ZK proof pipeline (Schnorr, Pedersen, policy proofs)
 - Neural anomaly detection on every transaction
 - Agent autonomy gradient (capability scales with reputation)
 - Physical air-gap for high-value operations

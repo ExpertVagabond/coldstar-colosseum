@@ -66,9 +66,9 @@ Open-source security infrastructure that replaces proprietary hardware wallets w
 ```
 Coldstar transforms any $10 USB drive into hardware-wallet-grade security for Solana. Private keys live on an air-gapped Alpine Linux system with network drivers blacklisted at the kernel level. The Rust secure signer holds plaintext in memory-locked buffers for ~100 microseconds, then auto-zeroizes.
 
-Full DeFi from cold storage: Jupiter V6 swaps, Pyth price feeds, FairScore reputation gating (6 integration points), ZK proof transaction layer (Schnorr ownership, Pedersen range proofs, policy compliance — Ristretto255, no trusted setup), DAO governance with veToken model, SPL token management. Transactions cross the air gap via QR codes — no USB data, no Bluetooth, no wireless.
+Full DeFi from cold storage: Jupiter V6 swaps, Pyth price feeds, ZK proof transaction layer (Schnorr ownership, Pedersen range proofs, policy compliance — Ristretto255, no trusted setup), DAO governance with veToken model, SPL token management. Transactions cross the air gap via QR codes — no USB data, no Bluetooth, no wireless.
 
-This is the only cold wallet on any chain with integrated on-chain reputation gating AND zero-knowledge proof signing. FairScore checks and ZK proofs run at the air-gap boundary — the point of no return before offline signing. 108 tests across the ZK layer (47 Rust + 61 Python).
+This is the only cold wallet on any chain with zero-knowledge proof signing. ZK proofs run at the air-gap boundary — the point of no return before offline signing. 108 tests across the ZK layer (47 Rust + 61 Python).
 
 Live and running: coldstar.dev, npm published MCP server (coldstar-mcp@0.2.0, 13 tools), DAO programs on devnet, Colosseum Agent Hackathon Project #62 (passed Feb 12, 2026).
 ```
