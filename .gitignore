@@ -60,3 +60,13 @@ node_modules/
 demo-audio/
 demo-video/
 coldstar_zk/target/
+
+# Environment
+.env
+.env.*
+
+# Credentials
+*.pem
+*.key
+credentials.json
+secrets.*
