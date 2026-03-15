@@ -1,74 +1,40 @@
-# 💎 Coldstar - Air-Gapped Solana Vault
+# :diamond_shape_with_a_dot_inside: Coldstar -- Air-Gapped Solana Vault
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Solana-14F195?style=for-the-badge&logo=solana&logoColor=white" alt="Solana"/>
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License"/>
-  <img src="https://img.shields.io/badge/Security-Air--Gapped-red?style=for-the-badge" alt="Air-Gapped"/>
-  <img src="https://img.shields.io/badge/FairScore-Reputation_Gating-ff00ff?style=for-the-badge" alt="FairScore"/>
-  <a href="https://huggingface.co/purplesquirrelnetworks/coldstar-whitepaper"><img src="https://img.shields.io/badge/🤗_Whitepaper-Hugging_Face-orange?style=for-the-badge" alt="HF Whitepaper"/></a>
-  <a href="https://huggingface.co/collections/purplesquirrelnetworks/purple-squirrel-ai-models-papers-and-data-699b4a18abe59a025baf2149"><img src="https://img.shields.io/badge/🤗_Collection-Purple_Squirrel_AI-yellow?style=for-the-badge" alt="HF Collection"/></a>
-</p>
+[![Colosseum #62](https://img.shields.io/badge/Colosseum-Project_%2362-8B5CF6?style=flat)](https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x)
+[![Solana](https://img.shields.io/badge/Solana-14F195?logo=solana&logoColor=white)](https://solana.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub stars](https://img.shields.io/github/stars/ExpertVagabond/coldstar-colosseum)](https://github.com/ExpertVagabond/coldstar-colosseum/stargazers)
+[![Whitepaper](https://img.shields.io/badge/Whitepaper-Hugging_Face-orange)](https://huggingface.co/purplesquirrelnetworks/coldstar-whitepaper)
 
-<p align="center">
-  <strong>Secure signing infrastructure for AI agents. Reputation-gated transactions prevent rogue agents from draining wallets.</strong>
-</p>
+**Turn any $10 USB drive into a hardware-grade Solana cold wallet.** Air-gapped signing, FairScore reputation gating, Jupiter DEX integration, and DAO governance -- built for both humans and AI agents managing serious capital.
 
-<p align="center">
-  <a href="#-ai-agent-integration">AI Agents</a> •
-  <a href="#-features">Features</a> •
-  <a href="#-fairscore-integration">FairScore</a> •
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-architecture">Architecture</a> •
-  <a href="#-demo">Demo</a> •
-  <a href="#-colosseum-hackathon">Hackathon</a>
-</p>
+## The Problem
 
----
+AI agents with wallet access can be tricked into sending funds to malicious addresses via prompt injection or hallucinated addresses. Hardware wallets are expensive ($79-279) and not programmable. Hot wallets are fast but vulnerable.
 
-## 🎯 What is Coldstar?
+## The Solution
 
-**Coldstar** turns any **$10 USB drive** into a **$200 hardware wallet** with complete air-gap isolation for Solana.
-
-**The Problem**: Agents managing serious capital need both security AND DeFi access. Hardware wallets are expensive and not programmable. Hot wallets are fast but vulnerable.
-
-**The Solution**: Air-gapped cold wallet + online DeFi integration = best of both worlds.
+Air-gapped cold wallet + reputation-gated transactions + DeFi integration. Private keys never touch the network. Every outbound transfer is scored by FairScore before execution.
 
 ```
-Create transactions online → Sign on air-gapped USB → Broadcast
-                           ↓
-              Private keys NEVER touch the network
+Create transaction online --> Sign on air-gapped USB --> Broadcast
+                             Private keys NEVER touch the network
 ```
 
----
-
-## 🤖 AI Agent Integration
-
-Coldstar provides the security layer AI agents need for crypto transactions.
-
-**The Problem**: AI agents with wallet access can be tricked into sending funds to malicious addresses — via prompt injection, hallucinated addresses, or compromised tool calls. There is no guardrail between "agent decides to send" and "funds are gone forever."
-
-**The Solution**: FairScore reputation gating blocks transactions to low-reputation wallets — even if the agent is compromised. Coldstar sits between the agent and the blockchain as an infrastructure-level kill switch.
-
-### Why This Matters Now
-
-As AI agents gain access to crypto wallets for payments, DeFi, and autonomous trading, the attack surface expands from "trick a human" to "trick an AI." Coldstar is the guardrail layer that makes agent-controlled wallets safe:
-
-- **Agent sends to scam wallet?** Blocked. Bronze-tier recipients are hard-blocked regardless of agent intent.
-- **Agent tries to drain treasury?** Limited. Transfer caps are enforced per-recipient reputation tier.
-- **Agent gets prompt-injected?** Protected. Reputation gating runs at the infrastructure layer, not the prompt layer.
-
-### MCP Server
-
-Install the Coldstar MCP server to give any AI agent secure Solana capabilities:
+## Install
 
 ```bash
-npm install -g coldstar-mcp
+git clone https://github.com/ExpertVagabond/coldstar-colosseum
+cd coldstar-colosseum
+pip install -r local_requirements.txt
+python main.py
 ```
 
-**8 tools:** `check_reputation`, `get_token_price`, `get_swap_quote`, `check_wallet_balance`, `validate_transaction`, `list_supported_tokens`, `get_portfolio`, `estimate_swap_cost`
+### MCP Server (for AI agents)
 
-Add to your MCP config:
+```bash
+npx coldstar-mcp
+```
 
 ```json
 {
@@ -76,480 +42,98 @@ Add to your MCP config:
     "coldstar": {
       "command": "npx",
       "args": ["-y", "coldstar-mcp"],
-      "env": {
-        "SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com"
-      }
+      "env": { "SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com" }
     }
   }
 }
 ```
 
-### Target Acquirers / Integration Partners
+**8 MCP tools**: `check_reputation`, `get_token_price`, `get_swap_quote`, `check_wallet_balance`, `validate_transaction`, `list_supported_tokens`, `get_portfolio`, `estimate_swap_cost`
 
-| Company | Use Case |
-|---------|----------|
-| **Phantom / Backpack** | Wallet-level agent reputation gating |
-| **Coinbase** | Institutional agent custody guardrails |
-| **Anthropic** | Agent safety infrastructure (tool use) |
-| **OpenAI** | Agent payment safety layer |
-| **Stripe** | Crypto payment validation for AI commerce |
+## FairScore Reputation Gating
 
-📖 [Full MCP Server Documentation →](mcp-server/README.md)
+Every outbound transfer is gated by [FairScale's FairScore API](https://fairscale.xyz):
 
----
+| Tier | Score | Action | Limit |
+|------|-------|--------|-------|
+| Bronze | 0-19 | **BLOCKED** | -- |
+| Silver | 20-39 | Warning | 10 SOL |
+| Gold | 40-59 | Proceed | 100 SOL |
+| Platinum | 60-79 | Proceed | 500 SOL |
+| Diamond | 80-100 | Proceed | Unlimited |
 
-## 🛡️ FairScore Integration
+## Features
 
-**Coldstar is the only cold wallet that checks counterparty reputation before every transaction.**
+- **Air-Gap Security** -- Alpine Linux with network drivers blacklisted, QR code signing
+- **DeFi Integration** -- Jupiter DEX routes, Pyth price feeds, SPL token support
+- **Reputation Gating** -- FairScore blocks low-reputation recipients at infrastructure level
+- **DAO Governance** -- Multi-sig vaults, on-chain voting, air-gapped approval
+- **Beautiful TUI** -- Rich terminal UI with portfolio dashboard and USB flashing tool
+- **Agent-Friendly** -- MCP server with 8 tools for autonomous wallet operations
 
-Every outbound transfer is gated by [FairScale's FairScore API](https://fairscale.xyz) — a real-time reputation score (0-100) for any Solana wallet.
-
-| Recipient Tier | FairScore | Action | Transfer Limit |
-|---------------|-----------|--------|----------------|
-| 🔴 Bronze | 0-19 | **HARD BLOCK** | Blocked |
-| 🟡 Silver | 20-39 | **SOFT WARNING** | 10 SOL max |
-| 🟢 Gold | 40-59 | Proceed | 100 SOL max |
-| 🔵 Platinum | 60-79 | Proceed | 500 SOL max |
-| 🟣 Diamond | 80-100 | Proceed | Unlimited |
-
-**6 Integration Points:**
-1. **Transaction Gating** — Block/warn before air-gap crossing
-2. **Dynamic Transfer Limits** — Reputation-scaled amounts
-3. **DAO Governance** — Vote weight by FairScore
-4. **Jupiter Swap Screening** — Token contract reputation
-5. **Vault Dashboard** — Reputation badges in portfolio view
-6. **MCP Agent Gates** — Autonomy gradient for AI agents
-
-> *"The last checkpoint before the point of no return."*
-
-**Live API Example (Jupiter Wallet):**
-```
-FairScore: 34.2/100 | Tier: Silver | Badges: LST Staker, SOL Maxi
-Action: ⚠️ WARNING — Confirm to proceed
-```
-
-📖 [Full Integration Documentation →](docs/FAIRSCORE_INTEGRATION.md)
-
----
-
-## ✨ Features
-
-### 🔐 Air-Gap Security
-- **Private keys generated offline** on air-gapped device
-- **Alpine Linux** with network drivers blacklisted at boot
-- **USB cold wallet** - any drive becomes hardware-grade security
-- **QR code signing** - transfer transactions without file copying
-
-### 💱 DeFi Integration
-- **Jupiter DEX** - Best routes across all Solana DEXes
-- **Pyth Network** - Real-time price feeds and USD portfolio valuation
-- **SPL Tokens** - Support for SOL, USDC, USDT, BONK, JUP, RAY
-- **Air-gapped swaps** - Create swap online, sign offline, broadcast
-
-### 🛡️ Reputation Gating (FairScore)
-- **FairScale API** - Real-time wallet reputation scoring (0-100)
-- **Transaction blocking** - Bronze tier addresses hard-blocked
-- **Soft warnings** - Silver tier requires explicit confirmation
-- **Dynamic limits** - Transfer caps scaled by counterparty reputation
-- **Badge display** - LST Staker, SOL Maxi, Early Adopter badges shown
-
-### 🏛️ DAO Governance
-- **Multi-sig vaults** - M-of-N signatures for fund movements
-- **On-chain voting** - Proposal creation and execution
-- **Air-gapped approval** - Each member signs with cold wallet
-- **Deployed on devnet** - Live DAO programs ready to use
-
-### 🎨 Beautiful Interface
-- **Modern TUI** - Rich terminal interface with progress bars
-- **Vault dashboard** - Portfolio tracking with real-time prices
-- **USB flashing tool** - Guided setup with visual feedback
-- **Companion PWA** - Mobile-friendly web app for online operations
-
----
-
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/ExpertVagabond/coldstar-colosseum
-cd coldstar-colosseum
-
-# Install dependencies
-pip install -r local_requirements.txt
-
-# Run the CLI
-python main.py
-```
-
-### Create Your First Cold Wallet
-
-```bash
-# 1. Flash USB drive (requires root)
-sudo python flash_usb_tui.py
-
-# 2. Boot from USB on air-gapped device
-#    Private key generated offline
-
-# 3. Use Coldstar CLI for operations
-python main.py
-```
-
----
-
-## 🏗️ Architecture
-
-### Air-Gapped Workflow
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    ONLINE DEVICE                            │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  Coldstar CLI                                       │    │
-│  │  • Check balance (Solana RPC)                      │    │
-│  │  • Get prices (Pyth Network)                       │    │
-│  │  • Create unsigned transactions                    │    │
-│  │  • Query Jupiter routes                            │    │
-│  └────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                    QR Code / USB Transfer
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                  OFFLINE DEVICE (Air-Gapped)                │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  USB Cold Wallet (Alpine Linux)                    │    │
-│  │  • Private key storage (encrypted)                 │    │
-│  │  • Transaction signing                             │    │
-│  │  • User verification screen                        │    │
-│  │  • ZERO network access                             │    │
-│  └────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
+ONLINE DEVICE                         OFFLINE DEVICE (Air-Gapped)
++--------------------------+          +---------------------------+
+| Coldstar CLI             |   QR /   | USB Cold Wallet           |
+| - Check balance (RPC)   |   USB    | - Private key storage     |
+| - Get prices (Pyth)     | <------> | - Transaction signing     |
+| - Create unsigned txs   |          | - ZERO network access     |
+| - Query Jupiter routes  |          | - Alpine Linux (<50MB)    |
++--------------------------+          +---------------------------+
 ```
 
-### Technology Stack
-
-| Layer | Technology |
-|-------|------------|
-| **OS** | Alpine Linux (minimal, <50MB) |
-| **Language** | Python 3.11+ |
-| **UI** | Rich (beautiful terminal UI) |
-| **Blockchain** | Solders (Solana Rust SDK bindings) |
-| **DEX** | Jupiter Aggregator API |
-| **Oracles** | Pyth Network Hermes API |
-| **Reputation** | FairScale FairScore API |
-| **Programs** | Anchor (DAO governance) |
-
----
-
-## 📊 Comparison
+## Comparison
 
 | Feature | Coldstar | Hardware Wallet | Hot Wallet |
 |---------|----------|-----------------|------------|
-| **Air-Gap Security** | ✅ Yes | ✅ Yes | ❌ No |
-| **Cost** | $10 | $79-279 | Free |
-| **Open Source** | ✅ Yes | ❌ No | Varies |
-| **DAO Governance** | ✅ Yes | ❌ No | ❌ No |
-| **Jupiter Swaps** | ✅ Yes | Limited | ✅ Yes |
-| **Pyth Prices** | ✅ Yes | ❌ No | ✅ Yes |
-| **Reputation Gating** | ✅ FairScore | ❌ No | ❌ No |
-| **Programmable** | ✅ Yes | ❌ No | ✅ Yes |
-| **Agent-Friendly** | ✅ Yes | ❌ No | ⚠️ Risky |
+| Air-Gap | Yes | Yes | No |
+| Cost | $10 | $79-279 | Free |
+| Open Source | Yes | No | Varies |
+| DeFi / Jupiter | Yes | Limited | Yes |
+| Reputation Gating | Yes | No | No |
+| Agent-Friendly | Yes | No | Risky |
+| DAO Governance | Yes | No | No |
 
-**Result**: 95% cheaper than hardware wallets with more features
+## Tech Stack
 
----
+| Layer | Technology |
+|-------|-----------|
+| OS | Alpine Linux (<50MB) |
+| Language | Python 3.11+ |
+| UI | Rich (terminal) |
+| Blockchain | Solders (Solana Rust SDK) |
+| DEX | Jupiter Aggregator |
+| Oracles | Pyth Network |
+| Reputation | FairScale FairScore API |
+| DAO | Anchor Programs (devnet) |
 
-## 🎬 Demo
+## Deployed Infrastructure
 
-### 📸 Screenshots
+- **Coldstar DAO**: [`Ue6Z2MBm...DJYXeat`](https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet)
+- **Voter Stake Registry**: [`2ueu2H3t...47ViZx`](https://explorer.solana.com/address/2ueu2H3tN8U3SWNsQPogd3dWhjnNBXH5AqiZ1H47ViZx?cluster=devnet)
 
-**Live TUI Gallery:** [View All Screenshots →](./screenshots/index.html)
+## Related Projects
 
-<table>
-  <tr>
-    <td width="50%">
-      <img src="https://expertvagabond.github.io/coldstar-colosseum/screenshots/flash_usb_preview.html" alt="USB Flashing Interface" />
-      <p align="center"><strong>USB Flashing Interface</strong></p>
-    </td>
-    <td width="50%">
-      <img src="https://expertvagabond.github.io/coldstar-colosseum/screenshots/vault_dashboard_preview.html" alt="Vault Dashboard" />
-      <p align="center"><strong>Portfolio Dashboard</strong></p>
-    </td>
-  </tr>
-</table>
+- [solana-mcp-server-app](https://github.com/ExpertVagabond/solana-mcp-server-app) -- Solana wallet + DeFi MCP
+- [solmail-mcp](https://github.com/ExpertVagabond/solmail-mcp) -- Physical mail via Solana payments
+- [ordinals-mcp](https://github.com/ExpertVagabond/ordinals-mcp) -- Bitcoin Ordinals MCP server
+- [cpanel-mcp](https://github.com/ExpertVagabond/cpanel-mcp) -- cPanel hosting MCP server
 
-**Interactive Demos:**
-- 🎥 [Animated USB Flashing](https://expertvagabond.github.io/coldstar-colosseum/screenshots/flash_usb_animated.html) - Watch the full flashing process (20s)
-- 📊 [Vault Dashboard](https://expertvagabond.github.io/coldstar-colosseum/screenshots/vault_dashboard_preview.html) - Portfolio management interface
-
-### Jupiter Swap (Air-Gapped)
-
-```bash
-# Online device: Create swap
-python main.py
-> J. Jupiter Swap
-> From: SOL
-> To: USDC
-> Amount: 1.0
-# → Creates unsigned transaction
-
-# Transfer to air-gapped USB via QR code
-
-# Offline device: Review and sign
-coldstar sign-transaction
-# → Full swap details visible
-# → Sign with private key
-
-# Transfer back and broadcast
-python main.py
-> 4. Broadcast Signed Transaction
-# → Swap executed!
-```
-
-### Portfolio Dashboard
-
-```
-╔══════════════════════════════════════════════════════════╗
-║                    WALLET STATUS                         ║
-╠══════════════════════════════════════════════════════════╣
-║  Address:  abc123...xyz789                               ║
-║  Balance:  5.2341 SOL                                    ║
-║  USD Value: ≈ $523.41 USD (SOL @ $100.00)               ║
-║  Source:   Pyth Network (live)                           ║
-╚══════════════════════════════════════════════════════════╝
-```
-
----
-
-## 🏆 Colosseum Agent Hackathon
-
-**Built for**: [Colosseum Agent Hackathon](https://colosseum.com/agent-hackathon)
-**Agent**: coldstar-final (ID: 127)
-**Prize Pool**: $100,000 USDC
-**Dates**: Feb 2-12, 2026
-
-### Why Coldstar Wins
-
-1. **Unique Category** - Only air-gapped wallet in hackathon
-2. **Complete Solution** - Works end-to-end with beautiful UX
-3. **Real Problem** - Agents managing billions need secure key storage
-4. **DeFi Integration** - Not just secure storage, full functionality
-5. **Open Source** - Community can audit and contribute
-
-### Deployed Infrastructure
-
-**DAO Programs on Devnet**:
-- Coldstar DAO: `Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat`
-- Voter Stake Registry: `2ueu2H3tN8U3SWNsQPogd3dWhjnNBXH5AqiZ1H47ViZx`
-
-[View on Solana Explorer →](https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet)
-
----
-
-## 📚 Documentation
-
-- **[TUI Guide](TUI_GUIDE.md)** - Terminal UI documentation
-- **[Deployed Programs](DEPLOYED_PROGRAMS.md)** - DAO contracts on devnet
-- **[MCP Integration](MCP_INTEGRATION.md)** - Hot+cold wallet architecture
-- **[FairScore Integration](docs/FAIRSCORE_INTEGRATION.md)** - Reputation gating documentation
-- **[Technical Whitepaper](whitepaper.md)** - Deep dive
-- **[Privacy Policy](PRIVACY.md)** - Data practices
-- **[Terms of Service](TERMS.md)** - Usage terms
-
----
-
-## 🛠️ Development
-
-### Project Structure
-
-```
-coldstar-colosseum/
-├── main.py                    # Main CLI (1300+ lines)
-├── src/
-│   ├── jupiter_integration.py # DEX swap integration
-│   ├── pyth_integration.py    # Price feed integration
-│   ├── fairscore_integration.py # FairScore reputation gating
-│   ├── wallet.py              # Keypair management
-│   ├── transaction.py         # TX creation/signing
-│   ├── network.py             # Solana RPC client
-│   ├── usb.py                 # USB device management
-│   └── ui.py                  # Beautiful TUI components
-├── flash_usb_tui.py           # USB flashing interface
-├── vault_dashboard_tui.py     # Portfolio dashboard
-├── companion-app/             # PWA for online operations
-└── mcp-server/                # AI-agent MCP server (8 tools, npm package)
-```
-
-### Build from Source
-
-```bash
-# Install dependencies
-pip install rich questionary solana solders pynacl httpx aiofiles base58 qrcode textual
-
-# Or use project file
-pip install -e .
-
-# Run tests
-python test_transaction.py
-
-# Build ISO (for USB flashing)
-python flash_usb.py
-```
-
----
-
-## 🔒 Security Model
-
-### Threat Model
-
-**Adversary**: Nation-state level (NSA, FSB)
-**Assumptions**: Online device is compromised
-**Guarantee**: Private keys remain secure
-
-### Attack Surface Analysis
-
-| Attack | Vulnerability | Mitigation |
-|--------|---------------|------------|
-| Private Key Exposure | ❌ IMPOSSIBLE | Air-gapped |
-| Transaction Tampering | ✅ DETECTED | Signature fails |
-| Balance Spoofing | ⚠️ POSSIBLE | Verify on explorer |
-| Denial of Service | ⚠️ POSSIBLE | Multiple RPCs |
-
-### Security Features
-
-- ✅ Network drivers blacklisted at OS level
-- ✅ Transaction review on offline screen
-- ✅ User verification before signing
-- ✅ Encrypted USB storage
-- ✅ Open source code (community audit)
-
----
-
-## 🌟 Use Cases
-
-### 1. Agent Treasury Management
-**Problem**: Agents managing $100K+ in crypto assets
-**Solution**: DAO-governed cold vault with air-gapped signing
-**Security**: Private keys never on networked servers
-
-### 2. High-Value Individual Holdings
-**Problem**: Don't want to spend $200 on hardware wallet
-**Solution**: $10 USB drive + Coldstar = same security
-**Savings**: 95% cost reduction
-
-### 3. Team Multi-Sig Wallets
-**Problem**: Need M-of-N signatures for fund movements
-**Solution**: Each member uses Coldstar for offline signing
-**Benefit**: Complete audit trail on-chain
-
-### 4. DeFi Access from Cold Storage
-**Problem**: Want to swap tokens but keep keys offline
-**Solution**: Create swap on online device, sign offline
-**Result**: DeFi functionality + hardware-level security
-
----
-
-## 🤝 Integration Partners
-
-Coldstar integrates with:
-- **FairScale** - Wallet reputation scoring and transaction gating
-- **Jupiter** - DEX aggregation for best swap routes
-- **Pyth Network** - Real-time price feeds
-- **Solana MCP Server** - Hot wallet operations
-- **SAID Protocol** - Agent identity verification
-- **AgentVault** - Agent economy escrow
-
----
-
-## 📈 Roadmap
-
-### Phase 1: Core Features ✅
-- [x] Air-gapped USB wallet creation
-- [x] QR code transaction signing
-- [x] Jupiter DEX integration
-- [x] Pyth price feeds
-- [x] DAO governance programs
-- [x] FairScore reputation gating
-
-### Phase 2: Enhanced Security (In Progress)
-- [ ] Hardware key import/export (BIP39)
-- [ ] Multi-device multi-sig
-- [ ] Encrypted USB backup
-- [ ] Yubikey 2FA integration
-
-### Phase 3: Agent Ecosystem (Planned)
-- [ ] REST API for agent integration
-- [ ] Webhook notifications
-- [ ] Scheduled transactions
-- [ ] Auto-rebalancing with governance
-
-### Phase 4: Enterprise (Future)
-- [ ] Corporate treasury management
-- [ ] Compliance reporting
-- [ ] Custom approval workflows
-- [ ] HSM integration
-
----
-
-## 🙏 Contributing
-
-We welcome contributions! Here's how:
+## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open a Pull Request
+2. Create your feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes
+4. Open a Pull Request
 
-**Security Issues**: Open a [private security advisory](https://github.com/ExpertVagabond/coldstar-colosseum/security/advisories/new)
+**Security Issues**: [Private advisory](https://github.com/ExpertVagabond/coldstar-colosseum/security/advisories/new)
 
----
+## Links
 
-## 📄 Legal
+- [Hackathon Project](https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x) | [Whitepaper](https://huggingface.co/purplesquirrelnetworks/coldstar-whitepaper) | [X: @buildcoldstar](https://x.com/buildcoldstar)
 
-- **License**: MIT — See [LICENSE](LICENSE)
-- **Privacy Policy**: [PRIVACY.md](PRIVACY.md)
-- **Terms of Service**: [TERMS.md](TERMS.md)
+## License
 
----
-
-## 🔗 Links
-
-- **GitHub**: [ExpertVagabond/coldstar-colosseum](https://github.com/ExpertVagabond/coldstar-colosseum)
-- **Hackathon Project**: [coldstar-air-gapped-solana-vault-2z9v3x](https://colosseum.com/agent-hackathon/projects/coldstar-air-gapped-solana-vault-2z9v3x)
-- **Forum**: Search "coldstar-agent"
-- **DAO Explorer**: [Solana Explorer](https://explorer.solana.com/address/Ue6Z2MBm7DxR5QTAYRRNsdXc7KBRgASQabA7DJYXeat?cluster=devnet)
-
----
-
-## 💬 Community
-
-**X**: [@buildcoldstar](https://x.com/buildcoldstar)
-**Hackathons**: Colosseum Agent Hackathon (Project #62) + FairScale Fairathon
-
-<p align="center">
-  <strong>Your keys, your responsibility. Open source, open trust.</strong>
-  <br><br>
-  Made with ✦ for the Solana Agent Economy
-</p>
-
----
-
-## 🎯 Quick Links
-
-| Resource | Link |
-|----------|------|
-| **Demo Page** | [Live Demo Site](https://expertvagabond.github.io/coldstar-colosseum/) |
-| **Screenshots** | [TUI Gallery](./screenshots/index.html) |
-| **FairScore Docs** | [Integration Guide](docs/FAIRSCORE_INTEGRATION.md) |
-| **Whitepaper** | [Technical Deep Dive](whitepaper.md) |
-| **Forum Posts** | [Coldstar Introduction](https://colosseum.com/agent-hackathon/) |
-| **DAO Programs** | [Devnet Explorer](https://explorer.solana.com/?cluster=devnet) |
-| **Privacy Policy** | [PRIVACY.md](PRIVACY.md) |
-| **Terms of Service** | [TERMS.md](TERMS.md) |
-
----
-
-**Star ⭐ this repo if you find it useful!**
+MIT -- [Purple Squirrel Media](https://github.com/ExpertVagabond)
