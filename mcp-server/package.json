@@ -1,7 +1,7 @@
 {
   "name": "coldstar-mcp",
-  "version": "0.2.0",
-  "description": "Multichain MCP server for AI-agent secure transactions on Solana and Base -- reputation gating, DEX quotes, price feeds, balance checks",
+  "version": "0.3.0",
+  "description": "Multichain MCP server for AI-agent secure transactions on Solana and Base -- reputation gating, DEX quotes, price feeds, balance checks, institutional custody vault tools",
   "main": "index.js",
   "type": "module",
   "bin": {
