@@ -70,3 +70,6 @@ coldstar_zk/target/
 *.key
 credentials.json
 secrets.*
+
+# Large video files
+video/

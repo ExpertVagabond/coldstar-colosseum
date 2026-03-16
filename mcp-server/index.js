@@ -13,12 +13,17 @@
  * Base tools:   base_check_balance, base_get_gas_price, base_get_token_price,
  *               base_get_portfolio, base_list_tokens
  *
- * 14 tools total across both chains.
+ * Custody tools: create_custody_request, list_pending_approvals,
+ *                approve_custody_transfer, get_vault_status,
+ *                get_custody_audit_trail, validate_custody_transfer
+ *
+ * 20 tools total across Solana, Base, and Custody.
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { registerCustodyTools } from "./src/custody-tools.ts";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -297,7 +302,7 @@ async function fetchBaseBlockNumber(rpcUrl) {
 
 const server = new McpServer({
   name: "coldstar-mcp",
-  version: "0.2.0",
+  version: "0.3.0",
 });
 
 // 1. check_reputation ---------------------------------------------------------
@@ -1425,6 +1430,13 @@ server.tool(
     };
   }
 );
+
+// ===========================================================================
+// CUSTODY TOOLS (Institutional Vault)
+// ===========================================================================
+
+// Register 6 custody-specific tools from the custody-tools module
+registerCustodyTools(server);
 
 // ---------------------------------------------------------------------------
 // Start
