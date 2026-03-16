@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>Coldstar — Hackathon Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #060608;
+            --bg2: #0c0c10;
+            --card: #12121a;
+            --text: #eeeef4;
+            --dim: #666680;
+            --accent: #00ffaa;
+            --accent2: #00cc88;
+            --glow: rgba(0, 255, 170, 0.12);
+            --border: #1a1a2e;
+            --cyan: #58d1eb;
+            --yellow: #FFB800;
+            --red: #FF4D4D;
+            --green: #98e024;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            width: 1920px;
+            height: 1080px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0; left: 0;
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 120px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease;
+            background: var(--bg);
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 72px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 52px;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: 28px;
+            color: var(--dim);
+            line-height: 1.5;
+            max-width: 1200px;
+            text-align: center;
+        }
+
+        .accent { color: var(--accent); }
+        .cyan { color: var(--cyan); }
+        .yellow { color: var(--yellow); }
+        .red { color: var(--red); }
+        .dim { color: var(--dim); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Shared slide backgrounds */
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse 800px 600px at 15% 20%, rgba(0, 255, 170, 0.04), transparent),
+                radial-gradient(ellipse 600px 400px at 85% 80%, rgba(88, 209, 235, 0.03), transparent);
+            pointer-events: none;
+        }
+
+        /* Grid lines background */
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(0,255,170,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,170,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* Timing bar */
+        #timing-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent);
+            transition: width 0.3s linear;
+            z-index: 1000;
+        }
+
+        /* Slide counter */
+        #slide-counter {
+            position: fixed;
+            bottom: 20px;
+            right: 40px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            color: var(--dim);
+            z-index: 1000;
+        }
+
+        /* Timer display */
+        #timer {
+            position: fixed;
+            bottom: 20px;
+            left: 40px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            color: var(--dim);
+            z-index: 1000;
+        }
+
+        /* Section label */
+        .section-label {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--accent);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        /* ======== SLIDE-SPECIFIC STYLES ======== */
+
+        /* Slide 1: Title */
+        .slide-title {
+            text-align: center;
+        }
+        .slide-title .logo-ring {
+            width: 160px;
+            height: 160px;
+            border: 3px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+            box-shadow: 0 0 40px rgba(0,255,170,0.15), inset 0 0 30px rgba(0,255,170,0.05);
+            animation: pulse-ring 3s ease-in-out infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { box-shadow: 0 0 40px rgba(0,255,170,0.15), inset 0 0 30px rgba(0,255,170,0.05); }
+            50% { box-shadow: 0 0 60px rgba(0,255,170,0.25), inset 0 0 40px rgba(0,255,170,0.08); }
+        }
+        .logo-ring .star {
+            font-size: 64px;
+            color: var(--accent);
+        }
+        .slide-title h1 {
+            font-size: 96px;
+            letter-spacing: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .slide-title .tagline {
+            font-size: 32px;
+            color: var(--dim);
+            margin-top: 12px;
+            font-weight: 400;
+        }
+
+        /* Slide 2-3: Hardware wallets */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 1400px;
+            margin-top: 40px;
+        }
+        .icon-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        .icon-card .icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+        .icon-card h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        .icon-card p {
+            color: var(--dim);
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        /* Comparison slide */
+        .vs-container {
+            display: grid;
+            grid-template-columns: 1fr 100px 1fr;
+            gap: 0;
+            max-width: 1400px;
+            width: 100%;
+            align-items: center;
+            margin-top: 40px;
+        }
+        .vs-card {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        .vs-card.highlight {
+            border-color: var(--accent);
+            box-shadow: 0 0 40px rgba(0,255,170,0.1);
+        }
+        .vs-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+        .vs-badge.old { background: rgba(255,77,77,0.15); color: var(--red); }
+        .vs-badge.new { background: rgba(0,255,170,0.15); color: var(--accent); }
+        .vs-price {
+            font-family: 'Space Mono', monospace;
+            font-size: 72px;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+        .vs-label {
+            font-size: 20px;
+            color: var(--dim);
+        }
+        .vs-divider {
+            text-align: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--dim);
+        }
+        .vs-features {
+            margin-top: 30px;
+            text-align: left;
+        }
+        .vs-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 18px;
+            color: var(--dim);
+        }
+        .vs-feature .check { color: var(--accent); font-size: 20px; }
+        .vs-feature .cross { color: var(--red); font-size: 20px; }
+
+        /* Install slide */
+        .install-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1400px;
+            margin-top: 40px;
+        }
+        .install-step {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px;
+        }
+        .step-num {
+            font-family: 'Space Mono', monospace;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent);
+            opacity: 0.3;
+            margin-bottom: 16px;
+        }
+        .step-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .step-desc {
+            font-size: 17px;
+            color: var(--dim);
+            line-height: 1.6;
+        }
+        .url-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--card);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 16px 32px;
+            margin-top: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            color: var(--accent);
+            box-shadow: 0 0 30px rgba(0,255,170,0.1);
+        }
+        .url-bar .lock { opacity: 0.5; font-size: 22px; }
+
+        /* Terminal mockup */
+        .terminal {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 1400px;
+        }
+        .terminal-bar {
+            background: #2a2a3e;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .term-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .term-dot-r { background: #ff5f56; }
+        .term-dot-y { background: #ffbd2e; }
+        .term-dot-g { background: #27c93f; }
+        .term-title { color: #888; font-size: 13px; margin-left: 20px; font-family: 'JetBrains Mono', monospace; }
+        .terminal-body {
+            padding: 24px 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        .t-cyan { color: #58d1eb; }
+        .t-green { color: #98e024; }
+        .t-yellow { color: #ffff00; }
+        .t-red { color: #ff5f56; }
+        .t-dim { color: #666; }
+        .t-white { color: #e0e0e0; }
+        .t-bold { font-weight: 700; }
+        .t-prompt { color: var(--accent); }
+
+        /* Vault dashboard mockup */
+        .vault-mock {
+            background: #1e1e1e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            max-width: 1500px;
+            width: 100%;
+        }
+        .vault-status {
+            background: #2a2a2a;
+            padding: 12px 20px;
+            border-bottom: 2px solid #0178d4;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .vault-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+        }
+        .vault-panel {
+            border: 2px solid var(--cyan);
+            border-radius: 4px;
+            padding: 16px;
+            min-height: 320px;
+        }
+        .vault-panel-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #444;
+        }
+        .token-row {
+            display: grid;
+            grid-template-columns: 28px 90px 1fr 80px;
+            gap: 8px;
+            padding: 6px 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            align-items: center;
+        }
+        .token-row.selected {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+        .token-icon { color: var(--cyan); }
+
+        /* Revenue slide */
+        .revenue-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1300px;
+            margin-top: 40px;
+        }
+        .revenue-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        .revenue-card.primary {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px rgba(0,255,170,0.08);
+        }
+        .revenue-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .revenue-big {
+            font-family: 'Space Mono', monospace;
+            font-size: 56px;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 16px 0;
+        }
+        .revenue-detail {
+            font-size: 20px;
+            color: var(--dim);
+            line-height: 1.6;
+        }
+        .revenue-example {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(0,255,170,0.05);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+        }
+
+        /* CTA slide */
+        .cta-links {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 22px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .cta-btn.primary {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        .cta-btn.secondary {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+
+        /* Fade-in animation for child elements */
+        .slide.active .fade-up {
+            animation: fadeUp 0.6s ease forwards;
+        }
+        .fade-up { opacity: 0; transform: translateY(20px); }
+        .fade-up:nth-child(2) { animation-delay: 0.15s; }
+        .fade-up:nth-child(3) { animation-delay: 0.3s; }
+        .fade-up:nth-child(4) { animation-delay: 0.45s; }
+        .fade-up:nth-child(5) { animation-delay: 0.6s; }
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typing cursor */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: var(--accent);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* QR flow */
+        .qr-flow {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 40px;
+            max-width: 1400px;
+        }
+        .qr-step {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px 24px;
+            text-align: center;
+            flex: 1;
+        }
+        .qr-step .step-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .qr-step h3 { font-size: 20px; margin-bottom: 8px; }
+        .qr-step p { font-size: 15px; color: var(--dim); }
+        .qr-arrow {
+            font-size: 32px;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        /* Stat pills */
+        .stat-row {
+            display: flex;
+            gap: 24px;
+            margin-top: 36px;
+        }
+        .stat-pill {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 12px 28px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+        }
+        .stat-pill .val { color: var(--accent); font-weight: 700; }
+
+        /* Controls help */
+        #controls-help {
+            position: fixed;
+            top: 20px;
+            right: 40px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--dim);
+            z-index: 1000;
+            text-align: right;
+            line-height: 1.8;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ====== SLIDE 1: TITLE ====== -->
+<div class="slide slide-title grid-bg active" data-time="0:00" data-section="INTRO">
+    <div class="logo-ring fade-up">
+        <span class="star">&#10022;</span>
+    </div>
+    <h1 class="fade-up">COLDSTAR</h1>
+    <p class="tagline fade-up">Air-Gapped Cold Wallet for Solana</p>
+    <div class="stat-row fade-up">
+        <div class="stat-pill"><span class="val">18K+</span> lines of code</div>
+        <div class="stat-pill"><span class="val">100%</span> open source</div>
+        <div class="stat-pill"><span class="val">$0</span> hardware cost</div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 2: WHAT ARE HARDWARE WALLETS ====== -->
+<div class="slide grid-bg" data-time="0:08" data-section="HARDWARE WALLETS">
+    <div class="section-label">01 — HARDWARE WALLETS</div>
+    <h2 class="fade-up">What is a <span class="accent">hardware wallet?</span></h2>
+    <p class="subtitle fade-up">A device that keeps your private keys offline — away from hackers, malware, and phishing attacks</p>
+    <div class="icon-grid fade-up">
+        <div class="icon-card">
+            <div class="icon">&#128274;</div>
+            <h3>Private Keys</h3>
+            <p>The password to your crypto. Whoever has it controls your funds. It must never touch the internet.</p>
+        </div>
+        <div class="icon-card">
+            <div class="icon">&#128187;</div>
+            <h3>Software Wallets</h3>
+            <p>Phantom, MetaMask — convenient but your keys live in your browser. One exploit = drained.</p>
+        </div>
+        <div class="icon-card">
+            <div class="icon">&#128737;</div>
+            <h3>Hardware Wallets</h3>
+            <p>Keys stay on a separate device. Transactions are signed offline. The gold standard of security.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 3: THE PROBLEM ====== -->
+<div class="slide grid-bg" data-time="0:22" data-section="HARDWARE WALLETS">
+    <div class="section-label">01 — THE PROBLEM</div>
+    <h2 class="fade-up">But hardware wallets have a <span class="red">barrier</span></h2>
+    <p class="subtitle fade-up" style="margin-bottom: 40px;">They cost money, require proprietary hardware, and create vendor lock-in</p>
+    <div class="icon-grid fade-up" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="icon-card" style="border-color: rgba(255,77,77,0.3);">
+            <div class="icon">&#128176;</div>
+            <h3 class="red">$79 — $399</h3>
+            <p>Ledger Nano S Plus: $79<br>Ledger Stax: $399<br>Trezor Safe 3: $79</p>
+        </div>
+        <div class="icon-card" style="border-color: rgba(255,77,77,0.3);">
+            <div class="icon">&#127981;</div>
+            <h3 class="red">Proprietary</h3>
+            <p>Closed-source firmware. Custom chips. You trust the company, not the code.</p>
+        </div>
+        <div class="icon-card" style="border-color: rgba(255,77,77,0.3);">
+            <div class="icon">&#128683;</div>
+            <h3 class="red">Supply Chain Risk</h3>
+            <p>Ledger's 2023 breach leaked 270K customer addresses. Targeted phishing attacks followed.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 4: COMPARISON ====== -->
+<div class="slide grid-bg" data-time="0:34" data-section="COLDSTAR VS LEDGER">
+    <div class="section-label">02 — THE ALTERNATIVE</div>
+    <h2 class="fade-up" style="margin-bottom: 10px;">A better way</h2>
+    <div class="vs-container fade-up">
+        <div class="vs-card">
+            <div class="vs-badge old">TRADITIONAL</div>
+            <h3>Ledger / Trezor</h3>
+            <div class="vs-price red">$79+</div>
+            <div class="vs-label">proprietary hardware</div>
+            <div class="vs-features">
+                <div class="vs-feature"><span class="cross">&#10007;</span> Closed-source firmware</div>
+                <div class="vs-feature"><span class="cross">&#10007;</span> Custom hardware required</div>
+                <div class="vs-feature"><span class="cross">&#10007;</span> Vendor lock-in</div>
+                <div class="vs-feature"><span class="cross">&#10007;</span> Supply chain risk</div>
+                <div class="vs-feature"><span class="check">&#10003;</span> USB/Bluetooth connection</div>
+            </div>
+        </div>
+        <div class="vs-divider">vs</div>
+        <div class="vs-card highlight">
+            <div class="vs-badge new">OPEN SOURCE</div>
+            <h3>Coldstar</h3>
+            <div class="vs-price accent">FREE</div>
+            <div class="vs-label">any USB drive you already own</div>
+            <div class="vs-features">
+                <div class="vs-feature"><span class="check">&#10003;</span> 100% open-source &amp; auditable</div>
+                <div class="vs-feature"><span class="check">&#10003;</span> Works with any USB drive</div>
+                <div class="vs-feature"><span class="check">&#10003;</span> No vendor — you own it</div>
+                <div class="vs-feature"><span class="check">&#10003;</span> Air-gapped QR signing</div>
+                <div class="vs-feature"><span class="check">&#10003;</span> Rust secure signer (AES-256)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 5: INSTALLATION INTRO ====== -->
+<div class="slide grid-bg" data-time="0:50" data-section="INSTALLATION">
+    <div class="section-label">03 — INSTALLATION</div>
+    <h2 class="fade-up">Get started in <span class="accent">3 steps</span></h2>
+    <div class="url-bar fade-up">
+        <span class="lock">&#128274;</span> coldstar.dev/build
+    </div>
+    <div class="install-steps fade-up">
+        <div class="install-step">
+            <div class="step-num">01</div>
+            <div class="step-title">Clone &amp; Install</div>
+            <div class="step-desc">
+                <code class="mono" style="color:var(--accent);">git clone</code> the repo.<br>
+                Run the install script.<br>
+                Python + Rust compile in ~2 min.
+            </div>
+        </div>
+        <div class="install-step">
+            <div class="step-num">02</div>
+            <div class="step-title">Flash Any USB</div>
+            <div class="step-desc">
+                Plug in a USB drive — any brand, any size.<br>
+                The TUI detects it automatically.<br>
+                One command encrypts &amp; provisions.
+            </div>
+        </div>
+        <div class="install-step">
+            <div class="step-num">03</div>
+            <div class="step-title">Create Wallet</div>
+            <div class="step-desc">
+                Generate a Solana keypair offline.<br>
+                Keys encrypted with AES-256-GCM.<br>
+                Locked in RAM with mlock. Done.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 6: INSTALL TERMINAL ====== -->
+<div class="slide grid-bg" data-time="1:02" data-section="INSTALLATION">
+    <div class="section-label">03 — LIVE INSTALL</div>
+    <div class="terminal fade-up" style="max-width:1100px;">
+        <div class="terminal-bar">
+            <div class="term-dot term-dot-r"></div>
+            <div class="term-dot term-dot-y"></div>
+            <div class="term-dot term-dot-g"></div>
+            <div class="term-title">coldstar — install</div>
+        </div>
+        <div class="terminal-body">
+            <span class="t-prompt">$</span> <span class="t-white">git clone https://github.com/ExpertVagabond/coldstar.git</span><br>
+            <span class="t-dim">Cloning into 'coldstar'...</span><br>
+            <span class="t-green">&#10003;</span> <span class="t-dim">18,247 lines · 47 files</span><br><br>
+            <span class="t-prompt">$</span> <span class="t-white">cd coldstar && ./install.sh</span><br>
+            <span class="t-cyan">[1/4]</span> <span class="t-white">Checking Python 3.11+ ...</span> <span class="t-green">&#10003; 3.13.2</span><br>
+            <span class="t-cyan">[2/4]</span> <span class="t-white">Installing dependencies ...</span> <span class="t-green">&#10003; 23 packages</span><br>
+            <span class="t-cyan">[3/4]</span> <span class="t-white">Building Rust secure_signer ...</span> <span class="t-green">&#10003; compiled (release)</span><br>
+            <span class="t-cyan">[4/4]</span> <span class="t-white">Verifying encryption layer ...</span> <span class="t-green">&#10003; AES-256-GCM + Argon2id</span><br><br>
+            <span class="t-green t-bold">&#9733; Coldstar installed successfully</span><br>
+            <span class="t-dim">Run:</span> <span class="t-white">python coldstar_tui.py</span><span class="cursor"></span>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 7: UI DEMO — WELCOME ====== -->
+<div class="slide grid-bg" data-time="1:16" data-section="UI DEMO">
+    <div class="section-label">04 — UI DEMO</div>
+    <h3 class="fade-up" style="margin-bottom: 24px; text-align: center;">Terminal User Interface</h3>
+    <div class="terminal fade-up" style="max-width:1100px;">
+        <div class="terminal-bar">
+            <div class="term-dot term-dot-r"></div>
+            <div class="term-dot term-dot-y"></div>
+            <div class="term-dot term-dot-g"></div>
+            <div class="term-title">coldstar — TUI</div>
+        </div>
+        <div class="terminal-body">
+            <div style="text-align:center; padding: 10px 0;">
+                <span class="t-cyan" style="font-size:14px; white-space:pre; line-height:1.1;">
+ ██████╗ ██████╗ ██╗     ██████╗ ███████╗████████╗ █████╗ ██████╗
+██╔════╝██╔═══██╗██║     ██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██╔══██╗
+██║     ██║   ██║██║     ██║  ██║███████╗   ██║   ███████║██████╔╝
+██║     ██║   ██║██║     ██║  ██║╚════██║   ██║   ██╔══██║██╔══██╗
+╚██████╗╚██████╔╝███████╗██████╔╝███████║   ██║   ██║  ██║██║  ██║
+ ╚═════╝ ╚═════╝ ╚══════╝╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝
+                </span><br>
+                <span class="t-dim">v2.0.0</span> <span class="t-yellow">&#9888; OFFLINE MODE — Keys never touch the network</span>
+            </div>
+            <br>
+            <span class="t-cyan t-bold">&#9550; USB Devices Detected:</span><br>
+            <span class="t-green"> &#10003; </span><span class="t-white">/dev/disk4 — KIOXIA TransMemory (32 GB)</span><br>
+            <span class="t-green"> &#10003; </span><span class="t-white">/dev/disk5 — SanDisk Ultra (64 GB)</span><br><br>
+            <div style="border: 2px solid #58d1eb; border-radius: 8px; padding: 12px 20px; display: inline-block;">
+                <span class="t-cyan t-bold">MAIN MENU</span><br>
+                <span class="t-white"> [1]</span> <span class="t-cyan">&#9654;</span> Flash Cold Wallet to USB<br>
+                <span class="t-white"> [2]</span> <span class="t-cyan">&#9654;</span> Mount &amp; Unlock Wallet<br>
+                <span class="t-white"> [3]</span> <span class="t-cyan">&#9654;</span> Sign Transaction (QR)<br>
+                <span class="t-white"> [4]</span> <span class="t-cyan">&#9654;</span> Vault Dashboard<br>
+                <span class="t-white"> [5]</span> <span class="t-cyan">&#9654;</span> Network Status<br>
+                <span class="t-white"> [Q]</span> <span class="t-dim">Exit</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 8: UI DEMO — QR SIGNING FLOW ====== -->
+<div class="slide grid-bg" data-time="1:34" data-section="UI DEMO">
+    <div class="section-label">04 — AIR-GAPPED SIGNING</div>
+    <h2 class="fade-up">Sign without <span class="accent">ever going online</span></h2>
+    <div class="qr-flow fade-up">
+        <div class="qr-step">
+            <div class="step-icon">&#128187;</div>
+            <h3>1. Build TX</h3>
+            <p>Create transaction on your online machine</p>
+        </div>
+        <div class="qr-arrow">&#8594;</div>
+        <div class="qr-step">
+            <div class="step-icon">&#9638;</div>
+            <h3>2. QR Code</h3>
+            <p>Transaction encoded as QR — no USB, no network</p>
+        </div>
+        <div class="qr-arrow">&#8594;</div>
+        <div class="qr-step" style="border-color: var(--accent);">
+            <div class="step-icon">&#9998;</div>
+            <h3 class="accent">3. Sign Offline</h3>
+            <p>Coldstar signs in RAM on the air-gapped machine</p>
+        </div>
+        <div class="qr-arrow">&#8594;</div>
+        <div class="qr-step">
+            <div class="step-icon">&#9638;</div>
+            <h3>4. QR Back</h3>
+            <p>Signed TX as QR code — scan with phone</p>
+        </div>
+        <div class="qr-arrow">&#8594;</div>
+        <div class="qr-step">
+            <div class="step-icon">&#127758;</div>
+            <h3>5. Broadcast</h3>
+            <p>Submit to Solana from your online device</p>
+        </div>
+    </div>
+    <div class="stat-row fade-up">
+        <div class="stat-pill"><span class="val">0</span> network exposure</div>
+        <div class="stat-pill"><span class="val">mlock</span> keys in RAM only</div>
+        <div class="stat-pill"><span class="val">zeroize</span> on completion</div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 9: UI DEMO — VAULT DASHBOARD ====== -->
+<div class="slide" data-time="1:52" data-section="UI DEMO">
+    <div class="section-label">04 — VAULT DASHBOARD</div>
+    <h3 class="fade-up" style="margin-bottom: 20px; text-align: center;">Full portfolio management in the terminal</h3>
+    <div class="vault-mock fade-up">
+        <div class="vault-status">
+            <span><span class="t-green">&#9679;</span> <span class="t-dim">OFFLINE SIGNING</span> &nbsp; <span class="t-cyan">&#9679;</span> <span class="t-dim">MAINNET-BETA</span></span>
+            <span><span class="t-dim">Wallet:</span> <span class="t-cyan">EbRU...Zykp</span> &nbsp; <span class="t-dim">Total:</span> <span class="t-green">$12,431</span> &nbsp; <span class="t-green">+1.8%</span></span>
+        </div>
+        <div class="vault-panels">
+            <div class="vault-panel">
+                <div class="vault-panel-title">&#128202; Portfolio</div>
+                <div class="token-row selected">
+                    <span class="token-icon">&#9673;</span>
+                    <span class="t-white t-bold">SOL</span>
+                    <span class="t-dim">42.50 SOL</span>
+                    <span class="t-green">$8,925</span>
+                </div>
+                <div class="token-row">
+                    <span class="token-icon">&#9673;</span>
+                    <span class="t-white t-bold">USDC</span>
+                    <span class="t-dim">2,500.00</span>
+                    <span class="t-white">$2,500</span>
+                </div>
+                <div class="token-row">
+                    <span class="token-icon">&#9673;</span>
+                    <span class="t-white t-bold">JUP</span>
+                    <span class="t-dim">1,200.00</span>
+                    <span class="t-white">$756</span>
+                </div>
+                <div class="token-row">
+                    <span class="token-icon">&#9673;</span>
+                    <span class="t-white t-bold">RAY</span>
+                    <span class="t-dim">85.20</span>
+                    <span class="t-white">$250</span>
+                </div>
+                <div style="padding: 12px 4px; font-size: 13px;">
+                    <span class="t-dim">&#9650;&#9660; Navigate</span> &nbsp; <span class="t-dim">Enter: Details</span> &nbsp; <span class="t-dim">S: Send</span>
+                </div>
+            </div>
+            <div class="vault-panel">
+                <div class="vault-panel-title">&#128196; Token Details — SOL</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 2;">
+                    <span class="t-dim">Mint:</span> <span class="t-cyan" style="font-size:12px;">So111...1112</span><br>
+                    <span class="t-dim">Price:</span> <span class="t-white">$210.00</span> <span class="t-green">&#9650; 3.2%</span><br>
+                    <span class="t-dim">Balance:</span> <span class="t-white">42.50 SOL</span><br>
+                    <span class="t-dim">Value:</span> <span class="t-green">$8,925.00</span><br><br>
+                    <span class="t-dim">Recent Transactions:</span><br>
+                    <span class="t-green">&#8594;</span> <span class="t-dim">Mar 10</span> <span class="t-white">+2.50 SOL</span><br>
+                    <span class="t-red">&#8592;</span> <span class="t-dim">Mar 08</span> <span class="t-white">-1.00 SOL</span><br>
+                    <span class="t-green">&#8594;</span> <span class="t-dim">Mar 05</span> <span class="t-white">+5.00 SOL</span>
+                </div>
+            </div>
+            <div class="vault-panel">
+                <div class="vault-panel-title">&#128232; Send SOL</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 2.2;">
+                    <span class="t-dim">To:</span><br>
+                    <div style="border:1px solid #58d1eb; padding: 6px 10px; border-radius: 4px; margin: 4px 0;">
+                        <span class="t-cyan">7xKX...mP4q</span>
+                    </div>
+                    <span class="t-dim">Amount:</span><br>
+                    <div style="border:1px solid #58d1eb; padding: 6px 10px; border-radius: 4px; margin: 4px 0;">
+                        <span class="t-white">1.5 SOL</span>
+                    </div>
+                    <span class="t-dim">Fee:</span> <span class="t-yellow">Priority</span> <span class="t-dim">(0.000015 SOL)</span><br>
+                    <span class="t-dim">Network fee:</span> <span class="t-white">0.015 SOL</span> <span class="t-dim">($3.15)</span><br><br>
+                    <div style="border:2px solid var(--accent); border-radius: 6px; padding: 8px; text-align:center;">
+                        <span class="t-green t-bold">[ SIGN VIA QR ]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 10: MONETIZATION ====== -->
+<div class="slide grid-bg" data-time="2:16" data-section="MONETIZATION">
+    <div class="section-label">05 — REVENUE MODEL</div>
+    <h2 class="fade-up">Sustainable &amp; <span class="accent">user-aligned</span></h2>
+    <p class="subtitle fade-up">Free to use. Revenue only when you transact.</p>
+    <div class="revenue-grid fade-up">
+        <div class="revenue-card primary">
+            <div class="revenue-icon">&#128184;</div>
+            <h3>Transaction Fee</h3>
+            <div class="revenue-big">1%</div>
+            <div class="revenue-detail">
+                On every transaction signed through Coldstar<br>
+                <strong style="color: var(--accent);">Capped at $10 max</strong> — no matter the size
+            </div>
+            <div class="revenue-example">
+                <span class="t-dim">Send 5 SOL ($1,050)</span> &#8594; <span class="accent">fee: $10.00</span> (capped)<br>
+                <span class="t-dim">Send 0.5 SOL ($105)</span> &#8594; <span class="accent">fee: $1.05</span> (1%)<br>
+                <span class="t-dim">Send 10 SOL ($2,100)</span> &#8594; <span class="accent">fee: $10.00</span> (capped)
+            </div>
+        </div>
+        <div class="revenue-card">
+            <div class="revenue-icon">&#9889;</div>
+            <h3>Jito Staking Tips</h3>
+            <div class="revenue-big" style="font-size: 42px;">MEV</div>
+            <div class="revenue-detail">
+                Coldstar routes transactions through Jito bundles<br>
+                Earns validator tips on every broadcast
+            </div>
+            <div class="revenue-example" style="text-align: left;">
+                <span class="t-cyan">&#8226;</span> Priority fee optimization<br>
+                <span class="t-cyan">&#8226;</span> Bundle landing guarantees<br>
+                <span class="t-cyan">&#8226;</span> Passive revenue per TX<br>
+                <span class="t-cyan">&#8226;</span> No user cost increase
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 11: REVENUE MATH ====== -->
+<div class="slide grid-bg" data-time="2:34" data-section="MONETIZATION">
+    <div class="section-label">05 — UNIT ECONOMICS</div>
+    <h2 class="fade-up">Why the cap <span class="accent">matters</span></h2>
+    <p class="subtitle fade-up" style="margin-bottom: 40px;">Whales pay the same $10 as everyone else. No predatory fees.</p>
+    <div class="terminal fade-up" style="max-width: 900px;">
+        <div class="terminal-bar">
+            <div class="term-dot term-dot-r"></div>
+            <div class="term-dot term-dot-y"></div>
+            <div class="term-dot term-dot-g"></div>
+            <div class="term-title">revenue projection</div>
+        </div>
+        <div class="terminal-body" style="font-size: 18px; line-height: 2;">
+            <span class="t-cyan t-bold">Scenario: 1,000 active users</span><br><br>
+            <span class="t-dim">Avg 5 tx/week/user</span> &nbsp; <span class="t-dim">&#215;</span> &nbsp; <span class="t-dim">avg fee $3.50</span><br>
+            <span class="t-dim">Weekly revenue:</span> &nbsp; <span class="t-green t-bold">$17,500</span><br>
+            <span class="t-dim">Monthly revenue:</span> &nbsp; <span class="t-green t-bold">$70,000</span><br>
+            <span class="t-dim">+ Jito tips:</span> &nbsp; <span class="t-yellow t-bold">~$5,000/mo</span><br><br>
+            <span class="t-white">Total MRR @ 1K users:</span> &nbsp; <span class="t-green t-bold" style="font-size: 24px;">$75,000</span><br>
+            <span class="t-dim">Cost to user: less than any hardware wallet</span>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SLIDE 12: CTA ====== -->
+<div class="slide slide-title grid-bg" data-time="2:48" data-section="GET STARTED">
+    <div class="logo-ring fade-up">
+        <span class="star">&#10022;</span>
+    </div>
+    <h1 class="fade-up" style="font-size: 80px;">COLDSTAR</h1>
+    <p class="tagline fade-up" style="font-size: 28px;">Cold signing for everyone. No hardware required.</p>
+    <div class="cta-links fade-up">
+        <div class="cta-btn primary">&#127758; &nbsp; coldstar.dev</div>
+        <div class="cta-btn secondary">&#128736; &nbsp; coldstar.dev/build</div>
+        <div class="cta-btn secondary">&#128193; &nbsp; github.com/ExpertVagabond/coldstar</div>
+    </div>
+    <div class="stat-row fade-up" style="margin-top: 30px;">
+        <div class="stat-pill"><span class="val">Free</span> &amp; open source</div>
+        <div class="stat-pill"><span class="val">1%</span> fee capped at <span class="val">$10</span></div>
+        <div class="stat-pill"><span class="val">Any</span> USB drive</div>
+    </div>
+</div>
+
+<!-- UI Overlays -->
+<div id="timing-bar"></div>
+<div id="slide-counter"></div>
+<div id="timer">0:00 / 3:00</div>
+<div id="controls-help">
+    &#8592; &#8594; navigate &nbsp;|&nbsp; SPACE auto-play &nbsp;|&nbsp; R reset
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    const timingBar = document.getElementById('timing-bar');
+    const counter = document.getElementById('slide-counter');
+    const timerEl = document.getElementById('timer');
+    const TOTAL_TIME = 180; // 3 minutes
+
+    let current = 0;
+    let autoPlay = false;
+    let startTime = null;
+    let elapsed = 0;
+    let animFrame = null;
+
+    // Slide timestamps in seconds (when to auto-advance)
+    const timestamps = Array.from(slides).map(s => {
+        const t = s.dataset.time || '0:00';
+        const [m, sec] = t.split(':').map(Number);
+        return m * 60 + sec;
+    });
+
+    function showSlide(n) {
+        slides.forEach(s => s.classList.remove('active'));
+        current = Math.max(0, Math.min(n, slides.length - 1));
+        slides[current].classList.add('active');
+        updateUI();
+    }
+
+    function updateUI() {
+        counter.textContent = `${current + 1} / ${slides.length}`;
+        const section = slides[current].dataset.section || '';
+        const time = slides[current].dataset.time || '0:00';
+        // Update bar based on slide position
+        const progress = ((current + 1) / slides.length) * 100;
+        timingBar.style.width = progress + '%';
+    }
+
+    function formatTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function tick() {
+        if (!autoPlay || !startTime) return;
+        elapsed = (Date.now() - startTime) / 1000;
+
+        timerEl.textContent = `${formatTime(elapsed)} / 3:00`;
+        timerEl.style.color = elapsed > 170 ? '#FF4D4D' : elapsed > 150 ? '#FFB800' : '#666680';
+
+        // Auto-advance based on timestamps
+        for (let i = slides.length - 1; i >= 0; i--) {
+            if (elapsed >= timestamps[i] && i > current) {
+                showSlide(i);
+                break;
+            }
+        }
+
+        // Update timing bar based on elapsed time
+        const progress = (elapsed / TOTAL_TIME) * 100;
+        timingBar.style.width = Math.min(progress, 100) + '%';
+
+        if (elapsed >= TOTAL_TIME) {
+            autoPlay = false;
+            timerEl.textContent = '3:00 / 3:00';
+        }
+
+        if (autoPlay) animFrame = requestAnimationFrame(tick);
+    }
+
+    function toggleAutoPlay() {
+        autoPlay = !autoPlay;
+        if (autoPlay) {
+            if (!startTime || elapsed >= TOTAL_TIME) {
+                startTime = Date.now();
+                elapsed = 0;
+                showSlide(0);
+            } else {
+                startTime = Date.now() - (elapsed * 1000);
+            }
+            tick();
+        }
+    }
+
+    function reset() {
+        autoPlay = false;
+        startTime = null;
+        elapsed = 0;
+        timerEl.textContent = '0:00 / 3:00';
+        timerEl.style.color = '#666680';
+        showSlide(0);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        switch(e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+                showSlide(current + 1);
+                break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+                showSlide(current - 1);
+                break;
+            case ' ':
+                e.preventDefault();
+                toggleAutoPlay();
+                break;
+            case 'r':
+            case 'R':
+                reset();
+                break;
+        }
+    });
+
+    // Initialize
+    showSlide(0);
+</script>
+</body>
+</html>
