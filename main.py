@@ -105,7 +105,7 @@ class SolanaColdWalletCLI:
                 if sol_price:
                     usd_value = balance * sol_price["price"]
                     print_info(f"≈ {format_usd(usd_value)} USD (SOL @ ${sol_price['price']:.2f})")
-            except:
+            except Exception:
                 pass  # Silently fail if price fetch fails
 
         # Show wallet reputation
@@ -115,7 +115,7 @@ class SolanaColdWalletCLI:
                 if assessment["available"]:
                     badge = format_reputation_badge(assessment["tier"])
                     print_info(f"Wallet Reputation: {badge}")
-            except:
+            except Exception:
                 pass
 
         console.print()
@@ -130,8 +130,8 @@ class SolanaColdWalletCLI:
                 print_info("Exiting...")
                 self.cleanup()
                 sys.exit(0)
-            except Exception as e:
-                print_error(f"Error: {e}")
+            except Exception:
+                print_error("An unexpected error occurred")
                 continue
     
     def _draw_header(self):
@@ -1106,8 +1106,8 @@ class SolanaColdWalletCLI:
                     if not keypair:
                         print_error("Invalid password or corrupted wallet")
                         return
-            except Exception as e:
-                print_error(f"Failed to decrypt wallet: {e}")
+            except Exception:
+                print_error("Failed to decrypt wallet")
                 return
 
             try:

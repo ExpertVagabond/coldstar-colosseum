@@ -383,7 +383,7 @@ class JupiterSwapManager:
         """Cleanup HTTP client"""
         try:
             self.client.close()
-        except:
+        except Exception:
             pass
 
 

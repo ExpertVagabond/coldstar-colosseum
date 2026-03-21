@@ -77,7 +77,7 @@ async function rpcCall(method, params = [], rpcUrl?) {
     method,
     params,
   });
-  if (result.error) throw new Error(result.error.message);
+  if (result.error) throw new Error(`RPC error ${result.error.code ?? "unknown"}`);
   return result.result;
 }
 
