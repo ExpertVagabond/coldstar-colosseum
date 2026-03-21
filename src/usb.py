@@ -703,7 +703,7 @@ class USBManager:
             try:
                 import ctypes
                 return ctypes.windll.shell32.IsUserAnAdmin() != 0
-            except:
+            except Exception:
                 return False
         else:
             # On Linux/macOS/Unix
@@ -725,7 +725,7 @@ class USBManager:
                     timeout=5
                 )
                 return result.returncode == 0
-            except:
+            except Exception:
                 return True  # Assume we have permissions
         
         # On Linux, root is required for mount operations

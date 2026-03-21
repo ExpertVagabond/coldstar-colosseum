@@ -6,18 +6,20 @@ Supports: Solana, Base (Coinbase L2)
 B - Love U 3000
 """
 
+import os
+
 # ── Chain selector ──────────────────────────────────────────
 # Set at runtime by TUI chain picker; defaults to Solana
 ACTIVE_CHAIN = "solana"  # "solana" | "base"
 
 # ── Solana ──────────────────────────────────────────────────
-SOLANA_RPC_URL = "https://api.devnet.solana.com"
-SOLANA_MAINNET_RPC_URL = "https://api.mainnet-beta.solana.com"
+SOLANA_RPC_URL = os.environ.get("SOLANA_RPC_URL", "https://api.devnet.solana.com")
+SOLANA_MAINNET_RPC_URL = os.environ.get("SOLANA_MAINNET_RPC_URL", "https://api.mainnet-beta.solana.com")
 LAMPORTS_PER_SOL = 1_000_000_000
 
 # ── Base (Coinbase L2) ─────────────────────────────────────
-BASE_RPC_URL = "https://mainnet.base.org"
-BASE_TESTNET_RPC_URL = "https://sepolia.base.org"
+BASE_RPC_URL = os.environ.get("BASE_RPC_URL", "https://mainnet.base.org")
+BASE_TESTNET_RPC_URL = os.environ.get("BASE_TESTNET_RPC_URL", "https://sepolia.base.org")
 BASE_CHAIN_ID = 8453
 BASE_TESTNET_CHAIN_ID = 84532
 WEI_PER_ETH = 10**18
