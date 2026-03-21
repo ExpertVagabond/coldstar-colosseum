@@ -237,7 +237,7 @@ async function fetchSolBalance(walletAddress, rpcUrl) {
     params: [walletAddress],
   };
   const result = await httpPost(rpcUrl, body);
-  if (result.error) throw new Error(result.error.message);
+  if (result.error) throw new Error(`RPC error ${result.error.code ?? "unknown"}`);
   return (result.result?.value ?? 0) / 1e9;
 }
 
@@ -253,7 +253,7 @@ async function fetchTokenAccounts(walletAddress, rpcUrl) {
     ],
   };
   const result = await httpPost(rpcUrl, body);
-  if (result.error) throw new Error(result.error.message);
+  if (result.error) throw new Error(`RPC error ${result.error.code ?? "unknown"}`);
   return result.result?.value ?? [];
 }
 
@@ -265,7 +265,7 @@ async function baseRpcCall(method, params = [], rpcUrl) {
   const rpc = rpcUrl || BASE_RPC_URL;
   const body = { jsonrpc: "2.0", id: 1, method, params };
   const result = await httpPost(rpc, body);
-  if (result.error) throw new Error(result.error.message);
+  if (result.error) throw new Error(`RPC error ${result.error.code ?? "unknown"}`);
   return result.result;
 }
 
