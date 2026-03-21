@@ -1432,6 +1432,168 @@ server.tool(
 );
 
 // ===========================================================================
+// SIGNATURE VERIFICATION TOOLS
+// ===========================================================================
+
+import { createPublicKey, verify, createHash } from "node:crypto";
+
+server.tool(
+  "verify_ed25519_signature",
+  "Verify an Ed25519 signature — independent second opinion on Coldstar-signed transactions or any Ed25519 payload. Returns whether the signature is valid, catches compromised signers.",
+  {
+    message: z
+      .string()
+      .describe("Base64-encoded message bytes that were signed"),
+    signature: z
+      .string()
+      .describe("Base64-encoded 64-byte Ed25519 signature"),
+    public_key: z
+      .string()
+      .describe("Base64-encoded 32-byte Ed25519 public key of the signer"),
+  },
+  async ({ message, signature, public_key }) => {
+    try {
+      const msgBuf = Buffer.from(message, "base64");
+      const sigBuf = Buffer.from(signature, "base64");
+      const pubBuf = Buffer.from(public_key, "base64");
+
+      if (sigBuf.length !== 64) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                valid: false,
+                error: `Invalid signature length: expected 64 bytes, got ${sigBuf.length}`,
+              }),
+            },
+          ],
+        };
+      }
+      if (pubBuf.length !== 32) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                valid: false,
+                error: `Invalid public key length: expected 32 bytes, got ${pubBuf.length}`,
+              }),
+            },
+          ],
+        };
+      }
+
+      // Build SPKI-encoded public key for node:crypto
+      const spki = Buffer.concat([
+        Buffer.from("302a300506032b6570032100", "hex"),
+        pubBuf,
+      ]);
+      const pubKey = createPublicKey({ key: spki, format: "der", type: "spki" });
+      const isValid = verify(null, msgBuf, pubKey, sigBuf);
+
+      const msgHash = createHash("sha256").update(msgBuf).digest("hex");
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              valid: isValid,
+              message_hash: msgHash,
+              message_length: msgBuf.length,
+              signer: pubBuf.toString("hex").slice(0, 16) + "...",
+            }),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              valid: false,
+              error: `Verification failed: ${err.message}`,
+            }),
+          },
+        ],
+      };
+    }
+  }
+);
+
+server.tool(
+  "verify_webhook_hmac",
+  "Verify an HMAC-SHA256 webhook signature — validates that a webhook payload is authentic and untampered. Works with Shopify, GitHub, Stripe, and other HMAC-signed webhooks.",
+  {
+    payload: z.string().describe("Raw webhook body string"),
+    signature: z
+      .string()
+      .describe("Signature from the webhook header (hex or base64)"),
+    secret: z.string().describe("HMAC shared secret"),
+    encoding: z
+      .enum(["hex", "base64"])
+      .optional()
+      .default("hex")
+      .describe("Encoding of the provided signature (default: hex)"),
+    prefix: z
+      .string()
+      .optional()
+      .default("")
+      .describe("Signature prefix to strip (e.g., 'sha256=' for GitHub)"),
+  },
+  async ({ payload, signature, secret, encoding, prefix }) => {
+    try {
+      const { createHmac } = await import("node:crypto");
+      const hmac = createHmac("sha256", secret);
+      hmac.update(payload, "utf-8");
+      const computed = hmac.digest(encoding);
+
+      // Strip prefix if present (e.g., "sha256=" from GitHub webhooks)
+      const cleanSig = prefix && signature.startsWith(prefix)
+        ? signature.slice(prefix.length)
+        : signature;
+
+      // Constant-time comparison
+      const { timingSafeEqual } = await import("node:crypto");
+      const a = Buffer.from(computed, encoding === "base64" ? "base64" : "utf-8");
+      const b = Buffer.from(cleanSig, encoding === "base64" ? "base64" : "utf-8");
+
+      let isValid = false;
+      if (a.length === b.length) {
+        isValid = timingSafeEqual(a, b);
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              valid: isValid,
+              computed_signature: computed.slice(0, 16) + "...",
+              payload_length: payload.length,
+            }),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              valid: false,
+              error: `HMAC verification failed: ${err.message}`,
+            }),
+          },
+        ],
+      };
+    }
+  }
+);
+
+// ===========================================================================
 // CUSTODY TOOLS (Institutional Vault)
 // ===========================================================================
 
