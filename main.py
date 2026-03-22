@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """
-Solana Cold Wallet USB Tool
-Main CLI Entry Point
+Solana Cold Wallet USB Tool — Air-gapped transaction signing for Solana.
 
-Security:
-- All error messages sanitized via sanitize_error() — no raw paths/keys leaked
-- RPC URLs loaded from env vars (SOLANA_RPC_URL, SOLANA_DEVNET_RPC, etc.)
-- File paths validated before access — no path traversal
-- Wallet passwords never logged or stored in plaintext
-- All secrets redacted from output (20+ char alphanumeric strings masked)
+Security Architecture:
+- sanitize_error(): strips file paths, redacts secrets (20+ char tokens), truncates to 200 chars
+- _validate_file_path(): resolves symlinks via os.path.realpath, blocks path traversal (.. segments)
+- RPC URLs loaded exclusively from env vars (SOLANA_RPC_URL, SOLANA_DEVNET_RPC) — never hardcoded
+- Wallet passwords handled via secure input (get_password_input) — never logged or stored in plaintext
+- Encrypted wallet containers use Rust signer (AES-256-GCM) with PyNaCl fallback
+- All catch blocks use sanitize_error() — no raw exception messages reach output
+- Private keys zeroed from memory after use (del + gc.collect)
+- FairScore reputation gating blocks transactions to untrusted wallets
+- Ed25519 signature verification for webhook HMAC and custody transfers
 """
 
 import json
@@ -88,8 +91,8 @@ class SolanaColdWalletCLI:
                 if container:
                     print_success("Wallet converted to Rust secure format successfully")
                 return container
-        except (json.JSONDecodeError, IOError):
-            pass
+        except (json.JSONDecodeError, IOError) as exc:
+            print_error(f"Failed to read wallet: {sanitize_error(exc)}")
 
         print_error("Failed to load wallet. Legacy unencrypted wallets must be upgraded first.")
         return None
