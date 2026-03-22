@@ -14,6 +14,7 @@ import platform
 from pathlib import Path
 from typing import Optional, Tuple
 
+from config import sanitize_error
 from src.ui import (
     print_success, print_error, print_info, print_warning,
     print_step, create_progress_bar, confirm_dangerous_action,
@@ -103,7 +104,7 @@ class ISOBuilder:
             print_error("wget/curl not found. Please install wget or curl.")
             return None
         except Exception as e:
-            print_error(f"Download error: {e}")
+            print_error(f"Download error: {sanitize_error(e)}")
             return None
     
     def extract_rootfs(self, tarball_path: Path) -> Optional[Path]:
@@ -133,7 +134,7 @@ class ISOBuilder:
                 return None
                 
         except Exception as e:
-            print_error(f"Extraction error: {e}")
+            print_error(f"Extraction error: {sanitize_error(e)}")
             return None
     
     def configure_offline_os(self) -> bool:
@@ -203,7 +204,7 @@ class ISOBuilder:
             return True
             
         except Exception as e:
-            print_error(f"Configuration error: {e}")
+            print_error(f"Configuration error: {sanitize_error(e)}")
             return False
     
     def _install_python_deps(self) -> bool:
@@ -742,7 +743,7 @@ fi
             print_warning("Image creation timed out, creating archive instead")
             return self._create_archive_image(output_dir)
         except Exception as e:
-            print_warning(f"Image creation failed: {e}, creating archive instead")
+            print_warning(f"Image creation failed: {sanitize_error(e)}, creating archive instead")
             return self._create_archive_image(output_dir)
     
     def _create_archive_image(self, output_dir: Path) -> Optional[Path]:
@@ -768,7 +769,7 @@ fi
                 return None
                 
         except Exception as e:
-            print_error(f"Archive creation failed: {e}")
+            print_error(f"Archive creation failed: {sanitize_error(e)}")
             return None
     
     def get_generated_pubkey(self) -> Optional[str]:
@@ -878,11 +879,11 @@ fi
             return True
             
         except ImportError as e:
-            print_error(f"Required modules not available: {e}")
+            print_error(f"Required modules not available: {sanitize_error(e)}")
             print_info("Make sure solders and secure_memory are installed")
             return False
         except Exception as e:
-            print_error(f"Wallet generation failed: {e}")
+            print_error(f"Wallet generation failed: {sanitize_error(e)}")
             import traceback
             if "--debug" in sys.argv:
                 traceback.print_exc()
@@ -977,7 +978,7 @@ For more information, see the project documentation.
                 return False
                 
         except Exception as e:
-            print_error(f"Flash error: {e}")
+            print_error(f"Flash error: {sanitize_error(e)}")
             return False
     
     def _flash_to_usb_linux(self, device_path: str, image_path: str = None) -> bool:
@@ -1038,7 +1039,7 @@ For more information, see the project documentation.
             print_error("Permission denied. Run with sudo.")
             return False
         except Exception as e:
-            print_error(f"Flash error: {e}")
+            print_error(f"Flash error: {sanitize_error(e)}")
             return False
     
     def cleanup(self):
@@ -1055,7 +1056,7 @@ For more information, see the project documentation.
                 
                 print_success("Cleanup completed")
             except Exception as e:
-                print_warning(f"Cleanup warning: {e}")
+                print_warning(f"Cleanup warning: {sanitize_error(e)}")
     
     def get_iso_path(self) -> Optional[Path]:
         return self.iso_path
