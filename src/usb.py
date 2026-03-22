@@ -115,7 +115,8 @@ class USBManager:
             print_error("Device detection timed out")
             return []
         except Exception as e:
-            print_error(f"Error detecting USB devices: {e}")
+            from config import sanitize_error
+            print_error(f"Error detecting USB devices: {sanitize_error(e)}")
             return self._detect_windows_simple()
     
     def _detect_windows_simple(self) -> List[Dict]:
@@ -156,7 +157,8 @@ class USBManager:
             return devices
             
         except Exception as e:
-            print_error(f"Simple detection failed: {e}")
+            from config import sanitize_error
+            print_error(f"Simple detection failed: {sanitize_error(e)}")
             return []
     
     def _detect_macos(self) -> List[Dict]:
@@ -254,7 +256,8 @@ class USBManager:
             print_error("plistlib not available - using fallback method")
             return self._detect_macos_fallback()
         except Exception as e:
-            print_error(f"Error detecting USB devices on macOS: {e}")
+            from config import sanitize_error
+            print_error(f"Error detecting USB devices on macOS: {sanitize_error(e)}")
             return self._detect_macos_fallback()
     
     def _detect_macos_fallback(self) -> List[Dict]:
@@ -330,7 +333,8 @@ class USBManager:
             return devices
             
         except Exception as e:
-            print_error(f"Fallback detection failed: {e}")
+            from config import sanitize_error
+            print_error(f"Fallback detection failed: {sanitize_error(e)}")
             return []
     
     def _detect_linux(self) -> List[Dict]:
@@ -387,9 +391,10 @@ class USBManager:
             print_warning("lsblk not found, trying alternative method")
             return self._detect_via_sys()
         except Exception as e:
-            print_error(f"Error detecting USB devices: {e}")
+            from config import sanitize_error
+            print_error(f"Error detecting USB devices: {sanitize_error(e)}")
             return []
-    
+
     def _detect_via_sys(self) -> List[Dict]:
         devices = []
         
@@ -426,7 +431,8 @@ class USBManager:
             return devices
             
         except Exception as e:
-            print_error(f"Alternative detection failed: {e}")
+            from config import sanitize_error
+            print_error(f"Alternative detection failed: {sanitize_error(e)}")
             return []
     
     def _format_size(self, size_bytes: int) -> str:
@@ -498,7 +504,8 @@ class USBManager:
                         print_error(f"Failed to mount: {result.stderr}")
                         return None
                     except Exception as e:
-                        print_error(f"Mount error: {e}")
+                        from config import sanitize_error
+                        print_error(f"Mount error: {sanitize_error(e)}")
                         return None
             else:
                 print_error("No partition found to mount")
@@ -574,9 +581,10 @@ class USBManager:
             print_error("Permission denied. Run with sudo for USB operations.")
             return None
         except Exception as e:
-            print_error(f"Mount error: {e}")
+            from config import sanitize_error
+            print_error(f"Mount error: {sanitize_error(e)}")
             return None
-    
+
     def unmount_device(self, mount_point: str = None) -> bool:
         """Unmount a device"""
         target = mount_point or self.mount_point
@@ -619,9 +627,10 @@ class USBManager:
                         print_error(f"Unmount failed: {result.stderr}")
                         return False
             except Exception as e:
-                print_error(f"Unmount error: {e}")
+                from config import sanitize_error
+                print_error(f"Unmount error: {sanitize_error(e)}")
                 return False
-        
+
         # On Windows, we don't need to unmount drives
         if self.is_windows:
             print_info("Flushing file system buffers...")
@@ -671,9 +680,10 @@ class USBManager:
                 return False
                 
         except Exception as e:
-            print_error(f"Unmount error: {e}")
+            from config import sanitize_error
+            print_error(f"Unmount error: {sanitize_error(e)}")
             return False
-    
+
     def check_wallet_exists(self, mount_point: str = None) -> bool:
         target = mount_point or self.mount_point
         if not target:

@@ -140,7 +140,8 @@ class TransactionManager:
             
             return self.unsigned_tx
         except Exception as e:
-            print_error(f"Failed to create transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to create transaction: {sanitize_error(e)}")
             return None
     
     def sign_transaction_secure(self, unsigned_tx_bytes: bytes, encrypted_container: dict, password: str) -> Optional[bytes]:
@@ -219,8 +220,10 @@ class TransactionManager:
             console.print()
             return self.signed_tx
         except Exception as e:
-            print_error(f"Failed to sign transaction: {e}")
-            if "Decryption failed" in str(e):
+            from config import sanitize_error
+            err_str = str(e)
+            print_error(f"Failed to sign transaction: {sanitize_error(e)}")
+            if "Decryption failed" in err_str:
                 print_warning("Incorrect password or corrupted wallet")
             return None
     
@@ -248,9 +251,10 @@ class TransactionManager:
             print_success(f"Unsigned transaction saved to: {filepath}")
             return True
         except Exception as e:
-            print_error(f"Failed to save transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to save transaction: {sanitize_error(e)}")
             return False
-    
+
     def load_unsigned_transaction(self, path: str) -> Optional[bytes]:
         try:
             filepath = Path(path)
@@ -271,9 +275,10 @@ class TransactionManager:
             print_success(f"Loaded unsigned transaction from: {filepath}")
             return tx_bytes
         except Exception as e:
-            print_error(f"Failed to load transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to load transaction: {sanitize_error(e)}")
             return None
-    
+
     def save_signed_transaction(self, tx_bytes: bytes, path: str) -> bool:
         try:
             filepath = Path(path)
@@ -291,7 +296,8 @@ class TransactionManager:
             print_success(f"Signed transaction saved to: {filepath}")
             return True
         except Exception as e:
-            print_error(f"Failed to save signed transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to save signed transaction: {sanitize_error(e)}")
             return False
     
     def load_signed_transaction(self, path: str) -> Optional[bytes]:
@@ -314,7 +320,8 @@ class TransactionManager:
             print_success(f"Loaded signed transaction from: {filepath}")
             return tx_bytes
         except Exception as e:
-            print_error(f"Failed to load signed transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to load signed transaction: {sanitize_error(e)}")
             return None
     
     def get_transaction_for_broadcast(self) -> Optional[str]:
@@ -354,5 +361,6 @@ class TransactionManager:
 
                 return info
             except Exception as e:
-                print_error(f"Failed to decode transaction: {e}")
+                from config import sanitize_error
+                print_error(f"Failed to decode transaction: {sanitize_error(e)}")
                 return None

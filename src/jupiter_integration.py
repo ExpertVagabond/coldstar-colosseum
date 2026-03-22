@@ -120,10 +120,12 @@ class JupiterSwapManager:
             return quote
 
         except httpx.HTTPError as e:
-            print_error(f"HTTP error fetching quote: {e}")
+            from config import sanitize_error
+            print_error(f"HTTP error fetching quote: {sanitize_error(e)}")
             return None
         except Exception as e:
-            print_error(f"Failed to get quote: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to get quote: {sanitize_error(e)}")
             return None
 
     def create_swap_transaction(
@@ -185,10 +187,12 @@ class JupiterSwapManager:
             return tx_bytes
 
         except httpx.HTTPError as e:
-            print_error(f"HTTP error creating swap: {e}")
+            from config import sanitize_error
+            print_error(f"HTTP error creating swap: {sanitize_error(e)}")
             return None
         except Exception as e:
-            print_error(f"Failed to create swap transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to create swap transaction: {sanitize_error(e)}")
             return None
 
     def get_price(self, token_ids: List[str]) -> Optional[Dict[str, Any]]:
@@ -221,7 +225,8 @@ class JupiterSwapManager:
             return prices["data"]
 
         except Exception as e:
-            print_error(f"Failed to get prices: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to get prices: {sanitize_error(e)}")
             return None
 
     def save_swap_transaction(
@@ -259,7 +264,8 @@ class JupiterSwapManager:
             return True
 
         except Exception as e:
-            print_error(f"Failed to save swap transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to save swap transaction: {sanitize_error(e)}")
             return False
 
     def load_swap_transaction(self, path: str) -> Optional[tuple[bytes, Dict]]:
@@ -300,7 +306,8 @@ class JupiterSwapManager:
             return (tx_bytes, quote_info)
 
         except Exception as e:
-            print_error(f"Failed to load swap transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to load swap transaction: {sanitize_error(e)}")
             return None
 
     def sign_swap_transaction(
@@ -332,7 +339,8 @@ class JupiterSwapManager:
             return signed_bytes
 
         except Exception as e:
-            print_error(f"Failed to sign swap transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to sign swap transaction: {sanitize_error(e)}")
             return None
 
     def save_signed_swap(self, tx_bytes: bytes, path: str) -> bool:
@@ -354,7 +362,8 @@ class JupiterSwapManager:
             return True
 
         except Exception as e:
-            print_error(f"Failed to save signed swap: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to save signed swap: {sanitize_error(e)}")
             return False
 
     def get_swap_summary(
