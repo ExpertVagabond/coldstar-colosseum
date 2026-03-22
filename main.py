@@ -9,7 +9,6 @@ B - Love U 3000
 """
 
 import json
-import re
 import sys
 import os
 import tempfile
@@ -18,15 +17,7 @@ from typing import Optional
 
 from rich.console import Console
 
-
-def sanitize_error(e: Exception) -> str:
-    """Sanitize error messages to prevent information leakage."""
-    msg = str(e)
-    msg = re.sub(r'/[^\s]+', '[path]', msg)
-    msg = re.sub(r'[A-Za-z0-9]{20,}', '[redacted]', msg)
-    return msg[:200]
-
-from config import APP_NAME, APP_VERSION, SOLANA_RPC_URL
+from config import APP_NAME, APP_VERSION, SOLANA_RPC_URL, sanitize_error
 from src.ui import (
     print_banner, print_success, print_error, print_info, print_warning,
     print_section_header, print_wallet_info, print_transaction_summary,

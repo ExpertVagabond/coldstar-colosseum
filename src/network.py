@@ -55,10 +55,12 @@ class SolanaNetwork:
             lamports = result.get("result", {}).get("value", 0)
             return lamports / LAMPORTS_PER_SOL
         except httpx.HTTPError as e:
-            print_error(f"Network error: {e}")
+            from config import sanitize_error
+            print_error(f"Network error: {sanitize_error(e)}")
             return None
         except Exception as e:
-            print_error(f"Error getting balance: {e}")
+            from config import sanitize_error
+            print_error(f"Error getting balance: {sanitize_error(e)}")
             return None
     
     def get_latest_blockhash(self) -> Optional[Tuple[str, int]]:
@@ -81,7 +83,8 @@ class SolanaNetwork:
                 return blockhash, last_valid_height
             return None
         except Exception as e:
-            print_error(f"Error getting blockhash: {e}")
+            from config import sanitize_error
+            print_error(f"Error getting blockhash: {sanitize_error(e)}")
             return None
     
     def get_minimum_balance_for_rent_exemption(self, data_size: int = 0) -> Optional[int]:
@@ -121,7 +124,8 @@ class SolanaNetwork:
                 return signature
             return None
         except Exception as e:
-            print_error(f"Error sending transaction: {e}")
+            from config import sanitize_error
+            print_error(f"Error sending transaction: {sanitize_error(e)}")
             return None
     
     def confirm_transaction(self, signature: str, max_retries: int = 30) -> bool:
@@ -170,7 +174,8 @@ class SolanaNetwork:
                 return signature
             return None
         except Exception as e:
-            print_error(f"Airdrop error: {e}")
+            from config import sanitize_error
+            print_error(f"Airdrop error: {sanitize_error(e)}")
             return None
     
     def get_account_info(self, public_key: str) -> Optional[dict]:
@@ -224,7 +229,8 @@ class SolanaNetwork:
             signatures = result.get("result", [])
             return signatures
         except Exception as e:
-            print_error(f"Error getting transaction history: {e}")
+            from config import sanitize_error
+            print_error(f"Error getting transaction history: {sanitize_error(e)}")
             return None
     
     def get_transaction_details(self, signature: str) -> Optional[dict]:

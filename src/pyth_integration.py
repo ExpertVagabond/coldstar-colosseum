@@ -120,10 +120,12 @@ class PythPriceClient:
             return result
 
         except httpx.HTTPError as e:
-            print_error(f"HTTP error fetching price for {symbol}: {e}")
+            from config import sanitize_error
+            print_error(f"HTTP error fetching price for {symbol}: {sanitize_error(e)}")
             return None
         except Exception as e:
-            print_error(f"Failed to get price for {symbol}: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to get price for {symbol}: {sanitize_error(e)}")
             return None
 
     def get_multiple_prices(
@@ -198,7 +200,8 @@ class PythPriceClient:
             return results
 
         except Exception as e:
-            print_error(f"Failed to get multiple prices: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to get multiple prices: {sanitize_error(e)}")
             return {}
 
     def get_portfolio_value(
@@ -257,7 +260,8 @@ class PythPriceClient:
             }
 
         except Exception as e:
-            print_error(f"Failed to calculate portfolio value: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to calculate portfolio value: {sanitize_error(e)}")
             return None
 
     def format_price_display(
