@@ -20,6 +20,7 @@ from typing import Optional, Tuple
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 
+from config import sanitize_error
 from src.ui import (
     print_success, print_error, print_info, print_warning,
     get_password_input, confirm_dangerous_action,
@@ -136,7 +137,7 @@ class EVMWalletManager:
             return True
 
         except Exception as e:
-            print_error(f"Failed to save keypair: {e}")
+            print_error(f"Failed to save keypair: {sanitize_error(e)}")
             return False
 
     def load_keypair(self, path: str = None) -> Optional[LocalAccount]:
@@ -160,7 +161,7 @@ class EVMWalletManager:
             return None  # Password requested at signing time
 
         except Exception as e:
-            print_error(f"Failed to load keypair: {e}")
+            print_error(f"Failed to load keypair: {sanitize_error(e)}")
             return None
 
     def load_encrypted_container(self, path: str = None) -> Optional[dict]:
@@ -194,7 +195,7 @@ class EVMWalletManager:
             return data
 
         except Exception as e:
-            print_error(f"Failed to load encrypted container: {e}")
+            print_error(f"Failed to load encrypted container: {sanitize_error(e)}")
             return None
 
     # ── Address & Validation ────────────────────────────────
@@ -253,7 +254,7 @@ class EVMWalletManager:
                 print_error("Unknown container format")
                 return None
         except Exception as e:
-            print_error(f"Decryption failed: {e}")
+            print_error(f"Decryption failed: {sanitize_error(e)}")
             return None
 
     # ── Memory Management ───────────────────────────────────

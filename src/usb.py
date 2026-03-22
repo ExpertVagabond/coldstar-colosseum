@@ -798,7 +798,7 @@ class USBManager:
                 with open(boot_marker_file, 'w') as f:
                     f.write(current_boot_id)
             except Exception as e:
-                print_warning(f"Could not update boot marker: {e}")
+                print_warning(f"Could not update boot marker: {sanitize_error(e)}")
             
             # Only show messages if files were actually restored
             if files_restored > 0:
@@ -854,7 +854,8 @@ class USBManager:
                         print_success(f"✓ Restored {file_path.name} from backup")
                         files_restored += 1
                     except Exception as e:
-                        print_error(f"Failed to restore {file_path.name}: {e}")
+                        from config import sanitize_error
+                        print_error(f"Failed to restore {file_path.name}: {sanitize_error(e)}")
             else:
                 # File exists and is valid - ensure we have a backup
                 self._create_backup_if_needed(file_path, backup_dir)
@@ -881,4 +882,4 @@ class USBManager:
                     shutil.copy2(file_path, backup_file)
         except Exception as e:
             # Only warn if backup actually fails
-            print_warning(f"Could not backup {file_path.name}: {e}")
+            print_warning(f"Could not backup {file_path.name}: {sanitize_error(e)}")

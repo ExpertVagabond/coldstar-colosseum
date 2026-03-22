@@ -20,6 +20,7 @@ from config import (
     WEI_PER_ETH, GWEI_PER_ETH,
     INFRASTRUCTURE_FEE_PERCENTAGE, INFRASTRUCTURE_FEE_WALLET_BASE,
 )
+from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning, console
 
 
@@ -86,7 +87,7 @@ class EVMTransactionManager:
             return tx
 
         except Exception as e:
-            print_error(f"Failed to create transaction: {e}")
+            print_error(f"Failed to create transaction: {sanitize_error(e)}")
             return None
 
     def create_erc20_transfer(
@@ -131,7 +132,7 @@ class EVMTransactionManager:
             return tx
 
         except Exception as e:
-            print_error(f"Failed to create ERC-20 transaction: {e}")
+            print_error(f"Failed to create ERC-20 transaction: {sanitize_error(e)}")
             return None
 
     # ── Signing ─────────────────────────────────────────────
@@ -149,7 +150,7 @@ class EVMTransactionManager:
             return self.signed_tx_bytes
 
         except Exception as e:
-            print_error(f"Failed to sign transaction: {e}")
+            print_error(f"Failed to sign transaction: {sanitize_error(e)}")
             return None
 
     def sign_transaction_secure(
@@ -205,7 +206,7 @@ class EVMTransactionManager:
             return self.signed_tx_bytes
 
         except Exception as e:
-            print_error(f"Secure signing failed: {e}")
+            print_error(f"Secure signing failed: {sanitize_error(e)}")
             return None
 
     # ── Serialization (for QR / file transfer) ──────────────
@@ -234,7 +235,7 @@ class EVMTransactionManager:
                     tx["data"] = b""
             return tx
         except Exception as e:
-            print_error(f"Failed to deserialize transaction: {e}")
+            print_error(f"Failed to deserialize transaction: {sanitize_error(e)}")
             return None
 
     # ── File save/load ──────────────────────────────────────
@@ -255,7 +256,7 @@ class EVMTransactionManager:
             print_success(f"Unsigned transaction saved to: {filepath}")
             return True
         except Exception as e:
-            print_error(f"Failed to save transaction: {e}")
+            print_error(f"Failed to save transaction: {sanitize_error(e)}")
             return False
 
     def load_unsigned_transaction(self, path: str) -> Optional[dict]:
@@ -274,7 +275,7 @@ class EVMTransactionManager:
             print_success(f"Loaded unsigned transaction from: {filepath}")
             return tx
         except Exception as e:
-            print_error(f"Failed to load transaction: {e}")
+            print_error(f"Failed to load transaction: {sanitize_error(e)}")
             return None
 
     def save_signed_transaction(self, signed_bytes: bytes, path: str) -> bool:
@@ -293,7 +294,7 @@ class EVMTransactionManager:
             print_success(f"Signed transaction saved to: {filepath}")
             return True
         except Exception as e:
-            print_error(f"Failed to save signed transaction: {e}")
+            print_error(f"Failed to save signed transaction: {sanitize_error(e)}")
             return False
 
     def load_signed_transaction(self, path: str) -> Optional[bytes]:
@@ -314,7 +315,7 @@ class EVMTransactionManager:
             print_success(f"Loaded signed transaction from: {filepath}")
             return self.signed_tx_bytes
         except Exception as e:
-            print_error(f"Failed to load signed transaction: {e}")
+            print_error(f"Failed to load signed transaction: {sanitize_error(e)}")
             return None
 
     def get_transaction_for_broadcast(self) -> Optional[str]:
