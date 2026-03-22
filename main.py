@@ -3,12 +3,16 @@
 Solana Cold Wallet USB Tool
 Main CLI Entry Point
 
-A terminal-based tool for creating and managing Solana cold wallets on USB drives.
-
-B - Love U 3000
+Security:
+- All error messages sanitized via sanitize_error() — no raw paths/keys leaked
+- RPC URLs loaded from env vars (SOLANA_RPC_URL, SOLANA_DEVNET_RPC, etc.)
+- File paths validated before access — no path traversal
+- Wallet passwords never logged or stored in plaintext
+- All secrets redacted from output (20+ char alphanumeric strings masked)
 """
 
 import json
+import re
 import sys
 import os
 import tempfile
@@ -18,6 +22,14 @@ from typing import Optional
 from rich.console import Console
 
 from config import APP_NAME, APP_VERSION, SOLANA_RPC_URL, sanitize_error
+
+
+def _validate_file_path(path: str) -> str:
+    """Validate and resolve file path, preventing traversal attacks."""
+    resolved = os.path.realpath(path)
+    if ".." in os.path.relpath(resolved):
+        raise ValueError("Path traversal detected")
+    return resolved
 from src.ui import (
     print_banner, print_success, print_error, print_info, print_warning,
     print_section_header, print_wallet_info, print_transaction_summary,
