@@ -9,6 +9,7 @@ B - Love U 3000
 """
 
 import json
+import re
 import sys
 import os
 import tempfile
@@ -16,6 +17,14 @@ from pathlib import Path
 from typing import Optional
 
 from rich.console import Console
+
+
+def sanitize_error(e: Exception) -> str:
+    """Sanitize error messages to prevent information leakage."""
+    msg = str(e)
+    msg = re.sub(r'/[^\s]+', '[path]', msg)
+    msg = re.sub(r'[A-Za-z0-9]{20,}', '[redacted]', msg)
+    return msg[:200]
 
 from config import APP_NAME, APP_VERSION, SOLANA_RPC_URL
 from src.ui import (
@@ -130,8 +139,8 @@ class SolanaColdWalletCLI:
                 print_info("Exiting...")
                 self.cleanup()
                 sys.exit(0)
-            except Exception:
-                print_error("An unexpected error occurred")
+            except Exception as e:
+                print_error(f"Error: {sanitize_error(e)}")
                 continue
     
     def _draw_header(self):
