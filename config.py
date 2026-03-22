@@ -7,6 +7,15 @@ B - Love U 3000
 """
 
 import os
+import re
+
+
+def sanitize_error(e: Exception) -> str:
+    """Sanitize error messages to prevent information leakage."""
+    msg = str(e)
+    msg = re.sub(r'/[^\s]+', '[path]', msg)
+    msg = re.sub(r'[A-Za-z0-9]{20,}', '[redacted]', msg)
+    return msg[:200]
 
 # ── Chain selector ──────────────────────────────────────────
 # Set at runtime by TUI chain picker; defaults to Solana
@@ -26,9 +35,13 @@ WEI_PER_ETH = 10**18
 GWEI_PER_ETH = 10**9
 
 # ── Infrastructure fee (both chains) ───────────────────────
-INFRASTRUCTURE_FEE_PERCENTAGE = 0.01  # 1% fee
-INFRASTRUCTURE_FEE_WALLET = "Cak1aAwxM2jTdu7AtdaHbqAc3Dfafts7KdsHNrtXN5rT"  # Solana
-INFRASTRUCTURE_FEE_WALLET_BASE = "0x0000000000000000000000000000000000000000"  # TODO: set Base fee wallet
+INFRASTRUCTURE_FEE_PERCENTAGE = float(os.environ.get("COLDSTAR_FEE_PERCENTAGE", "0.01"))  # 1% fee
+INFRASTRUCTURE_FEE_WALLET = os.environ.get(
+    "COLDSTAR_FEE_WALLET", "Cak1aAwxM2jTdu7AtdaHbqAc3Dfafts7KdsHNrtXN5rT"
+)  # Solana
+INFRASTRUCTURE_FEE_WALLET_BASE = os.environ.get(
+    "COLDSTAR_FEE_WALLET_BASE", ""
+)  # Base — must be set via env var before use
 
 # ── Directories ─────────────────────────────────────────────
 WALLET_DIR = "/wallet"

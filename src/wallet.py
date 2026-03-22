@@ -209,7 +209,8 @@ class WalletManager:
             print_success(f"Public key saved to {pubkey_path}")
             return True
         except Exception as e:
-            print_error(f"Failed to save keypair: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to save keypair: {sanitize_error(e)}")
             return False
     
     def load_keypair(self, path: str = None) -> Optional[Keypair]:
@@ -304,7 +305,8 @@ class WalletManager:
                         else:
                             keypair = None
                     except Exception as e:
-                        print_error(f"Rust decryption failed: {e}")
+                        from config import sanitize_error
+                        print_error(f"Rust decryption failed: {sanitize_error(e)}")
                         keypair = None
                 else:
                     print_error("Rust signer not available!")
@@ -333,9 +335,8 @@ class WalletManager:
                 return None
                 
         except Exception as e:
-            print_error(f"Failed to load keypair: {e}")
-            import traceback
-            print_warning(f"Details: {traceback.format_exc()}")
+            from config import sanitize_error
+            print_error(f"Failed to load keypair: {sanitize_error(e)}")
             return None
     
     def get_public_key(self) -> Optional[str]:
@@ -438,7 +439,8 @@ class WalletManager:
             
             return container
         except Exception as e:
-            print_error(f"Failed to convert container: {e}")
+            from config import sanitize_error
+            print_error(f"Failed to convert container: {sanitize_error(e)}")
             return None
     
     def load_encrypted_container(self, path: str = None, password: str = None) -> Optional[dict]:
@@ -552,9 +554,8 @@ class WalletManager:
             return None
             
         except Exception as e:
-            print_error(f"Failed to load encrypted container: {e}")
-            import traceback
-            print_warning(f"Details: {traceback.format_exc()}")
+            from config import sanitize_error
+            print_error(f"Failed to load encrypted container: {sanitize_error(e)}")
             return None
 
 
