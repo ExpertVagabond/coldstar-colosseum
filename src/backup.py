@@ -21,6 +21,7 @@ from datetime import datetime
 
 from solders.keypair import Keypair
 
+from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning
 
 try:
@@ -85,7 +86,7 @@ class WalletBackup:
             words = mnemo.generate(strength=strength)
             return words
         except Exception as e:
-            print_error(f"Failed to generate mnemonic: {e}")
+            print_error(f"Failed to generate mnemonic: {sanitize_error(e)}")
             return None
 
     def _generate_simple_mnemonic(self, word_count: int) -> str:
@@ -123,7 +124,7 @@ class WalletBackup:
             return keypair
 
         except Exception as e:
-            print_error(f"Failed to derive keypair: {e}")
+            print_error(f"Failed to derive keypair: {sanitize_error(e)}")
             return None
 
     def export_encrypted(self, keypair: Keypair, password: str) -> Optional[dict]:
@@ -177,7 +178,7 @@ class WalletBackup:
             }
 
         except Exception as e:
-            print_error(f"Encryption failed: {e}")
+            print_error(f"Encryption failed: {sanitize_error(e)}")
             return None
 
     def _export_base64(self, keypair: Keypair) -> dict:
@@ -200,7 +201,7 @@ class WalletBackup:
                 key_bytes = base64.b64decode(encrypted_data["data"])
                 return Keypair.from_bytes(key_bytes)
             except Exception as e:
-                print_error(f"Failed to decode keypair: {e}")
+                print_error(f"Failed to decode keypair: {sanitize_error(e)}")
                 return None
 
         if not self.encryption_available:
@@ -241,7 +242,7 @@ class WalletBackup:
             return Keypair.from_bytes(decrypted)
 
         except Exception as e:
-            print_error(f"Decryption failed: {e}")
+            print_error(f"Decryption failed: {sanitize_error(e)}")
             return None
 
     def create_paper_wallet(self, keypair: Keypair, output_dir: str = ".") -> Optional[str]:
@@ -393,7 +394,7 @@ class WalletBackup:
             return str(filepath)
 
         except Exception as e:
-            print_error(f"Failed to create paper wallet: {e}")
+            print_error(f"Failed to create paper wallet: {sanitize_error(e)}")
             return None
 
     def backup_to_file(self, keypair: Keypair, path: str, password: Optional[str] = None) -> bool:
@@ -425,7 +426,7 @@ class WalletBackup:
             return True
 
         except Exception as e:
-            print_error(f"Backup failed: {e}")
+            print_error(f"Backup failed: {sanitize_error(e)}")
             return False
 
     def restore_from_file(self, path: str, password: Optional[str] = None) -> Optional[Keypair]:
@@ -455,7 +456,7 @@ class WalletBackup:
             return None
 
         except Exception as e:
-            print_error(f"Restore failed: {e}")
+            print_error(f"Restore failed: {sanitize_error(e)}")
             return None
 
 

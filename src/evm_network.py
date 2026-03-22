@@ -14,6 +14,7 @@ from config import (
     BASE_CHAIN_ID, BASE_TESTNET_CHAIN_ID,
     WEI_PER_ETH,
 )
+from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning
 
 
@@ -67,7 +68,7 @@ class BaseNetwork:
             wei = int(result["result"], 16)
             return wei / WEI_PER_ETH
         except Exception as e:
-            print_error(f"Error getting balance: {e}")
+            print_error(f"Error getting balance: {sanitize_error(e)}")
             return None
 
     def get_balance_wei(self, address: str) -> Optional[int]:
@@ -121,7 +122,7 @@ class BaseNetwork:
                 return None
             return int(result["result"], 16)
         except Exception as e:
-            print_error(f"Gas estimation failed: {e}")
+            print_error(f"Gas estimation failed: {sanitize_error(e)}")
             return None
 
     # ── Nonce ───────────────────────────────────────────────
@@ -153,7 +154,7 @@ class BaseNetwork:
                 print_info(f"Tx hash: {tx_hash}")
             return tx_hash
         except Exception as e:
-            print_error(f"Error sending transaction: {e}")
+            print_error(f"Error sending transaction: {sanitize_error(e)}")
             return None
 
     def get_transaction_receipt(self, tx_hash: str) -> Optional[dict]:

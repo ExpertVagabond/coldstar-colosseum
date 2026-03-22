@@ -19,6 +19,7 @@ try:
 except ImportError:
     HAS_QRCODE = False
 
+from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning
 
 
@@ -57,7 +58,7 @@ class QRTransfer:
 
             return "\n".join(lines)
         except Exception as e:
-            print_error(f"Failed to generate QR code: {e}")
+            print_error(f"Failed to generate QR code: {sanitize_error(e)}")
             return None
 
     def display_transaction_qr(self, tx_data: dict, title: str = "SCAN THIS QR CODE"):
@@ -144,7 +145,7 @@ class QRTransfer:
             print_success(f"QR code saved to: {output_path}")
             return True
         except Exception as e:
-            print_error(f"Failed to save QR image: {e}")
+            print_error(f"Failed to save QR image: {sanitize_error(e)}")
             return False
 
 
@@ -284,7 +285,7 @@ def create_qr_signing_workflow():
         print_info("3. Broadcast the transaction from the companion app")
 
     except Exception as e:
-        print_error(f"Signing failed: {e}")
+        print_error(f"Signing failed: {sanitize_error(e)}")
 
 
 if __name__ == "__main__":

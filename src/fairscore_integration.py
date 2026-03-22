@@ -17,6 +17,7 @@ from typing import Optional, Dict, Any, Tuple
 from rich.panel import Panel
 from rich.table import Table
 
+from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning, console
 
 
@@ -160,10 +161,10 @@ class FairScoreClient:
             return tier
 
         except httpx.HTTPError as e:
-            print_warning(f"FairScore API unavailable: {e}")
+            print_warning(f"FairScore API unavailable: {sanitize_error(e)}")
             return None
         except Exception as e:
-            print_warning(f"FairScore check failed: {e}")
+            print_warning(f"FairScore check failed: {sanitize_error(e)}")
             return None
 
     def get_risk_assessment(self, wallet_address: str) -> Dict[str, Any]:

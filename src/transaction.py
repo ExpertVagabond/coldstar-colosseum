@@ -17,7 +17,7 @@ from solders.system_program import transfer, TransferParams
 from solders.transaction import Transaction
 from solders.message import Message
 
-from config import LAMPORTS_PER_SOL, INFRASTRUCTURE_FEE_PERCENTAGE, INFRASTRUCTURE_FEE_WALLET
+from config import LAMPORTS_PER_SOL, INFRASTRUCTURE_FEE_PERCENTAGE, INFRASTRUCTURE_FEE_WALLET, sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning, console
 
 # Import Rust signer (REQUIRED)
@@ -28,7 +28,7 @@ try:
 except ImportError as e:
     from src.ui import print_error, print_info
     print_error("FATAL: Rust secure signer is required but not found!")
-    print_error(f"Import error: {e}")
+    print_error(f"Import error: {sanitize_error(e)}")
     print_info("Build the Rust signer:")
     print_info("  cd secure_signer")
     print_info("  cargo build --release")
@@ -45,13 +45,13 @@ class TransactionManager:
             self.rust_signer = SolanaSecureSigner()
         except (FileNotFoundError, OSError) as e:
             print_error("FATAL: Rust library not found or incompatible!")
-            print_error(f"Error: {e}")
+            print_error(f"Error: {sanitize_error(e)}")
             print_info("Build the Rust signer:")
             print_info("  cd secure_signer")
             print_info("  cargo build --release")
             sys.exit(1)
         except Exception as e:
-            print_error(f"FATAL: Failed to initialize Rust signer: {e}")
+            print_error(f"FATAL: Failed to initialize Rust signer: {sanitize_error(e)}")
             sys.exit(1)
     
     def calculate_infrastructure_fee(self, amount_sol: float) -> float:

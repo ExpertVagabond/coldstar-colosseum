@@ -24,6 +24,7 @@ from solders.message import Message
 from solders.system_program import create_account, CreateAccountParams
 
 from config import LAMPORTS_PER_SOL
+from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning
 
 
@@ -210,7 +211,7 @@ class TokenTransferManager:
             return self.unsigned_tx
 
         except Exception as e:
-            print_error(f"Failed to create token transfer: {e}")
+            print_error(f"Failed to create token transfer: {sanitize_error(e)}")
             return None
 
     def sign_transaction(self, unsigned_tx_bytes: bytes, keypair: Keypair) -> Optional[bytes]:
@@ -223,7 +224,7 @@ class TokenTransferManager:
             print_success("Token transaction signed successfully")
             return self.signed_tx
         except Exception as e:
-            print_error(f"Failed to sign transaction: {e}")
+            print_error(f"Failed to sign transaction: {sanitize_error(e)}")
             return None
 
     def save_unsigned_transaction(self, tx_bytes: bytes, path: str, token_info: dict) -> bool:
@@ -245,7 +246,7 @@ class TokenTransferManager:
             print_success(f"Unsigned token transaction saved to: {filepath}")
             return True
         except Exception as e:
-            print_error(f"Failed to save transaction: {e}")
+            print_error(f"Failed to save transaction: {sanitize_error(e)}")
             return False
 
 
@@ -294,7 +295,7 @@ async def get_token_accounts(rpc_url: str, wallet: str) -> List[dict]:
             return accounts
 
     except Exception as e:
-        print_error(f"Failed to get token accounts: {e}")
+        print_error(f"Failed to get token accounts: {sanitize_error(e)}")
         return []
 
 

@@ -19,6 +19,7 @@ from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 import base58
 
+from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning, get_password_input, confirm_dangerous_action
 from src.secure_memory import SecureWalletHandler
 
@@ -108,7 +109,7 @@ try:
     RUST_SIGNER_AVAILABLE = True
 except ImportError as e:
     print_error("FATAL: Rust secure signer is required but not found!")
-    print_error(f"Import error: {e}")
+    print_error(f"Import error: {sanitize_error(e)}")
     print_info("Build the Rust signer:")
     print_info("  cd secure_signer")
     print_info("  cargo build --release")
@@ -138,13 +139,13 @@ class WalletManager:
             print_info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         except (FileNotFoundError, OSError) as e:
             print_error("FATAL: Rust library not found or incompatible!")
-            print_error(f"Error: {e}")
+            print_error(f"Error: {sanitize_error(e)}")
             print_info("Build the Rust signer:")
             print_info("  cd secure_signer")
             print_info("  cargo build --release")
             sys.exit(1)
         except Exception as e:
-            print_error(f"FATAL: Failed to initialize Rust signer: {e}")
+            print_error(f"FATAL: Failed to initialize Rust signer: {sanitize_error(e)}")
             sys.exit(1)
     
     def set_wallet_directory(self, path: str):
@@ -246,7 +247,7 @@ class WalletManager:
             try:
                 data = json.loads(file_content)
             except json.JSONDecodeError as e:
-                print_error(f"Wallet file is corrupted! JSON decode error: {e}")
+                print_error(f"Wallet file is corrupted! JSON decode error: {sanitize_error(e)}")
                 
                 # Check for backup
                 backup_path = load_path.with_suffix('.pynacl.backup')
@@ -475,7 +476,7 @@ class WalletManager:
             try:
                 data = json.loads(file_content)
             except json.JSONDecodeError as e:
-                print_error(f"Wallet file is corrupted! JSON decode error: {e}")
+                print_error(f"Wallet file is corrupted! JSON decode error: {sanitize_error(e)}")
                 
                 # Check for backup
                 backup_path = load_path.with_suffix('.pynacl.backup')
