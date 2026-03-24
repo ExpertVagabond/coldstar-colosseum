@@ -34,7 +34,7 @@ const FAIRSCORE_API_BASE =
 const FAIRSCORE_API_KEY = process.env.FAIRSCORE_API_KEY || "";
 
 const SOLANA_RPC_URL =
-  process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
+  process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
 
 const PYTH_HERMES_API = "https://hermes.pyth.network";
 
