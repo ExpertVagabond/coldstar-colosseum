@@ -49,6 +49,7 @@ from src.backup import WalletBackup
 from src.jupiter_integration import JupiterSwapManager, sol_to_lamports, lamports_to_sol
 from src.pyth_integration import PythPriceClient, format_usd
 from src.fairscore_integration import FairScoreClient, format_reputation_badge
+from src.sdp_ui import SdpMenuHandler
 
 
 class SolanaColdWalletCLI:
@@ -62,6 +63,7 @@ class SolanaColdWalletCLI:
         self.jupiter_manager = JupiterSwapManager(slippage_bps=50)  # 0.5% slippage
         self.pyth_client = PythPriceClient()
         self.fairscore_client = FairScoreClient()
+        self.sdp_handler = SdpMenuHandler()
 
         self.current_usb_device = None
         self.current_public_key = None
@@ -332,6 +334,7 @@ class SolanaColdWalletCLI:
             "8. Request Devnet Airdrop",
             "9. Network Status",
             "J. Jupiter Swap (Create Unsigned Swap)",
+            "S. SDP (Stablecoins / Payments / Trading)",
             "F. Check FairScore Reputation",
             "A. Unmount USB / Switch Device",
             "0. Exit"
@@ -384,6 +387,10 @@ class SolanaColdWalletCLI:
             self._draw_header()
             self.jupiter_swap()
             self._wait_for_key()
+        elif choice_num.upper() == "S":
+            self._draw_header()
+            self.sdp_handler.set_wallet(self.current_public_key or "")
+            self.sdp_handler.sdp_menu()
         elif choice_num.upper() == "F":
             self._draw_header()
             self.check_fairscore_reputation()
