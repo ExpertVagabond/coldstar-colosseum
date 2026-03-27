@@ -1,47 +1,30 @@
-# Coldstar MCP Server
+# coldstar-mcp
 
-Secure signing infrastructure for AI agents on Solana. FairScore reputation gating prevents rogue agents from draining wallets.
+[![npm version](https://img.shields.io/npm/v/coldstar-mcp)](https://www.npmjs.com/package/coldstar-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node](https://img.shields.io/badge/Node-%3E%3D18-339933?logo=node.js)](https://nodejs.org)
+[![Tools](https://img.shields.io/badge/tools-22-blue)](https://modelcontextprotocol.io)
 
-## The Problem
+**The only cold wallet MCP server.** 22 tools for air-gapped Solana and Base wallet operations -- reputation-gated transactions, institutional custody vaults, DEX quotes, price feeds, and cryptographic signature verification. Security-first, hardware-agnostic.
 
-AI agents are getting access to crypto wallets for payments, DeFi, and autonomous trading. But an agent can be tricked -- prompt injection, compromised tool calls, or hallucinated addresses can cause it to send funds to a scam wallet. There is no guardrail between "agent decides to send" and "funds are gone."
-
-## The Solution
-
-Coldstar MCP intercepts every outbound transaction and checks the recipient's on-chain reputation via FairScore. Low-reputation wallets are blocked. Medium-reputation wallets trigger warnings. Only verified, high-reputation addresses pass through cleanly.
-
-**The `validate_transaction` tool is the kill switch.** Any AI agent using Coldstar will automatically refuse to send funds to wallets with Bronze-tier reputation -- even if the agent itself has been compromised.
-
-## 8 Tools
-
-| Tool | Description |
-|------|-------------|
-| `check_reputation` | Check FairScore reputation of any Solana wallet (score 0-100, tier, badges) |
-| `get_token_price` | Real-time token prices via Pyth Network oracle |
-| `get_swap_quote` | Jupiter DEX swap quotes with best routes across all Solana DEXes |
-| `check_wallet_balance` | SOL and SPL token balances for any wallet |
-| `validate_transaction` | **Pre-flight safety check** -- reputation gate before any transfer |
-| `list_supported_tokens` | All supported tokens with mint addresses |
-| `get_portfolio` | Full portfolio with USD values (balances + Pyth prices) |
-| `estimate_swap_cost` | Total swap cost analysis including price impact and fees |
+No competitor exists. Every other wallet MCP holds keys in memory. Coldstar is a read-only security layer that never touches private keys.
 
 ## Install
-
-```bash
-npm install -g coldstar-mcp
-```
-
-Or run directly:
 
 ```bash
 npx coldstar-mcp
 ```
 
+Or install globally:
+
+```bash
+npm install -g coldstar-mcp
+coldstar-mcp
+```
+
 ## Configure
 
-### Claude Desktop / Claude Code
-
-Add to your MCP settings:
+Add to your MCP config (`claude_desktop_config.json` or `~/.mcp.json`):
 
 ```json
 {
@@ -58,23 +41,59 @@ Add to your MCP settings:
 }
 ```
 
-### Cursor / Windsurf / Other MCP Clients
+## Tools (22)
 
-Same configuration format -- just add the `coldstar` entry to your MCP config.
+### Solana (9)
 
-## Environment Variables
+| Tool | Description | Key Params |
+|------|-------------|------------|
+| `check_reputation` | FairScore reputation of any Solana wallet (0-100, tier, badges) | `address` |
+| `get_token_price` | Real-time token prices via Pyth Network oracle | `token` |
+| `get_swap_quote` | Jupiter DEX swap quotes with best routes | `inputToken`, `outputToken`, `amount` |
+| `check_wallet_balance` | SOL and SPL token balances | `address` |
+| `validate_transaction` | **Pre-flight safety check** -- reputation gate before any transfer | `recipient`, `amount`, `token` |
+| `list_supported_tokens` | All supported tokens with mint addresses | -- |
+| `get_portfolio` | Full portfolio with USD values (balances + Pyth prices) | `wallet_address` |
+| `estimate_swap_cost` | Total swap cost analysis including price impact and fees | `inputToken`, `outputToken`, `amount` |
+| `solana_get_fees` | Current network fees, slot height, and transaction cost estimates | -- |
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SOLANA_RPC_URL` | `https://api.mainnet-beta.solana.com` | Solana RPC endpoint |
-| `FAIRSCORE_API_URL` | `https://api2.fairscale.xyz` | FairScale API base URL |
-| `FAIRSCORE_API_KEY` | (empty) | Optional FairScale API key |
+### Base / EVM (5)
+
+| Tool | Description | Key Params |
+|------|-------------|------------|
+| `base_check_balance` | ETH and ERC-20 balances on Base | `address` |
+| `base_get_gas_price` | Current Base gas price | -- |
+| `base_get_token_price` | Token prices on Base | `token` |
+| `base_get_portfolio` | Full portfolio with USD values on Base | `address` |
+| `base_list_tokens` | Supported Base tokens with contract addresses | -- |
+
+### Institutional Custody (6)
+
+| Tool | Description | Key Params |
+|------|-------------|------------|
+| `create_custody_request` | Create a withdrawal request from the vault | `amount`, `token`, `destination` |
+| `list_pending_approvals` | List pending withdrawal requests | -- |
+| `approve_custody_transfer` | Approve a pending request | `requestId` |
+| `get_vault_status` | Vault health, compliance info, and balances | -- |
+| `get_custody_audit_trail` | On-chain event history for the vault | -- |
+| `validate_custody_transfer` | Pre-flight check before creating a custody request | `amount`, `token`, `destination` |
+
+### Cryptographic Verification (2)
+
+| Tool | Description | Key Params |
+|------|-------------|------------|
+| `verify_ed25519_signature` | Verify Ed25519 signatures -- independent check on signed transactions | `message`, `signature`, `publicKey` |
+| `verify_webhook_hmac` | Verify HMAC-SHA256 webhook signatures (Shopify, GitHub, Stripe) | `payload`, `signature`, `secret` |
+
+## Why This One?
+
+- **Read-only security layer.** Coldstar never holds private keys, never signs transactions, never broadcasts. It only provides reputation checks, price data, and safety gates. The worst case if compromised is incorrect data -- it can never move funds.
+- **Reputation-gated transactions.** Every outbound transfer is checked against FairScore. Bronze-tier wallets (score 0-19) are blocked. Even a compromised AI agent cannot send funds to a scam address.
+- **Multichain + institutional custody.** Covers Solana and Base with 22 tools. Institutional vault operations (create/approve/audit withdrawals) are built in for permissioned stablecoin custody.
 
 ## Security Model
 
 ### Reputation Gating
-
-Every outbound transfer is gated by FairScore reputation tiers:
 
 | Tier | Score | Action | Transfer Limit |
 |------|-------|--------|----------------|
@@ -84,60 +103,21 @@ Every outbound transfer is gated by FairScore reputation tiers:
 | Platinum | 60-79 | Allow | 500 SOL max |
 | Diamond | 80-100 | Allow | Unlimited |
 
-### How It Protects Agents
-
-1. **Agent receives instruction** to send 50 SOL to an address
-2. **Agent calls `validate_transaction`** with the recipient address
-3. **Coldstar checks FairScore** -- recipient has a score of 12 (Bronze)
-4. **Transaction is BLOCKED** -- agent receives clear "not allowed" response
-5. **Agent refuses the transaction** and reports the issue
-
-The agent never needs to understand scam detection. Coldstar handles it at the infrastructure layer.
-
 ### What Coldstar Does NOT Do
 
-- It does **not** hold private keys (that is the air-gapped USB wallet)
-- It does **not** sign transactions (signing is offline)
-- It does **not** broadcast transactions (that is the user's choice)
-- It **only** provides read operations and safety checks
+- Does **not** hold private keys (that is the air-gapped USB wallet)
+- Does **not** sign transactions (signing is offline)
+- Does **not** broadcast transactions (that is the user's choice)
+- **Only** provides read operations and safety checks
 
-This is a read-only security layer. The worst case if Coldstar is compromised is that it returns incorrect reputation data -- it can never move funds.
+## Environment Variables
 
-## Example Usage
-
-### Validate Before Sending
-
-```
-Agent: I need to send 5 SOL to 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU
-
-> validate_transaction(recipient="7xKXtg...", amount=5, token="SOL")
-
-Result: {
-  "allowed": false,
-  "tier": "Bronze",
-  "fairscore": 8.5,
-  "warnings": ["BLOCKED: Recipient has Bronze reputation (score: 8.5). Transaction denied."],
-  "recommendation": "Transaction should be rejected"
-}
-
-Agent: I cannot complete this transfer. The recipient wallet has a Bronze reputation
-score of 8.5/100 which indicates high risk. The transaction has been blocked by
-Coldstar's reputation gating system.
-```
-
-### Check Portfolio
-
-```
-> get_portfolio(wallet_address="YourWa11etAddressHere...")
-
-Result: {
-  "total_value_usd": 1523.41,
-  "holdings": [
-    { "symbol": "SOL", "amount": 10.5, "price_usd": 130.25, "value_usd": 1367.63 },
-    { "symbol": "USDC", "amount": 155.78, "price_usd": 1.0, "value_usd": 155.78 }
-  ]
-}
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SOLANA_RPC_URL` | No | Solana RPC endpoint (default: mainnet) |
+| `BASE_RPC_URL` | No | Base RPC endpoint (default: `https://mainnet.base.org`) |
+| `FAIRSCORE_API_URL` | No | FairScale API base URL |
+| `FAIRSCORE_API_KEY` | No | FairScale API key |
 
 ## Architecture
 
@@ -151,20 +131,22 @@ Coldstar MCP Server (this package)
     +---> Pyth Network (price oracles)
     +---> Jupiter Aggregator (DEX quotes)
     +---> Solana RPC (balances, token accounts)
+    +---> Base RPC (EVM balances, gas)
+    +---> Coldstar Vault Program (custody ops)
     |
     v
 Coldstar Air-Gapped Wallet (offline signing)
 ```
 
-## Target Integration Partners
+## Development
 
-- **Phantom** -- Wallet-level reputation gating
-- **Backpack** -- Agent-aware wallet security
-- **Coinbase** -- Institutional agent custody
-- **Anthropic** -- Agent safety infrastructure
-- **OpenAI** -- Agent payment guardrails
-- **Stripe** -- Crypto payment validation
+```bash
+git clone https://github.com/ExpertVagabond/coldstar.git
+cd coldstar/mcp-server
+npm install
+node index.js
+```
 
 ## License
 
-MIT
+MIT -- [Purple Squirrel Media](https://github.com/ExpertVagabond)
