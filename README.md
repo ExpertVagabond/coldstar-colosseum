@@ -6,11 +6,17 @@
 [![GitHub stars](https://img.shields.io/github/stars/ExpertVagabond/coldstar-colosseum)](https://github.com/ExpertVagabond/coldstar-colosseum/stargazers)
 [![Whitepaper](https://img.shields.io/badge/Whitepaper-Hugging_Face-orange)](https://huggingface.co/purplesquirrelnetworks/coldstar-whitepaper)
 
-**Turn any $10 USB drive into a hardware-grade Solana cold wallet.** Air-gapped signing, FairScore reputation gating, Jupiter DEX integration, and DAO governance -- built for both humans and AI agents managing serious capital.
+**Programmable cold-signing infrastructure for Solana.** Any USB drive becomes an air-gapped cold wallet. Air-gapped signing, FairScore reputation gating, Jupiter DEX integration, and native RWA support — built for DAOs, traders, and developers who need hardware-grade security without a $200 device. By ChainLabs Technologies.
+
+## Traction
+
+- **107 wallets created**, 37 actively signing (35% retention)
+- Partnerships: Superteam IE, Superteam UK, DeAura, Bonk Advisory, Jito
+- Revenue: 1% transaction fee (capped at $10) + Jito staking tips + native RWA swaps
 
 ## The Problem
 
-AI agents with wallet access can be tricked into sending funds to malicious addresses via prompt injection or hallucinated addresses. Hardware wallets are expensive ($79-279) and not programmable. Hot wallets are fast but vulnerable.
+Hardware wallets cost $50–$300, suffer data breaches, and aren't programmable. This blocks DAOs, traders, and developers from using cold security in practice.
 
 ## The Solution
 
@@ -136,4 +142,4 @@ ONLINE DEVICE                         OFFLINE DEVICE (Air-Gapped)
 
 ## License
 
-MIT -- [Purple Squirrel Media](https://github.com/ExpertVagabond)
+MIT -- [ChainLabs Technologies](https://github.com/devsyrem)
