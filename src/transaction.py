@@ -21,6 +21,10 @@ from config import LAMPORTS_PER_SOL, INFRASTRUCTURE_FEE_PERCENTAGE, INFRASTRUCTU
 from src.ui import print_success, print_error, print_info, print_warning, console
 
 # Import Rust signer (REQUIRED)
+# NOTE: sys.path manipulation is intentional here.  python_signer_example.py
+# lives in the project root while this module lives in src/.  A standard
+# relative import cannot reach outside the package, and the Rust-backed module
+# is not installed via pip, so we prepend the project root to sys.path.
 try:
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from python_signer_example import SolanaSecureSigner

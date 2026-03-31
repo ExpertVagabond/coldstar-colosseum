@@ -24,6 +24,28 @@ from src.ui import print_success, print_error, print_info, print_warning, get_pa
 from src.secure_memory import SecureWalletHandler
 
 
+# ── Common passwords blocklist (top-100 subset) ─────────────
+COMMON_PASSWORDS = frozenset({
+    "password", "123456", "12345678", "qwerty", "abc123", "monkey", "1234567",
+    "letmein", "trustno1", "dragon", "baseball", "iloveyou", "master", "sunshine",
+    "ashley", "michael", "shadow", "123123", "654321", "superman", "qazwsx",
+    "football", "password1", "password123", "welcome", "welcome1", "p@ssw0rd",
+    "passw0rd", "admin", "login", "princess", "starwars", "solo", "qwerty123",
+    "mustang", "access", "flower", "696969", "batman", "111111", "tigger",
+    "joshua", "charlie", "andrew", "thomas", "hockey", "ranger", "daniel",
+    "hunter", "buster", "soccer", "harley", "george", "maggie", "pepper",
+    "ginger", "summer", "jessica", "1234567890", "000000", "computer",
+    "whatever", "killer", "cheese", "jordan", "matrix", "freedom", "pass",
+    "internet", "mercedes", "corvette", "thunder", "cookie", "chicken",
+    "jackson", "robert", "alexander", "diamond", "yankees", "sparky",
+    "snoopy", "maverick", "phoenix", "camaro", "peanut", "morgan", "falcon",
+    "andrea", "hockey1", "junior", "dallas", "nicholas", "banana", "winter",
+    "marina", "ginger1", "golfer", "chelsea", "creative", "pa55w0rd",
+    "changeme", "changeme1", "letmein1", "opensesame", "default", "secret",
+    "trustno1!", "solana", "bitcoin", "crypto", "blockchain", "wallet",
+})
+
+
 # ── Password strength validation ──────────────────────────────
 def validate_password_strength(password: str) -> Tuple[bool, str]:
     """Validate password meets cold wallet security requirements.
@@ -35,7 +57,12 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
     - At least one digit
     - At least one special character
     - Estimated entropy >= 50 bits
+    - Not in the common-passwords blocklist
     """
+    # Check against common passwords before anything else
+    if password.lower().strip() in COMMON_PASSWORDS:
+        return False, "Password is too common — choose something unique"
+
     if len(password) < 12:
         return False, "Password must be at least 12 characters"
     if not any(c.isupper() for c in password):
@@ -103,6 +130,10 @@ class PasswordAttemptTracker:
         self._last_attempt_time = 0.0
 
 # Import Rust signer (REQUIRED)
+# NOTE: sys.path manipulation is intentional here.  python_signer_example.py
+# lives in the project root while this module lives in src/.  A standard
+# relative import cannot reach outside the package, and the Rust-backed module
+# is not installed via pip, so we prepend the project root to sys.path.
 try:
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from python_signer_example import SolanaSecureSigner
