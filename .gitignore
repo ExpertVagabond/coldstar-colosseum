@@ -73,3 +73,11 @@ secrets.*
 
 # Large video files
 video/
+
+# Backup-safety patterns (portfolio audit)
+.env
+.env.*
+*credential*
+*secret*
+*.pem
+*keypair*
