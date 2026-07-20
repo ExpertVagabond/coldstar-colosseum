@@ -81,3 +81,8 @@ video/
 *secret*
 *.pem
 *keypair*
+
+# repo-slim hygiene (2026-07-20): prevent re-committing the blobs purged from history
+**/target/
+*.wav
+*.mp3
