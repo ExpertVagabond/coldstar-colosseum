@@ -272,7 +272,7 @@ mod tests {
 
     #[test]
     fn test_public_with_proofs_rejected() {
-        let mut envelope = TransferEnvelope {
+        let envelope = TransferEnvelope {
             version: "1.0.0".to_string(),
             mode: TransactionMode::Public,
             created_at: "2026-03-10".to_string(),

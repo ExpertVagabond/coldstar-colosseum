@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_binding_changes_with_amount() {
-        let mut ctx1 = make_test_context();
+        let ctx1 = make_test_context();
         let mut ctx2 = make_test_context();
         ctx2.amount_lamports = 2_000_000_000;
 
