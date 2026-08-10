@@ -1,3 +1,27 @@
+# Normalize all text to LF in the repository and in working copies.
+# Coldstar builds on macOS and Linux; CRLF in Python sources or the shell
+# scripts baked into the ISO builder has caused breakage before.
+* text=auto eol=lf
+
+# Binary assets — never touch, never diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.iso binary
+*.img binary
+*.mp4 binary
+*.wav binary
+
+# Windows helper scripts must keep CRLF.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
 # GitHub linguist overrides — Coldstar is a Python + Rust project
 # Static HTML site pages are documentation, not application code
 *.html linguist-documentation
