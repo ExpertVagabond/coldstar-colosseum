@@ -237,7 +237,7 @@ impl std::fmt::Display for SigningSummary {
         writeln!(f, "╔══════════════════════════════════════════════════╗")?;
         writeln!(f, "║           TRANSACTION SIGNING SUMMARY            ║")?;
         writeln!(f, "╠══════════════════════════════════════════════════╣")?;
-        writeln!(f, "║ Destination: {}",  &self.destination)?;
+        writeln!(f, "║ Destination: {}", self.destination)?;
         writeln!(f, "║ Amount:      {:.9} SOL", self.amount_sol)?;
         writeln!(f, "║ Fee:         {:.9} SOL", self.fee_sol)?;
         writeln!(f, "║ Mode:        {}", self.mode.as_str().to_uppercase())?;
