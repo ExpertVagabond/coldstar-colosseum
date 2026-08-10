@@ -1,8 +1,20 @@
 name: CI
 on: [push, pull_request]
+
+# This repo is Python at the root; the Rust code lives in two independent
+# crates (there is no root Cargo.toml and no cargo workspace), so every
+# cargo job has to run from inside a crate directory.
 jobs:
   test:
+    name: test (${{ matrix.crate }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crate: [secure_signer, coldstar_zk]
+    defaults:
+      run:
+        working-directory: ${{ matrix.crate }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -10,7 +22,15 @@ jobs:
       - run: cargo test --all-features
       - run: cargo clippy -- -D warnings
   fmt:
+    name: fmt (${{ matrix.crate }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crate: [secure_signer, coldstar_zk]
+    defaults:
+      run:
+        working-directory: ${{ matrix.crate }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
