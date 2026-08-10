@@ -26,6 +26,7 @@ from src.ui import (
     get_password_input, confirm_dangerous_action,
 )
 from src.secure_memory import SecureWalletHandler
+from src.secure_io import write_secret_atomic, write_public_atomic
 
 # Try to import Rust signer for encrypted container management
 RUST_SIGNER_AVAILABLE = False
@@ -118,15 +119,15 @@ class EVMWalletManager:
                 container = Account.encrypt(private_key_bytes, password)
                 container["chain"] = "evm"
 
-            with open(save_path, 'w') as f:
-                json.dump(container, f, indent=2)
+            # Atomic write, created at 0o600 rather than chmod'd afterwards.
+            # Same defect the Solana keystore had: open()+chmod truncates any
+            # existing keystore before the new bytes land, and leaves the
+            # ciphertext readable at the umask default until the chmod runs.
+            write_secret_atomic(save_path, json.dumps(container, indent=2))
 
             # Save address in plaintext for quick lookup
             address_path = save_path.parent / "evm_address.txt"
-            with open(address_path, 'w') as f:
-                f.write(self.account.address)
-
-            os.chmod(save_path, 0o600)
+            write_public_atomic(address_path, self.account.address)
 
             # Clear plaintext key from memory
             self.account = None
