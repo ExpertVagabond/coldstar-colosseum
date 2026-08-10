@@ -42,10 +42,7 @@
 //! O(n) where n = number of bits. Each bit adds ~160 bytes.
 //! For 64-bit values: ~10KB. Acceptable for USB transfer.
 
-use curve25519_dalek::{
-    ristretto::RistrettoPoint,
-    scalar::Scalar,
-};
+use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
 use rand_core::OsRng;
 use zeroize::Zeroize;
 
@@ -93,9 +90,8 @@ pub fn prove_range(
     let bits: Vec<u8> = (0..num_bits).map(|i| ((value >> i) & 1) as u8).collect();
 
     // Generate random blinding factors for each bit
-    let mut bit_blindings: Vec<Scalar> = (0..num_bits)
-        .map(|_| Scalar::random(&mut OsRng))
-        .collect();
+    let mut bit_blindings: Vec<Scalar> =
+        (0..num_bits).map(|_| Scalar::random(&mut OsRng)).collect();
 
     // The total blinding factor for the value commitment
     // must satisfy: r = Σ(2^i * r_i) so that Σ(2^i * C_i) = C

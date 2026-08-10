@@ -36,9 +36,7 @@ pub use crypto::{
 };
 
 // EVM (secp256k1)
-pub use crypto::{
-    decrypt_and_sign_evm, sign_evm_transaction, EVMSigningResult,
-};
+pub use crypto::{decrypt_and_sign_evm, sign_evm_transaction, EVMSigningResult};
 
 pub use error::SignerError;
 pub use secure_buffer::{LockingMode, SecureBuffer};
@@ -49,8 +47,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Re-export for convenience
 pub mod prelude {
     pub use crate::crypto::{
-        create_encrypted_key_container, decrypt_and_sign, decrypt_and_sign_evm,
-        EncryptedKeyContainer, EVMSigningResult,
+        create_encrypted_key_container, decrypt_and_sign, decrypt_and_sign_evm, EVMSigningResult,
+        EncryptedKeyContainer,
     };
     pub use crate::error::SignerError;
     pub use crate::secure_buffer::SecureBuffer;

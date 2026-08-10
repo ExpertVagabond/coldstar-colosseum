@@ -182,8 +182,7 @@ impl PolicyEngine {
                 }
 
                 // Check 8: Ownership proof
-                let tx_context_hash =
-                    binding::compute_tx_context_hash(&envelope.transaction);
+                let tx_context_hash = binding::compute_tx_context_hash(&envelope.transaction);
                 let ownership_ok =
                     ownership::verify_ownership(&bundle.ownership_proof, &tx_context_hash).is_ok();
                 checks.push(VerificationCheck {
@@ -201,8 +200,7 @@ impl PolicyEngine {
 
                 // Check 9: Range proof (if present)
                 if let Some(ref range_proof) = bundle.range_proof {
-                    let range_ok =
-                        range::verify_range(range_proof, &tx_context_hash).is_ok();
+                    let range_ok = range::verify_range(range_proof, &tx_context_hash).is_ok();
                     checks.push(VerificationCheck {
                         name: "Range proof".to_string(),
                         passed: range_ok,
@@ -234,8 +232,7 @@ impl PolicyEngine {
                 }
 
                 // Check 11: Proof binding
-                let binding_ok =
-                    binding::verify_binding(&envelope.transaction, bundle).is_ok();
+                let binding_ok = binding::verify_binding(&envelope.transaction, bundle).is_ok();
                 checks.push(VerificationCheck {
                     name: "Proof-to-transaction binding".to_string(),
                     passed: binding_ok,
@@ -265,7 +262,11 @@ impl PolicyEngine {
                 envelope.mode
             )
         } else {
-            let failed: Vec<_> = checks.iter().filter(|c| !c.passed).map(|c| c.name.clone()).collect();
+            let failed: Vec<_> = checks
+                .iter()
+                .filter(|c| !c.passed)
+                .map(|c| c.name.clone())
+                .collect();
             format!("FAILED checks: {}", failed.join(", "))
         };
 
@@ -388,12 +389,20 @@ mod tests {
         // First validation — nonce is fresh
         let (result1, _) = engine.validate_envelope(&envelope).unwrap();
         // Note: other checks may fail, but nonce should pass
-        let nonce_check1 = result1.checks.iter().find(|c| c.name.contains("Nonce")).unwrap();
+        let nonce_check1 = result1
+            .checks
+            .iter()
+            .find(|c| c.name.contains("Nonce"))
+            .unwrap();
         assert!(nonce_check1.passed, "First use of nonce should pass");
 
         // Second validation — replay!
         let (result2, _) = engine.validate_envelope(&envelope).unwrap();
-        let nonce_check2 = result2.checks.iter().find(|c| c.name.contains("Nonce")).unwrap();
+        let nonce_check2 = result2
+            .checks
+            .iter()
+            .find(|c| c.name.contains("Nonce"))
+            .unwrap();
         assert!(!nonce_check2.passed, "Replayed nonce must be detected");
     }
 }

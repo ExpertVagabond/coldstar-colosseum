@@ -90,7 +90,10 @@ pub fn compute_binding(tx_context: &TransactionContext, bundle: &ProofBundle) ->
 ///
 /// # Returns
 /// Ok(()) if the binding is valid, Err if not.
-pub fn verify_binding(tx_context: &TransactionContext, bundle: &ProofBundle) -> Result<(), ZkError> {
+pub fn verify_binding(
+    tx_context: &TransactionContext,
+    bundle: &ProofBundle,
+) -> Result<(), ZkError> {
     // Mode must be private for proof bundles
     if tx_context.mode != TransactionMode::Private {
         return Err(ZkError::ModeMismatch {
@@ -118,8 +121,8 @@ pub fn verify_binding(tx_context: &TransactionContext, bundle: &ProofBundle) -> 
 /// Uses OsRng for cryptographic randomness.
 /// Returns hex-encoded 32 random bytes.
 pub fn generate_nonce() -> String {
-    use rand_core::OsRng;
     use rand::RngCore;
+    use rand_core::OsRng;
     let mut nonce = [0u8; 32];
     OsRng.fill_bytes(&mut nonce);
     hex::encode(nonce)

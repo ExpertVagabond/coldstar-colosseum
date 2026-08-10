@@ -83,7 +83,8 @@ impl SecureBuffer {
         if mode == LockingMode::Strict && !locked {
             return Err(SignerError::MemoryLockFailed(
                 "mlock failed - memory may be swapped to disk. \
-                 Check ulimit -l or run with CAP_IPC_LOCK capability.".to_string()
+                 Check ulimit -l or run with CAP_IPC_LOCK capability."
+                    .to_string(),
             ));
         }
 
@@ -181,18 +182,22 @@ impl SecureBuffer {
     }
 
     /// Resize the buffer with configurable locking mode
-    pub fn resize_with_mode(&mut self, new_len: usize, mode: LockingMode) -> Result<(), SignerError> {
+    pub fn resize_with_mode(
+        &mut self,
+        new_len: usize,
+        mode: LockingMode,
+    ) -> Result<(), SignerError> {
         if new_len > self.data.len() {
             // Create new buffer first
             let mut new_data = vec![0u8; new_len];
-            
+
             // Lock new memory before proceeding
             let new_locked = lock_memory(&new_data);
-            
+
             if mode == LockingMode::Strict && !new_locked {
                 // Don't proceed - original buffer is preserved
                 return Err(SignerError::MemoryLockFailed(
-                    "mlock failed on resized buffer".to_string()
+                    "mlock failed on resized buffer".to_string(),
                 ));
             }
 

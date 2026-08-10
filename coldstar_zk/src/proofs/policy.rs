@@ -24,10 +24,7 @@
 //! 6. Verifier recomputes C from known policy_id + "satisfied" + constraint,
 //!    recomputes challenge, and checks s*G == R + c*W where W = w*G
 
-use curve25519_dalek::{
-    constants::RISTRETTO_BASEPOINT_POINT,
-    scalar::Scalar,
-};
+use curve25519_dalek::{constants::RISTRETTO_BASEPOINT_POINT, scalar::Scalar};
 use rand_core::OsRng;
 use sha2::{Digest, Sha256, Sha512};
 use zeroize::Zeroize;

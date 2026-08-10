@@ -65,10 +65,7 @@ pub enum ZkError {
 
     /// Mode mismatch between components
     #[error("Mode mismatch: expected {expected}, got {actual}")]
-    ModeMismatch {
-        expected: String,
-        actual: String,
-    },
+    ModeMismatch { expected: String, actual: String },
 }
 
 impl From<serde_json::Error> for ZkError {

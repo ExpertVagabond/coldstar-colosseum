@@ -111,7 +111,10 @@ enum StdinCommand {
         transaction: String,
     },
     #[serde(rename = "sign_direct")]
-    SignDirect { private_key: String, message: String },
+    SignDirect {
+        private_key: String,
+        message: String,
+    },
     #[serde(rename = "check")]
     Check,
 }
@@ -242,7 +245,10 @@ fn process_stdin_command(json: &str) -> Output {
 
     match result {
         Ok(output) => output,
-        Err(e) => { let msg: String = e.to_string(); Output::error(&msg) },
+        Err(e) => {
+            let msg: String = e.to_string();
+            Output::error(&msg)
+        }
     }
 }
 
@@ -297,11 +303,9 @@ fn handle_sign_inline(
     transaction_b64: &str,
 ) -> Result<Output, SignerError> {
     // Decode transaction
-    let transaction_bytes = base64::Engine::decode(
-        &base64::engine::general_purpose::STANDARD,
-        transaction_b64,
-    )
-    .map_err(|e| SignerError::Base64Error(e.to_string()))?;
+    let transaction_bytes =
+        base64::Engine::decode(&base64::engine::general_purpose::STANDARD, transaction_b64)
+            .map_err(|e| SignerError::Base64Error(e.to_string()))?;
 
     // Sign
     let result = decrypt_and_sign(container_json, passphrase, &transaction_bytes)?;
