@@ -78,10 +78,12 @@ pub struct TransactionContext {
 /// without revealing `x`.
 ///
 /// Protocol (Fiat-Shamir):
-///   1. Prover picks random k, computes R = k*G
-///   2. c = H(domain || X || R || context)
-///   3. s = k + c*x
-///   Verifier checks: s*G == R + c*X
+///
+/// 1. Prover picks random k, computes R = k*G
+/// 2. c = H(domain || X || R || context)
+/// 3. s = k + c*x
+///
+/// Verifier checks: s*G == R + c*X
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OwnershipProof {
     /// Public key being proven (compressed Ristretto, hex)

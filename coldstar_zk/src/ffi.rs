@@ -49,7 +49,7 @@ impl FfiResponse {
         }
     }
 
-    fn to_c_string(self) -> *mut c_char {
+    fn into_c_string(self) -> *mut c_char {
         let json = serde_json::to_string(&self).unwrap_or_else(|_| {
             r#"{"success":false,"error":"Failed to serialize response"}"#.to_string()
         });
@@ -73,6 +73,16 @@ unsafe fn parse_c_str<'a>(ptr: *const c_char) -> Result<&'a str, String> {
 // FFI Functions
 // ============================================================================
 
+///
+/// # Safety
+/// `input_json` must be either null or a valid pointer to a NUL-terminated,
+/// UTF-8 C string that stays alive for the duration of this call. A null or
+/// non-UTF-8 pointer is reported as an error response, not undefined
+/// behaviour, but a dangling or unterminated pointer is undefined behaviour.
+///
+/// The returned pointer is heap-allocated and owned by the caller, who must
+/// release it with [`coldstar_zk_free_string`]. Freeing it any other way, or
+/// using it after freeing, is undefined behaviour.
 /// Generate an ownership proof.
 ///
 /// Input JSON:
@@ -94,7 +104,7 @@ unsafe fn parse_c_str<'a>(ptr: *const c_char) -> Result<&'a str, String> {
 pub unsafe extern "C" fn coldstar_zk_prove_ownership(input_json: *const c_char) -> *mut c_char {
     let input = match parse_c_str(input_json) {
         Ok(s) => s,
-        Err(e) => return FfiResponse::err(e).to_c_string(),
+        Err(e) => return FfiResponse::err(e).into_c_string(),
     };
 
     #[derive(Deserialize)]
@@ -105,7 +115,7 @@ pub unsafe extern "C" fn coldstar_zk_prove_ownership(input_json: *const c_char) 
 
     let params: Input = match serde_json::from_str(input) {
         Ok(p) => p,
-        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).into_c_string(),
     };
 
     let secret_key = match hex::decode(&params.secret_key_hex) {
@@ -116,25 +126,35 @@ pub unsafe extern "C" fn coldstar_zk_prove_ownership(input_json: *const c_char) 
         }
         Ok(k) => {
             return FfiResponse::err(format!("Secret key must be 32 bytes, got {}", k.len()))
-                .to_c_string()
+                .into_c_string()
         }
-        Err(e) => return FfiResponse::err(format!("Invalid hex: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid hex: {}", e)).into_c_string(),
     };
 
     let context_data = match hex::decode(&params.context_data_hex) {
         Ok(d) => d,
-        Err(e) => return FfiResponse::err(format!("Invalid context hex: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid context hex: {}", e)).into_c_string(),
     };
 
     match ownership::prove_ownership(&secret_key, &context_data) {
         Ok(proof) => {
             let data = serde_json::to_value(&proof).unwrap();
-            FfiResponse::ok(serde_json::json!({ "ownership_proof": data })).to_c_string()
+            FfiResponse::ok(serde_json::json!({ "ownership_proof": data })).into_c_string()
         }
-        Err(e) => FfiResponse::err(format!("Proof generation failed: {}", e)).to_c_string(),
+        Err(e) => FfiResponse::err(format!("Proof generation failed: {}", e)).into_c_string(),
     }
 }
 
+///
+/// # Safety
+/// `input_json` must be either null or a valid pointer to a NUL-terminated,
+/// UTF-8 C string that stays alive for the duration of this call. A null or
+/// non-UTF-8 pointer is reported as an error response, not undefined
+/// behaviour, but a dangling or unterminated pointer is undefined behaviour.
+///
+/// The returned pointer is heap-allocated and owned by the caller, who must
+/// release it with [`coldstar_zk_free_string`]. Freeing it any other way, or
+/// using it after freeing, is undefined behaviour.
 /// Verify an ownership proof.
 ///
 /// Input JSON:
@@ -148,7 +168,7 @@ pub unsafe extern "C" fn coldstar_zk_prove_ownership(input_json: *const c_char) 
 pub unsafe extern "C" fn coldstar_zk_verify_ownership(input_json: *const c_char) -> *mut c_char {
     let input = match parse_c_str(input_json) {
         Ok(s) => s,
-        Err(e) => return FfiResponse::err(e).to_c_string(),
+        Err(e) => return FfiResponse::err(e).into_c_string(),
     };
 
     #[derive(Deserialize)]
@@ -159,24 +179,34 @@ pub unsafe extern "C" fn coldstar_zk_verify_ownership(input_json: *const c_char)
 
     let params: Input = match serde_json::from_str(input) {
         Ok(p) => p,
-        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).into_c_string(),
     };
 
     let context_data = match hex::decode(&params.context_data_hex) {
         Ok(d) => d,
-        Err(e) => return FfiResponse::err(format!("Invalid context hex: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid context hex: {}", e)).into_c_string(),
     };
 
     match ownership::verify_ownership(&params.proof, &context_data) {
-        Ok(()) => FfiResponse::ok(serde_json::json!({ "valid": true })).to_c_string(),
+        Ok(()) => FfiResponse::ok(serde_json::json!({ "valid": true })).into_c_string(),
         Err(e) => FfiResponse::ok(serde_json::json!({
             "valid": false,
             "error": format!("{}", e)
         }))
-        .to_c_string(),
+        .into_c_string(),
     }
 }
 
+///
+/// # Safety
+/// `input_json` must be either null or a valid pointer to a NUL-terminated,
+/// UTF-8 C string that stays alive for the duration of this call. A null or
+/// non-UTF-8 pointer is reported as an error response, not undefined
+/// behaviour, but a dangling or unterminated pointer is undefined behaviour.
+///
+/// The returned pointer is heap-allocated and owned by the caller, who must
+/// release it with [`coldstar_zk_free_string`]. Freeing it any other way, or
+/// using it after freeing, is undefined behaviour.
 /// Generate a range proof.
 ///
 /// Input JSON:
@@ -191,7 +221,7 @@ pub unsafe extern "C" fn coldstar_zk_verify_ownership(input_json: *const c_char)
 pub unsafe extern "C" fn coldstar_zk_prove_range(input_json: *const c_char) -> *mut c_char {
     let input = match parse_c_str(input_json) {
         Ok(s) => s,
-        Err(e) => return FfiResponse::err(e).to_c_string(),
+        Err(e) => return FfiResponse::err(e).into_c_string(),
     };
 
     #[derive(Deserialize)]
@@ -203,23 +233,33 @@ pub unsafe extern "C" fn coldstar_zk_prove_range(input_json: *const c_char) -> *
 
     let params: Input = match serde_json::from_str(input) {
         Ok(p) => p,
-        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).into_c_string(),
     };
 
     let context_data = match hex::decode(&params.context_data_hex) {
         Ok(d) => d,
-        Err(e) => return FfiResponse::err(format!("Invalid context hex: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid context hex: {}", e)).into_c_string(),
     };
 
     match range::prove_range(params.value, params.num_bits, &context_data) {
         Ok((proof, _blinding)) => {
             let data = serde_json::to_value(&proof).unwrap();
-            FfiResponse::ok(serde_json::json!({ "range_proof": data })).to_c_string()
+            FfiResponse::ok(serde_json::json!({ "range_proof": data })).into_c_string()
         }
-        Err(e) => FfiResponse::err(format!("Range proof failed: {}", e)).to_c_string(),
+        Err(e) => FfiResponse::err(format!("Range proof failed: {}", e)).into_c_string(),
     }
 }
 
+///
+/// # Safety
+/// `input_json` must be either null or a valid pointer to a NUL-terminated,
+/// UTF-8 C string that stays alive for the duration of this call. A null or
+/// non-UTF-8 pointer is reported as an error response, not undefined
+/// behaviour, but a dangling or unterminated pointer is undefined behaviour.
+///
+/// The returned pointer is heap-allocated and owned by the caller, who must
+/// release it with [`coldstar_zk_free_string`]. Freeing it any other way, or
+/// using it after freeing, is undefined behaviour.
 /// Verify a range proof.
 ///
 /// Input JSON:
@@ -233,7 +273,7 @@ pub unsafe extern "C" fn coldstar_zk_prove_range(input_json: *const c_char) -> *
 pub unsafe extern "C" fn coldstar_zk_verify_range(input_json: *const c_char) -> *mut c_char {
     let input = match parse_c_str(input_json) {
         Ok(s) => s,
-        Err(e) => return FfiResponse::err(e).to_c_string(),
+        Err(e) => return FfiResponse::err(e).into_c_string(),
     };
 
     #[derive(Deserialize)]
@@ -244,24 +284,34 @@ pub unsafe extern "C" fn coldstar_zk_verify_range(input_json: *const c_char) -> 
 
     let params: Input = match serde_json::from_str(input) {
         Ok(p) => p,
-        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).into_c_string(),
     };
 
     let context_data = match hex::decode(&params.context_data_hex) {
         Ok(d) => d,
-        Err(e) => return FfiResponse::err(format!("Invalid context hex: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid context hex: {}", e)).into_c_string(),
     };
 
     match range::verify_range(&params.proof, &context_data) {
-        Ok(()) => FfiResponse::ok(serde_json::json!({ "valid": true })).to_c_string(),
+        Ok(()) => FfiResponse::ok(serde_json::json!({ "valid": true })).into_c_string(),
         Err(e) => FfiResponse::ok(serde_json::json!({
             "valid": false,
             "error": format!("{}", e)
         }))
-        .to_c_string(),
+        .into_c_string(),
     }
 }
 
+///
+/// # Safety
+/// `input_json` must be either null or a valid pointer to a NUL-terminated,
+/// UTF-8 C string that stays alive for the duration of this call. A null or
+/// non-UTF-8 pointer is reported as an error response, not undefined
+/// behaviour, but a dangling or unterminated pointer is undefined behaviour.
+///
+/// The returned pointer is heap-allocated and owned by the caller, who must
+/// release it with [`coldstar_zk_free_string`]. Freeing it any other way, or
+/// using it after freeing, is undefined behaviour.
 /// Build and verify a complete transfer envelope.
 ///
 /// Input JSON:
@@ -274,7 +324,7 @@ pub unsafe extern "C" fn coldstar_zk_verify_range(input_json: *const c_char) -> 
 pub unsafe extern "C" fn coldstar_zk_validate_envelope(input_json: *const c_char) -> *mut c_char {
     let input = match parse_c_str(input_json) {
         Ok(s) => s,
-        Err(e) => return FfiResponse::err(e).to_c_string(),
+        Err(e) => return FfiResponse::err(e).into_c_string(),
     };
 
     #[derive(Deserialize)]
@@ -284,12 +334,12 @@ pub unsafe extern "C" fn coldstar_zk_validate_envelope(input_json: *const c_char
 
     let params: Input = match serde_json::from_str(input) {
         Ok(p) => p,
-        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid input: {}", e)).into_c_string(),
     };
 
     let env = match envelope::deserialize_envelope(&params.envelope_json) {
         Ok(e) => e,
-        Err(e) => return FfiResponse::err(format!("Invalid envelope: {}", e)).to_c_string(),
+        Err(e) => return FfiResponse::err(format!("Invalid envelope: {}", e)).into_c_string(),
     };
 
     let mut engine = PolicyEngine::new();
@@ -299,9 +349,9 @@ pub unsafe extern "C" fn coldstar_zk_validate_envelope(input_json: *const c_char
                 "verification": serde_json::to_value(&result).unwrap(),
                 "summary": serde_json::to_value(&summary).unwrap(),
             });
-            FfiResponse::ok(data).to_c_string()
+            FfiResponse::ok(data).into_c_string()
         }
-        Err(e) => FfiResponse::err(format!("Validation failed: {}", e)).to_c_string(),
+        Err(e) => FfiResponse::err(format!("Validation failed: {}", e)).into_c_string(),
     }
 }
 
