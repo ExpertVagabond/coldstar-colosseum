@@ -130,9 +130,10 @@ impl EncryptedKeyContainer {
 
         // Get public key for verification
         let signing_key = SigningKey::from_bytes(
-            secure_key.as_slice().try_into().map_err(|_| {
-                SignerError::InvalidKeyFormat(secure_key.len())
-            })?,
+            secure_key
+                .as_slice()
+                .try_into()
+                .map_err(|_| SignerError::InvalidKeyFormat(secure_key.len()))?,
         );
         let public_key = bs58::encode(signing_key.verifying_key().as_bytes()).into_string();
 
@@ -144,7 +145,10 @@ impl EncryptedKeyContainer {
             version: 1,
             salt: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, salt),
             nonce: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, nonce),
-            ciphertext: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, ciphertext),
+            ciphertext: base64::Engine::encode(
+                &base64::engine::general_purpose::STANDARD,
+                ciphertext,
+            ),
             public_key: Some(public_key),
         })
     }
@@ -202,8 +206,12 @@ pub fn decrypt_and_sign(
 
     // Decode base64 fields
     let salt = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.salt)?;
-    let nonce = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.nonce)?;
-    let ciphertext = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.ciphertext)?;
+    let nonce =
+        base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.nonce)?;
+    let ciphertext = base64::Engine::decode(
+        &base64::engine::general_purpose::STANDARD,
+        &container.ciphertext,
+    )?;
 
     // Derive decryption key
     let mut derived_key = derive_key(passphrase.as_bytes(), &salt)?;
@@ -250,9 +258,10 @@ fn sign_with_secure_key(
 
     // Create signing key - ed25519-dalek's SigningKey implements Zeroize
     let signing_key = SigningKey::from_bytes(
-        secure_key.as_slice().try_into().map_err(|_| {
-            SignerError::InvalidKeyFormat(secure_key.len())
-        })?,
+        secure_key
+            .as_slice()
+            .try_into()
+            .map_err(|_| SignerError::InvalidKeyFormat(secure_key.len()))?,
     );
 
     // Get the public key
@@ -364,9 +373,8 @@ fn sign_evm_with_secure_key(
     }
 
     // Create secp256k1 signing key
-    let signing_key = K256SigningKey::from_bytes(
-        secure_key.as_slice().into(),
-    ).map_err(|e| SignerError::SigningFailed(format!("Invalid secp256k1 key: {}", e)))?;
+    let signing_key = K256SigningKey::from_bytes(secure_key.as_slice().into())
+        .map_err(|e| SignerError::SigningFailed(format!("Invalid secp256k1 key: {}", e)))?;
 
     let verifying_key = signing_key.verifying_key();
     let address = evm_address_from_pubkey(verifying_key);
@@ -407,9 +415,10 @@ pub fn decrypt_and_sign_evm(
     message_hash: &[u8],
 ) -> Result<EVMSigningResult, SignerError> {
     if message_hash.len() != 32 {
-        return Err(SignerError::InvalidTransaction(
-            format!("EVM message hash must be 32 bytes, got {}", message_hash.len())
-        ));
+        return Err(SignerError::InvalidTransaction(format!(
+            "EVM message hash must be 32 bytes, got {}",
+            message_hash.len()
+        )));
     }
 
     // Parse the container
@@ -417,8 +426,12 @@ pub fn decrypt_and_sign_evm(
 
     // Decode base64 fields
     let salt = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.salt)?;
-    let nonce = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.nonce)?;
-    let ciphertext = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.ciphertext)?;
+    let nonce =
+        base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &container.nonce)?;
+    let ciphertext = base64::Engine::decode(
+        &base64::engine::general_purpose::STANDARD,
+        &container.ciphertext,
+    )?;
 
     // Derive decryption key
     let mut derived_key = derive_key(passphrase.as_bytes(), &salt)?;
@@ -492,7 +505,7 @@ mod tests {
     #[test]
     fn test_encrypt_decrypt_roundtrip() {
         enable_permissive_mode();
-        
+
         // Generate a test key
         let mut seed = [0u8; 32];
         OsRng.fill_bytes(&mut seed);
@@ -521,7 +534,7 @@ mod tests {
     #[test]
     fn test_wrong_passphrase_fails() {
         enable_permissive_mode();
-        
+
         let mut seed = [0u8; 32];
         OsRng.fill_bytes(&mut seed);
 
@@ -549,7 +562,10 @@ mod tests {
         let signature_bytes = bs58::decode(&result.signature).into_vec().unwrap();
         let signature = Signature::from_slice(&signature_bytes).unwrap();
 
-        assert!(signing_key.verifying_key().verify(message, &signature).is_ok());
+        assert!(signing_key
+            .verifying_key()
+            .verify(message, &signature)
+            .is_ok());
     }
 
     // ── EVM (secp256k1) tests ──────────────────────────────

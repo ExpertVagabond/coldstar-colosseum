@@ -45,7 +45,10 @@ use crate::types::OwnershipProof;
 /// - The secret key is converted to a Scalar and used only for computing `s = k + c*x`
 /// - The random nonce `k` is generated from OsRng
 /// - Both `k` and the secret scalar are zeroized after use
-pub fn prove_ownership(secret_key: &[u8; 32], context_data: &[u8]) -> Result<OwnershipProof, ZkError> {
+pub fn prove_ownership(
+    secret_key: &[u8; 32],
+    context_data: &[u8],
+) -> Result<OwnershipProof, ZkError> {
     let g = RISTRETTO_BASEPOINT_POINT;
 
     // Convert secret key to scalar
@@ -124,7 +127,9 @@ pub fn verify_ownership(proof: &OwnershipProof, context_data: &[u8]) -> Result<(
     // Deserialize commitment R
     let r_bytes = hex::decode(&proof.commitment_r)?;
     if r_bytes.len() != 32 {
-        return Err(ZkError::InvalidProof("Commitment R must be 32 bytes".into()));
+        return Err(ZkError::InvalidProof(
+            "Commitment R must be 32 bytes".into(),
+        ));
     }
     let mut r_arr = [0u8; 32];
     r_arr.copy_from_slice(&r_bytes);

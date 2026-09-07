@@ -47,7 +47,11 @@ impl Transcript {
     }
 
     /// Append a compressed Ristretto point to the transcript.
-    pub fn append_point(&mut self, label: &[u8], point: &curve25519_dalek::ristretto::CompressedRistretto) {
+    pub fn append_point(
+        &mut self,
+        label: &[u8],
+        point: &curve25519_dalek::ristretto::CompressedRistretto,
+    ) {
         self.append(label, point.as_bytes());
     }
 
@@ -113,7 +117,10 @@ mod tests {
         t2.append(b"data", b"hello");
         let c2 = t2.challenge_scalar(b"ch");
 
-        assert_ne!(c1, c2, "Different domains must produce different challenges");
+        assert_ne!(
+            c1, c2,
+            "Different domains must produce different challenges"
+        );
     }
 
     #[test]
@@ -128,6 +135,9 @@ mod tests {
         t2.append(b"a", b"1");
         let c2 = t2.challenge_scalar(b"ch");
 
-        assert_ne!(c1, c2, "Different ordering must produce different challenges");
+        assert_ne!(
+            c1, c2,
+            "Different ordering must produce different challenges"
+        );
     }
 }

@@ -289,9 +289,7 @@ pub unsafe extern "C" fn coldstar_zk_validate_envelope(input_json: *const c_char
 
     let env = match envelope::deserialize_envelope(&params.envelope_json) {
         Ok(e) => e,
-        Err(e) => {
-            return FfiResponse::err(format!("Invalid envelope: {}", e)).to_c_string()
-        }
+        Err(e) => return FfiResponse::err(format!("Invalid envelope: {}", e)).to_c_string(),
     };
 
     let mut engine = PolicyEngine::new();

@@ -88,15 +88,16 @@ pub fn commitment_to_hex(point: &RistrettoPoint) -> String {
 pub fn commitment_from_hex(hex_str: &str) -> Result<RistrettoPoint, crate::error::ZkError> {
     let bytes = hex::decode(hex_str)?;
     if bytes.len() != 32 {
-        return Err(crate::error::ZkError::InvalidCommitment(
-            format!("Expected 32 bytes, got {}", bytes.len()),
-        ));
+        return Err(crate::error::ZkError::InvalidCommitment(format!(
+            "Expected 32 bytes, got {}",
+            bytes.len()
+        )));
     }
     let mut arr = [0u8; 32];
     arr.copy_from_slice(&bytes);
-    CompressedRistretto(arr)
-        .decompress()
-        .ok_or_else(|| crate::error::ZkError::InvalidCommitment("Point decompression failed".into()))
+    CompressedRistretto(arr).decompress().ok_or_else(|| {
+        crate::error::ZkError::InvalidCommitment("Point decompression failed".into())
+    })
 }
 
 #[cfg(test)]
@@ -112,7 +113,10 @@ mod tests {
         let r2 = Scalar::random(&mut OsRng);
         let c1 = commit(&v, &r1);
         let c2 = commit(&v, &r2);
-        assert_ne!(c1, c2, "Different blinding factors must produce different commitments");
+        assert_ne!(
+            c1, c2,
+            "Different blinding factors must produce different commitments"
+        );
     }
 
     #[test]
@@ -121,11 +125,17 @@ mod tests {
         let v = Scalar::from(100u64);
         let r = Scalar::random(&mut OsRng);
         let c = commit(&v, &r);
-        assert!(verify_opening(&c, &v, &r), "Commitment must verify with correct opening");
+        assert!(
+            verify_opening(&c, &v, &r),
+            "Commitment must verify with correct opening"
+        );
 
         // Wrong value must fail
         let v_wrong = Scalar::from(101u64);
-        assert!(!verify_opening(&c, &v_wrong, &r), "Commitment must not verify with wrong value");
+        assert!(
+            !verify_opening(&c, &v_wrong, &r),
+            "Commitment must not verify with wrong value"
+        );
     }
 
     #[test]
@@ -142,7 +152,11 @@ mod tests {
         let r_sum = r1 + r2;
         let c_sum = commit(&v_sum, &r_sum);
 
-        assert_eq!(c1 + c2, c_sum, "Pedersen commitments must be additively homomorphic");
+        assert_eq!(
+            c1 + c2,
+            c_sum,
+            "Pedersen commitments must be additively homomorphic"
+        );
     }
 
     #[test]
