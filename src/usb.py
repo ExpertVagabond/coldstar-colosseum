@@ -14,6 +14,13 @@ from typing import List, Optional, Dict
 from src.ui import print_success, print_error, print_info, print_warning, print_device_list
 
 
+# Return values for USBManager.wallet_status(). Kept distinct so callers cannot
+# accidentally treat a disconnected drive as an empty one.
+WALLET_PRESENT = "present"
+WALLET_ABSENT = "absent"
+VOLUME_UNAVAILABLE = "unavailable"
+
+
 class USBManager:
     def __init__(self):
         self.detected_devices: List[Dict] = []
@@ -684,14 +691,58 @@ class USBManager:
             print_error(f"Unmount error: {sanitize_error(e)}")
             return False
 
-    def check_wallet_exists(self, mount_point: str = None) -> bool:
+    def volume_available(self, mount_point: str = None) -> bool:
+        """
+        Whether the volume is actually reachable right now.
+
+        Path.exists() swallows OSError, so an ejected or failing disk reports
+        the same False as a healthy volume with nothing on it. Probing the
+        directory instead surfaces ENODEV/EIO, which is what distinguishes
+        "the drive is gone" from "the drive is empty".
+        """
         target = mount_point or self.mount_point
         if not target:
             return False
-        
-        wallet_path = Path(target) / "wallet" / "keypair.json"
-        return wallet_path.exists()
-    
+
+        try:
+            with os.scandir(target) as entries:
+                next(entries, None)
+            return True
+        except (OSError, ValueError):
+            return False
+
+    def wallet_status(self, mount_point: str = None) -> str:
+        """
+        Tri-state wallet check: WALLET_PRESENT, WALLET_ABSENT, or VOLUME_UNAVAILABLE.
+
+        Callers must not collapse the last two. Treating an unreachable volume
+        as "no wallet here" is how a user with a briefly-disconnected USB gets
+        told their wallet does not exist and offered a brand new one.
+        """
+        target = mount_point or self.mount_point
+        if not target or not self.volume_available(target):
+            return VOLUME_UNAVAILABLE
+
+        try:
+            return (
+                WALLET_PRESENT
+                if (Path(target) / "wallet" / "keypair.json").is_file()
+                else WALLET_ABSENT
+            )
+        except OSError:
+            # The volume disappeared between the probe and the stat.
+            return VOLUME_UNAVAILABLE
+
+    def check_wallet_exists(self, mount_point: str = None) -> bool:
+        """
+        Whether a wallet is present. An unreachable volume reports False.
+
+        Prefer wallet_status() anywhere the answer decides what to offer the
+        user — this boolean cannot express "the drive went away".
+        """
+        return self.wallet_status(mount_point) == WALLET_PRESENT
+
+
     def get_wallet_paths(self, mount_point: str = None) -> Dict[str, str]:
         target = mount_point or self.mount_point
         if not target:

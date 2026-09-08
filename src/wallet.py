@@ -22,6 +22,12 @@ import base58
 from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning, get_password_input, confirm_dangerous_action
 from src.secure_memory import SecureWalletHandler
+from src.secure_io import (
+    write_secret_atomic,
+    write_public_atomic,
+    find_orphan_temps,
+    target_of_temp,
+)
 
 
 # ── Password strength validation ──────────────────────────────
@@ -192,16 +198,16 @@ class WalletManager:
 
             # Encrypt keypair
             encrypted_data = SecureWalletHandler.encrypt_keypair(self.keypair, password)
-            
-            with open(save_path, 'w') as f:
-                json.dump(encrypted_data, f)
-            
+
+            # Atomic write, created at 0o600 rather than chmod'd afterwards.
+            # The previous open()+chmod pair truncated any existing keystore
+            # before the new bytes landed, and left the ciphertext briefly
+            # readable at the umask default.
+            write_secret_atomic(save_path, json.dumps(encrypted_data))
+
             pubkey_path = save_path.parent / "pubkey.txt"
-            with open(pubkey_path, 'w') as f:
-                f.write(str(self.keypair.pubkey()))
-            
-            os.chmod(save_path, 0o600)
-            
+            write_public_atomic(pubkey_path, str(self.keypair.pubkey()))
+
             # Clear plaintext keypair from memory after saving
             self.keypair = None
             gc.collect()
@@ -363,6 +369,68 @@ class WalletManager:
             return False
         return check_path.exists()
     
+    def check_stale_writes(self, wallet_dir: str = None) -> list:
+        """
+        Scan the wallet directory for interrupted writes.
+
+        Returns a list of dicts: {"target": Path, "temp": Path, "target_usable": bool}.
+        An empty list means every previous save completed.
+
+        Policy is to keep both files, prefer the valid one, and warn loudly.
+        Nothing is deleted or restored automatically: the temp file may hold the
+        only copy of a freshly generated key, and the target may hold a wallet
+        that already has funds. Choosing between them is the user's call, made
+        against their seed phrase.
+        """
+        if wallet_dir:
+            scan_dir = Path(wallet_dir)
+        elif self.keypair_path:
+            scan_dir = Path(self.keypair_path).parent
+        else:
+            return []
+
+        stale = []
+        for temp in find_orphan_temps(scan_dir):
+            target = target_of_temp(temp)
+            if target is None:
+                continue
+
+            usable = False
+            if target.exists():
+                try:
+                    with open(target, 'r') as f:
+                        json.load(f)
+                    usable = True
+                except Exception:
+                    usable = False
+
+            stale.append({"target": target, "temp": temp, "target_usable": usable})
+
+        return stale
+
+    def warn_stale_writes(self, wallet_dir: str = None) -> bool:
+        """
+        Print a warning for each interrupted write found. Returns True if any.
+
+        Call this on startup before presenting a wallet as healthy.
+        """
+        stale = self.check_stale_writes(wallet_dir)
+        for entry in stale:
+            if entry["target_usable"]:
+                print_warning(
+                    f"An earlier save of '{entry['target']}' did not finish; a partial write "
+                    f"remains at '{entry['temp']}'. Your wallet still opens normally. Verify "
+                    f"your balance, then move the partial file somewhere safe before deleting it."
+                )
+            else:
+                print_error(
+                    f"An earlier save of '{entry['target']}' did not finish and the file is now "
+                    f"unreadable. A partial write remains at '{entry['temp']}'. Do not delete "
+                    f"either file. Restore from your seed phrase or backup, and confirm your "
+                    f"funds before cleaning up."
+                )
+        return bool(stale)
+
     def export_public_key_bytes(self) -> Optional[bytes]:
         if self.keypair is None:
             return None

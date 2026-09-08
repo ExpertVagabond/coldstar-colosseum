@@ -23,6 +23,7 @@ from solders.keypair import Keypair
 
 from config import sanitize_error
 from src.ui import print_success, print_error, print_info, print_warning
+from src.secure_io import write_secret_atomic
 
 try:
     from mnemonic import Mnemonic
@@ -387,8 +388,10 @@ class WalletBackup:
 </body>
 </html>"""
 
-            with open(filepath, 'w') as f:
-                f.write(html_content)
+            # This HTML contains the private key in the clear, ready to print.
+            # It was previously written with a bare open() and no chmod at all,
+            # landing a plaintext key at the umask default (commonly 0644).
+            write_secret_atomic(filepath, html_content)
 
             print_success(f"Paper wallet created: {filepath}")
             return str(filepath)
@@ -414,10 +417,11 @@ class WalletBackup:
                     "created_at": datetime.utcnow().isoformat()
                 }
 
-            with open(filepath, 'w') as f:
-                json.dump(data, f, indent=2)
-
-            os.chmod(filepath, 0o600)  # Read/write owner only
+            # Atomic and 0o600 from creation. A backup is the file whose entire
+            # job is recovery, so overwriting a good one with a truncated one is
+            # the worst available outcome — and backups land on removable media
+            # where interrupted writes are not hypothetical.
+            write_secret_atomic(filepath, json.dumps(data, indent=2))
 
             print_success(f"Wallet backed up to: {filepath}")
             if not password:

@@ -41,7 +41,8 @@ from src.ui import (
     clear_screen, console
 )
 from src.wallet import WalletManager, create_wallet_structure
-from src.usb import USBManager
+from src.secure_io import write_secret_atomic
+from src.usb import USBManager, WALLET_PRESENT, WALLET_ABSENT, VOLUME_UNAVAILABLE
 from src.network import SolanaNetwork
 from src.transaction import TransactionManager
 from src.iso_builder import ISOBuilder
@@ -100,12 +101,30 @@ class SolanaColdWalletCLI:
         return None
 
     def _check_usb_for_wallet(self, mount_point: str) -> tuple:
-        """Check if mounted USB has a cold wallet with pubkey.txt"""
+        """
+        Check whether a mounted USB holds a cold wallet.
+
+        Returns (status, pubkey) where status is one of WALLET_PRESENT,
+        WALLET_ABSENT, or VOLUME_UNAVAILABLE. The third state matters: a drive
+        that was ejected or has failed reads as "no wallet" through
+        Path.exists(), which previously led to telling the user their wallet
+        was missing and offering to create a new one over the top of it.
+        """
+        status = self.usb_manager.wallet_status(mount_point)
+        if status != WALLET_PRESENT:
+            return status, None
+
         pubkey_path = Path(mount_point) / "wallet" / "pubkey.txt"
-        if pubkey_path.exists():
+        try:
             with open(pubkey_path, 'r') as f:
-                return True, f.read().strip()
-        return False, None
+                return WALLET_PRESENT, f.read().strip()
+        except FileNotFoundError:
+            # keypair.json without pubkey.txt — the wallet is real, we just
+            # cannot show its address without unlocking it.
+            return WALLET_PRESENT, None
+        except OSError as exc:
+            print_error(f"Could not read wallet: {sanitize_error(exc)}")
+            return VOLUME_UNAVAILABLE, None
     
     def _display_wallet_balance(self):
         if not self.current_public_key:
@@ -254,17 +273,32 @@ class SolanaColdWalletCLI:
         
         mount_point = self.usb_manager.mount_device(device['device'])
         if mount_point:
-            is_wallet, pubkey = self._check_usb_for_wallet(mount_point)
-            if is_wallet:
+            status, pubkey = self._check_usb_for_wallet(mount_point)
+
+            if status == WALLET_PRESENT:
                 self.usb_is_cold_wallet = True
                 self.current_public_key = pubkey
                 self.current_usb_device = device
                 print_success("Cold wallet found on USB!")
-                print_info(f"Public Key: {pubkey}")
+                if pubkey:
+                    print_info(f"Public Key: {pubkey}")
+                else:
+                    print_warning("Wallet found, but pubkey.txt is missing — unlock to see the address.")
                 # Load the wallet
                 wallet_dir = Path(mount_point) / "wallet"
                 self.wallet_manager.set_wallet_directory(str(wallet_dir))
+                # Surface any save that was interrupted by an unplugged USB or
+                # a crash before presenting this wallet as healthy.
+                self.wallet_manager.warn_stale_writes(str(wallet_dir))
                 self._display_wallet_balance()
+
+            elif status == VOLUME_UNAVAILABLE:
+                # Never offer to create a wallet here. The drive may hold one we
+                # simply cannot read, and creating over it would be destructive.
+                print_error(f"The drive at {mount_point} is no longer readable.")
+                print_info("It may have been ejected, unplugged, or be failing.")
+                print_info("Reconnect it and try again. No wallet was created or modified.")
+
             else:
                 print_info("No wallet found on this USB.")
                 # Offer to create a wallet
@@ -436,10 +470,15 @@ class SolanaColdWalletCLI:
                     if self.usb_manager.check_permissions():
                         mount_point = self.usb_manager.mount_device()
                         if mount_point:
-                            if self.usb_manager.check_wallet_exists():
+                            status = self.usb_manager.wallet_status()
+                            if status == WALLET_PRESENT:
                                 print_success("Wallet found on USB device!")
                                 paths = self.usb_manager.get_wallet_paths()
                                 self.wallet_manager.set_wallet_directory(paths['wallet'])
+                                self.wallet_manager.warn_stale_writes(paths['wallet'])
+                            elif status == VOLUME_UNAVAILABLE:
+                                print_error("The drive is no longer readable — ejected, unplugged, or failing.")
+                                print_info("Reconnect it and try again. Nothing was created or modified.")
                             else:
                                 print_info("No wallet found on this device")
                     else:
@@ -1261,25 +1300,30 @@ class SolanaColdWalletCLI:
             # Save to wallet directory
             wallet_dir.mkdir(parents=True, exist_ok=True)
             keypair_path = wallet_dir / "keypair.json"
-            pubkey_path = wallet_dir / "pubkey.txt"
 
-            # Backup existing if present
+            # Backup existing if present. Copy rather than rename: a rename
+            # leaves no wallet at keypair_path until the save below finishes,
+            # so a failure there strands the user with a missing wallet.
             if keypair_path.exists():
                 print_warning("Existing wallet will be replaced!")
                 if not confirm_dangerous_action("Replace existing wallet?", "REPLACE"):
                     return
                 import time
                 old_backup = wallet_dir / f"keypair_old_{int(time.time())}.json"
-                keypair_path.rename(old_backup)
+                write_secret_atomic(old_backup, keypair_path.read_bytes())
                 print_info(f"Old wallet backed up to: {old_backup}")
 
-            # Save new keypair
-            with open(keypair_path, 'w') as f:
-                json.dump(list(bytes(keypair)), f)
+            # Save the restored keypair through the same encrypted path every
+            # other wallet write uses. This previously dumped the raw secret key
+            # bytes to disk unencrypted and without a mode, leaving a restored
+            # wallet strictly less protected than a generated one.
+            self.wallet_manager.set_wallet_directory(str(wallet_dir))
+            self.wallet_manager.keypair = keypair
+            if not self.wallet_manager.save_keypair(str(keypair_path)):
+                print_error("Restore aborted — wallet was not saved.")
+                return
 
-            with open(pubkey_path, 'w') as f:
-                f.write(str(keypair.pubkey()))
-
+            # save_keypair writes pubkey.txt alongside the keystore itself.
             self.current_public_key = str(keypair.pubkey())
             print_success("Wallet restored successfully!")
             print_info(f"Public key: {self.current_public_key}")
